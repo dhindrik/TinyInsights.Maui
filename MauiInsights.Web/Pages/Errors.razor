@@ -64,7 +64,7 @@
     public string Type { get; set; }
     
     [CascadingParameter]
-    public int NumberOfDays  {get;set;}
+    public required GlobalFilter GlobalFilter  {get;set;}
     
     private List<CountPerDay> errorsPerDays = new();
     private List<CountPerKey> errors = new();
@@ -76,9 +76,7 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-    
-        await base.OnInitializedAsync();
-
+        
         if (Type == "crashes")
         {
             isCrash = true;
@@ -111,17 +109,17 @@
         
         if (isCrash)
         {
-            result = await Service.GetCrashesPerDay(NumberOfDays);
+            result = await Service.GetCrashesPerDay(GlobalFilter.NumberOfDays);
         }
         else
         {
-            result = await Service.GetErrorsPerDay(NumberOfDays);
+            result = await Service.GetErrorsPerDay(GlobalFilter.NumberOfDays);
         }
         
-        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-NumberOfDays);
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
         
-        for (int i = 0; i < NumberOfDays; i++)
+        for (int i = 0; i < GlobalFilter.NumberOfDays; i++)
         {
             var currentDate = date.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
@@ -146,11 +144,11 @@
 
         if (isCrash)
         {
-            result = await Service.GetCrashesGrouped(NumberOfDays);
+            result = await Service.GetCrashesGrouped(GlobalFilter.NumberOfDays);
         }
         else
         {
-            result = await Service.GetErrorsGrouped(NumberOfDays);
+            result = await Service.GetErrorsGrouped(GlobalFilter.NumberOfDays);
         }
         
 

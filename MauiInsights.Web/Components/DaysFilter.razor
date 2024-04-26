@@ -1,8 +1,8 @@
-<RadzenDropDown @bind-Value="@NumberOfDays" @bind-Value:after="AfterValueChanged" Data="dayFilter" TextProperty="Text" ValueProperty="Value"/>
+<RadzenDropDown @bind-Value="@GlobalFilter.NumberOfDays" Data="dayFilter" TextProperty="Text" ValueProperty="Value"/>
 
 @code {
     [CascadingParameter]
-    public int NumberOfDays { get; set; }
+    public GlobalFilter GlobalFilter { get; set; }
     
     [CascadingParameter]
     public EventCallback<int> NumberOfDaysChanged { get; set; }
@@ -14,12 +14,6 @@
         new("14 days", 14),
         new("30 days", 30),
     };
-
-
-    private async Task AfterValueChanged()
-    {
-        await NumberOfDaysChanged.InvokeAsync(NumberOfDays);
-    }
     
     private record DayFilterItem(string Text, int Value);
 }

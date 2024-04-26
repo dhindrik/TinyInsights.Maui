@@ -51,7 +51,7 @@
 
 @code {
     [CascadingParameter]
-    public int NumberOfDays  {get;set;}
+    public GlobalFilter GlobalFilter  {get;set;}
     
     private bool isLoadingPageViews, isLoadingList = true;
     private List<CountPerDay> pageViewsPerDay = new();
@@ -76,12 +76,12 @@
     {
         isLoadingPageViews = true;
         
-        var result = await Service.GetPageViewsPerDay(NumberOfDays);
+        var result = await Service.GetPageViewsPerDay(GlobalFilter.NumberOfDays);
         
-        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-NumberOfDays);
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
         
-        for (int i = 0; i < NumberOfDays; i++)
+        for (int i = 0; i < GlobalFilter.NumberOfDays; i++)
         {
             var currentDate = date.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
@@ -101,7 +101,7 @@
     {
         isLoadingList = true;
 
-        var result = await Service.GetPageViewsGrouped(NumberOfDays);
+        var result = await Service.GetPageViewsGrouped(GlobalFilter.NumberOfDays);
 
         pageViews = result.OrderByDescending(x => x.Count).ToList();
         

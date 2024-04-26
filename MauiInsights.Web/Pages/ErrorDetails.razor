@@ -93,7 +93,7 @@
     public required string Id { get; set; }
     
     [CascadingParameter]
-    public int NumberOfDays  {get;set;}
+    public GlobalFilter GlobalFilter { get; set; }
 
     private bool isLoading = true;
     private bool isCrash;
@@ -129,11 +129,11 @@
 
         if (isCrash)
         {
-            data = await Service.GetCrashDetails(Id, NumberOfDays);
+            data = await Service.GetCrashDetails(Id, GlobalFilter.NumberOfDays);
         }
         else
         {
-            data = await Service.GetErrorDetails(Id, NumberOfDays);
+            data = await Service.GetErrorDetails(Id, GlobalFilter.NumberOfDays);
         }
 
         isLoading = false;

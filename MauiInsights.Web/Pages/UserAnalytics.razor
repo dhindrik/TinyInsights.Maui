@@ -52,7 +52,7 @@
 
 @code {
     [CascadingParameter]
-    public int NumberOfDays  {get;set;}
+    public GlobalFilter GlobalFilter  {get;set;}
     
     private bool isLoadingUsersPerDayViews, isLoadingCountryList = true;
     private List<CountPerDay> usersPerDay = new();
@@ -77,12 +77,12 @@
     {
         isLoadingUsersPerDayViews = true;
         
-        var result = await Service.GetUsersPerDay(NumberOfDays);
+        var result = await Service.GetUsersPerDay(GlobalFilter.NumberOfDays);
         
-        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-NumberOfDays);
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
         
-        for (int i = 0; i < NumberOfDays; i++)
+        for (int i = 0; i < GlobalFilter.NumberOfDays; i++)
         {
             var currentDate = date.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
@@ -102,7 +102,7 @@
     {
         isLoadingCountryList = true;
 
-        var result = await Service.GetUserPerCountry(NumberOfDays);
+        var result = await Service.GetUserPerCountry(GlobalFilter.NumberOfDays);
 
         usersPerCountry = result.OrderByDescending(x => x.Count).ToList();
         

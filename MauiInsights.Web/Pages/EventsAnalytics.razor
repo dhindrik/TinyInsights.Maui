@@ -40,7 +40,7 @@
 @code {
     
     [CascadingParameter]
-    public int NumberOfDays  {get;set;}
+    public GlobalFilter GlobalFilter  {get;set;}
     
     private bool isLoadingPageViews, isLoadingList = true;
     private List<CountPerKey> events = new();
@@ -63,7 +63,7 @@
     {
         isLoadingList = true;
 
-        var result = await Service.GetEventsGrouped(NumberOfDays);
+        var result = await Service.GetEventsGrouped(GlobalFilter.NumberOfDays);
 
         events = result.OrderByDescending(x => x.Count).ToList();
         
