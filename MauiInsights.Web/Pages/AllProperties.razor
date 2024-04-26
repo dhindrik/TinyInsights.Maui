@@ -1,0 +1,26 @@
+<RadzenDataGrid Data="allProperties">
+    <Columns>
+        <RadzenDataGridColumn TItem="PropertyModel" Title="Property" Property="@nameof(PropertyModel.Property)" />
+        <RadzenDataGridColumn TItem="PropertyModel" Title="Value" Property="@nameof(PropertyModel.Value)" />
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter]
+    public Dictionary<string, string> Properties { get; set; } = new();
+
+    private List<PropertyModel> allProperties = new();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        
+        allProperties.AddRange(Properties.Select(x => new PropertyModel() {Property = x.Key, Value = x.Value}));
+    }
+
+    private class PropertyModel
+    {
+        public required string Property { get; set; }
+        public string? Value { get; set; }
+    }
+}

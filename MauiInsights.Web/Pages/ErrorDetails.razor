@@ -1,0 +1,156 @@
+@page "/diagnostics/crashes/details/{*Id}"
+@page "/diagnostics/errors/details/{*Id}"
+@using MauiInsights.Web.Services
+
+@inherits MauiInsightsComponentBase
+
+@inject IInsightsService Service
+@inject DialogService DialogService
+
+<RadzenStack>
+    <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+        <a href="@backUrl" title="Back">
+            <RadzenIcon Icon="arrow_back"/>
+        </a>
+        <DaysFilter />
+
+
+    </RadzenRow>
+    <RadzenCard>
+
+        <h2>@detailsHeader</h2>
+
+        @if (isLoading)
+        {
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+        }
+        else
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
+                <LabelValuePair Key="Count" Value="@data.Count.ToString()"/>
+                <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()"/>
+                <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))"/>
+                <LabelValuePair Key="Affected operating systems" Value="@(string.Join(", ", data.AffectedOperatingSystems))"/>
+            </RadzenStack>
+        }
+
+    </RadzenCard>
+    <RadzenCard>
+        <h2>Stacktrace</h2>
+        @if (isLoading)
+        {
+        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+}
+        else
+        {
+            <p class="stacktrace">
+                @if (data.Items.Count > 0 && data.Items.First().StackTrace is not null)
+                {
+                    @data.Items.First().StackTrace
+
+                }
+                else
+                {
+                    <span>No stacktrace available</span>
+                }
+            </p>
+        }
+    </RadzenCard>
+    <RadzenCard>
+        <h2>@listHeader</h2>
+        @if (isLoading)
+        {
+        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+        }
+        else
+        {
+            <RadzenDataGrid Data="data.Items">
+                <Columns>
+                    <RadzenDataGridColumn TItem="ErrorItem" Title="Timestamp" Property="@nameof(ErrorItem.Timestamp)"/>
+                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device" Property="@nameof(ErrorItem.ClientModel)"/>
+                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS" Property="@nameof(ErrorItem.ClientOs)"/>
+                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS version" Property="@nameof(ErrorItem.ClientOsVersion)"/>
+                    <RadzenDataGridColumn TItem="ErrorItem" Title="Country" Property="@nameof(ErrorItem.ClientCountry)"/>
+                    <RadzenDataGridColumn TItem="ErrorItem" Width="100px">
+                        <Template>
+                            <RadzenButton Icon="description" Click="@(async (args) => await ShowAllProperties(context))"/>
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ErrorItem" Width="100px">
+                        <Template>
+                            <RadzenButton Icon="format_list_numbered" Click="@(async (args) => await ShowEvents(context))"/>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        }
+    </RadzenCard>
+</RadzenStack>
+
+
+@code {
+    [Parameter]
+    public required string Id { get; set; }
+    
+    [CascadingParameter]
+    public int NumberOfDays  {get;set;}
+
+    private bool isLoading = true;
+    private bool isCrash;
+    private string backUrl,detailsHeader, listHeader = string.Empty;
+
+    private Services.ErrorDetails data = new();
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        if (NavigationManager.Uri.Contains("crashes"))
+        {
+            isCrash = true;
+            backUrl = "/diagnostics/crashes";
+            detailsHeader = "Crash details";
+            listHeader = "Crashes";
+        }
+        else
+        {
+            isCrash = false;
+            backUrl = "/diagnostics/errors";
+            detailsHeader = "Error details";
+            listHeader = "Errors";
+        }
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+
+        if (isCrash)
+        {
+            data = await Service.GetCrashDetails(Id, NumberOfDays);
+        }
+        else
+        {
+            data = await Service.GetErrorDetails(Id, NumberOfDays);
+        }
+
+        isLoading = false;
+    }
+
+    private async Task ShowAllProperties(ErrorItem item)
+    {
+        await DialogService.OpenAsync<AllProperties>($"All properties",
+            new Dictionary<string, object>() { { "Properties", item.Data } },
+            new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true});
+    }
+    
+    private async Task ShowEvents(ErrorItem item)
+    {
+        await DialogService.OpenAsync<Events>($"Recent events",
+            new Dictionary<string, object>() { { "UserId", item.UserId }, { "Timestamp", item.Timestamp } },
+            new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true});
+    }
+}
+

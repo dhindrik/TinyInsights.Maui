@@ -1,0 +1,42 @@
+﻿@inherits LayoutComponentBase
+<CascadingValue Value="IsLoggedIn">
+<CascadingValue Value="IsLoggedInChanged">
+    <CascadingValue Value="NumberOfDays">
+        <CascadingValue Value="NumberOfDaysChanged">
+            <RadzenLayout>
+                <RadzenHeader>
+                    <RadzenStack>
+                        <h1>MAUI Insights</h1>
+                    </RadzenStack>
+
+                </RadzenHeader>
+                <RadzenSidebar Expanded="true">
+                    <Menu/>
+                </RadzenSidebar>
+                <RadzenBody>
+                    <div>
+                        @Body
+                    </div>
+                </RadzenBody>
+            </RadzenLayout>
+        </CascadingValue>
+    </CascadingValue>
+</CascadingValue>
+</CascadingValue>
+<RadzenComponents/>
+@code
+{
+    public bool IsLoggedIn { get; set; }
+    public EventCallback<bool> IsLoggedInChanged { get; set; }
+
+    public int NumberOfDays { get; set; } = 30;
+    public EventCallback<int> NumberOfDaysChanged { get; set; }
+    
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        IsLoggedInChanged = EventCallback.Factory.Create<bool>(this, x => IsLoggedIn = x);
+        NumberOfDaysChanged = EventCallback.Factory.Create<int>(this, x => NumberOfDays = x);
+    }
+}

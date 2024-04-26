@@ -1,0 +1,64 @@
+@using MauiInsights.Web.Services
+
+@inject IInsightsService Service
+@inject DialogService DialogService
+
+@if (isLoading)
+{
+    <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+}
+else
+{
+    <RadzenDataGrid Data="events">
+        <Columns>
+            <RadzenDataGridColumn TItem="EventItem" Width="100px">
+                <Template>
+                        <RadzenIcon Icon="@GetIcon(context.EventType)" title="Page View" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="EventItem" Title="Timestamp" Property="@nameof(EventItem.Timestamp)" />
+            <RadzenDataGridColumn TItem="EventItem" Title="Name" Property="@nameof(EventItem.Name)" />
+            <RadzenDataGridColumn TItem="EventItem"  Width="100px">
+                <Template>
+                    <RadzenButton Icon="description" Click="@(async (args) => await ShowAllProperties(context))"/>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    [Parameter]
+    public required string UserId { get; set; }
+    [Parameter]
+    public required DateTime Timestamp { get; set; }
+
+    private bool isLoading = true;
+    private List<EventItem> events = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        events = await Service.GetEventsByUser(UserId, Timestamp);
+        
+        isLoading = false;
+    }
+
+    private async Task ShowAllProperties(EventItem item)
+    {
+        await DialogService.OpenAsync<AllProperties>($"All properties",
+            new Dictionary<string, object>() { { "Properties", item.Data } },
+            new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true});
+    }
+
+    private string GetIcon(EventType eventType) => eventType switch
+    {
+        EventType.CustomEvent => "touch_app",
+        EventType.PageView => "visibility",
+        EventType.Crash => "dangerous",
+        EventType.Error => "error",
+        _ => string.Empty
+    };
+
+}

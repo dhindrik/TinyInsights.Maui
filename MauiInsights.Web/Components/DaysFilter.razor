@@ -1,0 +1,25 @@
+<RadzenDropDown @bind-Value="@NumberOfDays" @bind-Value:after="AfterValueChanged" Data="dayFilter" TextProperty="Text" ValueProperty="Value"/>
+
+@code {
+    [CascadingParameter]
+    public int NumberOfDays { get; set; }
+    
+    [CascadingParameter]
+    public EventCallback<int> NumberOfDaysChanged { get; set; }
+    
+    private List<DayFilterItem> dayFilter = new()
+    {
+        new("3 days", 3),
+        new("7 days", 7),
+        new("14 days", 14),
+        new("30 days", 30),
+    };
+
+
+    private async Task AfterValueChanged()
+    {
+        await NumberOfDaysChanged.InvokeAsync(NumberOfDays);
+    }
+    
+    private record DayFilterItem(string Text, int Value);
+}

@@ -1,0 +1,115 @@
+@page "/analytics/users"
+
+@using MauiInsights.Web.Services
+
+@inherits MauiInsightsComponentBase
+
+@inject IInsightsService Service
+<RadzenStack Gap="20">
+    <RadzenRow JustifyContent="JustifyContent.End">
+        <DaysFilter />
+    </RadzenRow>
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Unique per day</h2>
+            @if (isLoadingUsersPerDayViews)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            }
+            else
+            {
+                <RadzenChart>
+                    <RadzenLegend Visible="false"/>
+                    <RadzenLineSeries Data="@usersPerDay" CategoryProperty="Date" ValueProperty="Count">
+                        <RadzenMarkers MarkerType="MarkerType.Circle"/>
+                        <RadzenSeriesDataLabels/>
+                    </RadzenLineSeries>
+                    <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                </RadzenChart>
+            }
+        </RadzenStack>
+    </RadzenCard>
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Users per country</h2>
+
+            @if (isLoadingCountryList)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            }
+            else
+            {
+            <RadzenDataGrid Data="usersPerCountry">
+                <Columns>
+                    <RadzenDataGridColumn TItem="CountPerKey" Title="Country" Property="@nameof(CountPerKey.Key)" />
+                    <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                </Columns>
+            </RadzenDataGrid>
+            }
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    [CascadingParameter]
+    public int NumberOfDays  {get;set;}
+    
+    private bool isLoadingUsersPerDayViews, isLoadingCountryList = true;
+    private List<CountPerDay> usersPerDay = new();
+    private List<CountPerKey> usersPerCountry = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var graphTask = LoadGraph();
+        var listTask = LoadList();
+
+        await Task.WhenAll(graphTask, listTask);
+    }
+
+    private async Task LoadGraph()
+    {
+        isLoadingUsersPerDayViews = true;
+        
+        var result = await Service.GetUsersPerDay(NumberOfDays);
+        
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-NumberOfDays);
+        var days = new List<CountPerDay>();
+        
+        for (int i = 0; i < NumberOfDays; i++)
+        {
+            var currentDate = date.AddDays(i);
+            var day = result.SingleOrDefault(x => x.Date == currentDate);
+
+            var count = day?.Count ?? 0;
+ 
+            days.Add(new CountPerDay(currentDate, count));
+        }
+
+        usersPerDay = days;
+        isLoadingUsersPerDayViews = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    private async Task LoadList()
+    {
+        isLoadingCountryList = true;
+
+        var result = await Service.GetUserPerCountry(NumberOfDays);
+
+        usersPerCountry = result.OrderByDescending(x => x.Count).ToList();
+        
+        isLoadingCountryList = false;
+        
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    private record DayFilterItem(string Text, int Value);
+}

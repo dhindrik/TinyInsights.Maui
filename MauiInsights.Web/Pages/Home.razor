@@ -1,0 +1,67 @@
+﻿@page "/"
+
+@inherits MauiInsightsComponentBase
+
+@using System.ComponentModel.DataAnnotations
+@using MauiInsights.Web.Services
+
+@inject IInsightsService Service
+@inject DialogService DialogService
+
+<PageTitle>Home</PageTitle>
+<RadzenCard>
+    <EditForm Model="_model" OnValidSubmit="Open">
+        <RadzenStack>
+            <h2>Login</h2>
+            <RadzenText Text="Application id"/>
+            <RadzenTextBox @bind-Value="_model.ApplicationId" Placeholder="Enter your application id"/>
+            <RadzenText Text="API token"></RadzenText>
+            <RadzenPassword @bind-Value="_model.ApiKey" Placeholder="Enter your API token"/>
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Open"/>
+        </RadzenStack>
+    </EditForm>
+</RadzenCard>
+<RadzenCard>
+    <h2>Get started</h2>
+    To use this application you need to install and configurate the Nuget "MauiInsights" into your app. 
+    Read more here, <a href="https://github.com/dhindrik/MauiInsights">https://github.com/dhindrik/MauiInsights</a>
+    <h3>Get the Application id</h3>
+    <h3>Get API token</h3>
+</RadzenCard>
+
+@code{
+    [CascadingParameter] public EventCallback<bool> IsLoggedInChanged { get; set; }
+    private readonly AuthModel _model = new();
+
+    public async Task Open()
+    {
+        try
+        {
+            if (_model.ApplicationId is not null && _model.ApiKey is not null)
+            {
+                var result = await Service.ValidateToken(_model.ApplicationId, _model.ApiKey);
+
+                if (result)
+                {
+                    await IsLoggedInChanged.InvokeAsync(true);
+
+                    NavigationManager.NavigateTo("/diagnostics/crashes");
+                    return;
+                }
+
+                await DialogService.Alert("Authentication failed", "Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.Alert(ex.Message, "Error");
+        }
+    }
+
+    public class AuthModel
+    {
+        [Required] public string? ApplicationId { get; set; }
+        [Required] public string? ApiKey { get; set; }
+    }
+
+}

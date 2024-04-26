@@ -1,0 +1,76 @@
+@page "/analytics/events"
+@using MauiInsights.Web.Services
+
+@inherits MauiInsightsComponentBase
+
+@inject IInsightsService Service
+<RadzenStack Gap="20">
+    <RadzenRow JustifyContent="JustifyContent.End">
+        <DaysFilter />
+    </RadzenRow>
+   
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Events</h2>
+
+            @if (isLoadingList)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            }
+            else
+            {
+            <RadzenDataGrid Data="events">
+                <Columns>
+                    <RadzenDataGridColumn TItem="CountPerKey" Title="Identifier" Property="@nameof(CountPerKey.Key)" />
+                    <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                    <RadzenDataGridColumn TItem="CountPerKey" Width="100px" TextAlign="TextAlign.End">
+                        <Template>
+                            <a href="@($"/analytics/events/details/{context.Key}")">
+                                <RadzenIcon Icon="arrow_forward"/>
+                            </a>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+            }
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    
+    [CascadingParameter]
+    public int NumberOfDays  {get;set;}
+    
+    private bool isLoadingPageViews, isLoadingList = true;
+    private List<CountPerKey> events = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var listTask = LoadList();
+
+        await Task.WhenAll(listTask);
+    }
+    
+    private async Task LoadList()
+    {
+        isLoadingList = true;
+
+        var result = await Service.GetEventsGrouped(NumberOfDays);
+
+        events = result.OrderByDescending(x => x.Count).ToList();
+        
+        isLoadingList = false;
+        
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    private record DayFilterItem(string Text, int Value);
+}

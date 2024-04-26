@@ -1,0 +1,12 @@
+<RadzenStack AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Start" Gap="0">
+    <RadzenText TextStyle="TextStyle.Caption" Text="@Key" />
+    <span>@Value</span>
+</RadzenStack>
+
+
+@code {
+    [Parameter]
+    public string? Key { get; set; }
+    [Parameter]
+    public string? Value { get; set; }
+}

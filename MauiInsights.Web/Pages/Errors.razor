@@ -1,0 +1,167 @@
+@page "/diagnostics/{Type}"
+
+@using MauiInsights.Web.Services
+
+@inherits MauiInsightsComponentBase
+
+@inject IInsightsService Service
+<RadzenStack Gap="20">
+    <RadzenRow JustifyContent="JustifyContent.End">
+        <DaysFilter />
+    </RadzenRow>
+    <RadzenCard>
+        <RadzenStack>
+            <h2>@perDayHeader</h2>
+            @if (isLoadingGraph)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            }
+            else
+            {
+
+                <RadzenChart>
+                    <RadzenLegend Visible="false"/>
+                    <RadzenLineSeries Data="@errorsPerDays" CategoryProperty="Date" ValueProperty="Count">
+                        <RadzenMarkers MarkerType="MarkerType.Circle"/>
+                        <RadzenSeriesDataLabels/>
+                    </RadzenLineSeries>
+                    <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                </RadzenChart>
+            }
+        </RadzenStack>
+    </RadzenCard>
+
+    <RadzenCard>
+        <RadzenStack>
+            <h2>@listHeader</h2>
+
+            @if (isLoadingList)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            }
+            else
+            {
+                <RadzenDataGrid Data="errors"> 
+                    <Columns>
+                        <RadzenDataGridColumn TItem="CountPerKey" Title="Identifier" Property="@nameof(CountPerKey.Key)" />
+                        <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                        <RadzenDataGridColumn TItem="CountPerKey" Width="100px" TextAlign="TextAlign.End">
+                            <Template>
+                                <a href="@($"/diagnostics/{Type}/details/{context.Key}")">
+                                <RadzenIcon Icon="arrow_forward"/>
+                                </a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            }
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+@code {
+    
+    [Parameter]
+    public string Type { get; set; }
+    
+    [CascadingParameter]
+    public int NumberOfDays  {get;set;}
+    
+    private List<CountPerDay> errorsPerDays = new();
+    private List<CountPerKey> errors = new();
+    private bool isLoadingGraph, isLoadingList = true;
+
+    private bool isCrash;
+    private string perDayHeader, listHeader = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+    
+        await base.OnInitializedAsync();
+
+        if (Type == "crashes")
+        {
+            isCrash = true;
+            perDayHeader = "Crashes per day";
+            listHeader = "Crashes";
+        }
+        else
+        {
+            isCrash = false;
+            perDayHeader = "Errors per day";
+            listHeader = "Errors";
+        }
+        
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var graphTask = LoadGraph();
+        var listTask = LoadList();
+
+        await Task.WhenAll(graphTask, listTask);
+    }
+
+    private async Task LoadGraph()
+    {
+        isLoadingGraph = true;
+
+        List<CountPerDay> result;
+        
+        if (isCrash)
+        {
+            result = await Service.GetCrashesPerDay(NumberOfDays);
+        }
+        else
+        {
+            result = await Service.GetErrorsPerDay(NumberOfDays);
+        }
+        
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-NumberOfDays);
+        var days = new List<CountPerDay>();
+        
+        for (int i = 0; i < NumberOfDays; i++)
+        {
+            var currentDate = date.AddDays(i);
+            var day = result.SingleOrDefault(x => x.Date == currentDate);
+
+            var count = day?.Count ?? 0;
+ 
+            days.Add(new CountPerDay(currentDate, count));
+        }
+
+        errorsPerDays = days;
+
+        isLoadingGraph = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadList()
+    {
+        isLoadingList = true;
+
+        List<CountPerKey> result;
+
+        if (isCrash)
+        {
+            result = await Service.GetCrashesGrouped(NumberOfDays);
+        }
+        else
+        {
+            result = await Service.GetErrorsGrouped(NumberOfDays);
+        }
+        
+
+        errors = result.OrderByDescending(x => x.Count).ToList();
+        
+        isLoadingList = false;
+        
+        await InvokeAsync(StateHasChanged);
+    }
+    
+
+    private record DayFilterItem(string Text, int Value);
+
+}
