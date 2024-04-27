@@ -1,0 +1,29 @@
+name: PR
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    
+    - name: Restore dependencies
+      run: dotnet MauiInsights/MauiInsights.csproj restore
+    
+    - name: Build
+      run: dotnet build MauiInsights/MauiInsights.csproj --no-restore
+    
+    - name: Pack
+      run: dotnet pack MauiInsights/MauiInsights.csproj
+
+    - name: Push
+      run: dotnet nuget push /**/MauiInsights.nupkg --api-key ${{ NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json
