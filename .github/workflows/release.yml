@@ -26,7 +26,7 @@ jobs:
       run: dotnet build MauiInsights/MauiInsights.csproj --no-restore
     
     - name: Pack
-      run: dotnet pack MauiInsights/MauiInsights.csproj -p:PackageVersion=${{ github.GITHUB_RUN_ID }}
+      run: dotnet pack MauiInsights/MauiInsights.csproj -p:PackageVersion=$GITHUB_JOB
 
     - name: Push
-      run: dotnet nuget push MauiInsights/MauiInsights/bin/Release/MauiInsights.${{ github.GITHUB_RUN_ID }}.nupkg --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push MauiInsights/MauiInsights/bin/Release/MauiInsights.$GITHUB_JOB.nupkg --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json
