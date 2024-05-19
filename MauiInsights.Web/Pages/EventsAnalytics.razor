@@ -6,7 +6,7 @@
 @inject IInsightsService Service
 <RadzenStack Gap="20">
     <RadzenRow JustifyContent="JustifyContent.End">
-        <DaysFilter />
+        <GlobalFilters />
     </RadzenRow>
    
     <RadzenCard>
@@ -63,7 +63,7 @@
     {
         isLoadingList = true;
 
-        var result = await Service.GetEventsGrouped(GlobalFilter.NumberOfDays);
+        var result = await Service.GetEventsGrouped(GlobalFilter);
 
         events = result.OrderByDescending(x => x.Count).ToList();
         

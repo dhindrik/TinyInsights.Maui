@@ -12,7 +12,7 @@
         <a href="@backUrl" title="Back">
             <RadzenIcon Icon="arrow_back"/>
         </a>
-        <DaysFilter />
+        <GlobalFilters />
 
 
     </RadzenRow>
@@ -129,11 +129,11 @@
 
         if (isCrash)
         {
-            data = await Service.GetCrashDetails(Id, GlobalFilter.NumberOfDays);
+            data = await Service.GetCrashDetails(Id, GlobalFilter);
         }
         else
         {
-            data = await Service.GetErrorDetails(Id, GlobalFilter.NumberOfDays);
+            data = await Service.GetErrorDetails(Id, GlobalFilter);
         }
 
         isLoading = false;

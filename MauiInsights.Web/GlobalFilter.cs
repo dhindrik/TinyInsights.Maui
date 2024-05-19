@@ -2,17 +2,23 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace MauiInsights.Web;
-
 public class GlobalFilter : INotifyPropertyChanged
 {
     private int numberOfDays = 30;
-
     public int NumberOfDays
     {
         get => numberOfDays;
         set => SetField(ref numberOfDays, value);
     }
-    
+
+    private string operatingSystem = "all";
+    public string OperatingSystem
+    {
+        get => operatingSystem;
+        set => SetField(ref operatingSystem, value);
+    }
+
+    public string? OperatingSystemFilterValue => OperatingSystem == "all" ? null : OperatingSystem;
     
     public event PropertyChangedEventHandler? PropertyChanged;
 

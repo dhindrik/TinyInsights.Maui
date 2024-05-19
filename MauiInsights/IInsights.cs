@@ -10,6 +10,6 @@ public interface IInsights
 
     Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null);
 
-    Task TrackDependencyAsync(string dependencyType, string dependencyName, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception exception = null);
-    Dependency CreateDependencyTracker(string dependencyType, string dependencyName);
+    Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception exception = null);
+    Dependency CreateDependencyTracker(string dependencyType, string dependencyName, string data);
 }

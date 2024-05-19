@@ -2,9 +2,11 @@ namespace MauiInsights.Web.Services;
 
 public partial class InsightsService
 {
-    public async Task<List<CountPerDay>> GetPageViewsPerDay(int days)
+    public async Task<List<CountPerDay>> GetPageViewsPerDay(GlobalFilter filter)
     {
-        var query = $"pageViews | where timestamp > ago({days}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+        var queryFilter = GetFilter(filter);
+        
+        var query = $"pageViews | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
         var queryResult = await GetQueryResult<QueryResult>(query);
         var result = new List<CountPerDay>();
 
@@ -16,9 +18,11 @@ public partial class InsightsService
         return result;
     }
     
-    public async Task<List<CountPerKey>>  GetPageViewsGrouped(int days)
+    public async Task<List<CountPerKey>>  GetPageViewsGrouped(GlobalFilter filter)
     {
-        var query = $"pageViews | where timestamp > ago({days}d) | summarize count_sum = sum(itemCount) by name";
+        var queryFilter = GetFilter(filter);
+        
+        var query = $"pageViews | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by name";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
@@ -32,9 +36,11 @@ public partial class InsightsService
         return result;
     }
     
-    public async Task<List<CountPerKey>>  GetEventsGrouped(int days)
+    public async Task<List<CountPerKey>>  GetEventsGrouped(GlobalFilter filter)
     {
-        var query = $"customEvents | where timestamp > ago({days}d) | summarize count_sum = sum(itemCount) by name";
+        var queryFilter = GetFilter(filter);
+        
+        var query = $"customEvents | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by name";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
@@ -48,9 +54,10 @@ public partial class InsightsService
         return result;
     }
     
-    public async Task<List<CountPerDay>> GetUsersPerDay(int days)
+    public async Task<List<CountPerDay>> GetUsersPerDay(GlobalFilter filter)
     {
-        var query = $"pageViews | where timestamp > ago({days}d) | summarize uniqueUsers = dcount(user_Id) by bin(timestamp, 1d)";
+        var queryFilter = GetFilter(filter);
+        var query = $"pageViews | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize uniqueUsers = dcount(user_Id) by bin(timestamp, 1d)";
         var queryResult = await GetQueryResult<QueryResult>(query);
         var result = new List<CountPerDay>();
 
@@ -62,9 +69,10 @@ public partial class InsightsService
         return result;
     }
     
-    public async Task<List<CountPerKey>>  GetUserPerCountry(int days)
+    public async Task<List<CountPerKey>>  GetUserPerCountry(GlobalFilter filter)
     {
-        var query = $"pageViews | where timestamp > ago({days}d) | summarize PageViewsCount = dcount(user_Id) by client_CountryOrRegion";
+        var queryFilter = GetFilter(filter);
+        var query = $"pageViews | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize PageViewsCount = dcount(user_Id) by client_CountryOrRegion";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 

@@ -28,9 +28,11 @@ public partial class InsightsService : IInsightsService
         return response.IsSuccessStatusCode;
     }
 
-    public async Task<List<CountPerDay>> GetErrorsPerDay(int days)
+    public async Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter)
     {
-        var query = $"exceptions | where customDimensions.IsCrash != 'true' and timestamp > ago({days}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+        var queryFilter = GetFilter(filter);
+        
+        var query = $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
         var queryResult = await GetQueryResult<QueryResult>(query);
         var result = new List<CountPerDay>();
 
@@ -42,9 +44,11 @@ public partial class InsightsService : IInsightsService
         return result;
     }
     
-    public async Task<List<CountPerDay>> GetCrashesPerDay(int days)
+    public async Task<List<CountPerDay>> GetCrashesPerDay(GlobalFilter filter)
     {
-        var query = $"exceptions | where customDimensions.IsCrash == 'true' and timestamp > ago({days}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+        var queryFilter = GetFilter(filter);
+        
+        var query = $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
                               var queryResult = await GetQueryResult<QueryResult>(query);
                               var result = new List<CountPerDay>();
                       
@@ -56,9 +60,11 @@ public partial class InsightsService : IInsightsService
                               return result;
     }
 
-    public async Task<List<CountPerKey>>  GetErrorsGrouped(int days)
+    public async Task<List<CountPerKey>>  GetErrorsGrouped(GlobalFilter filter)
     {
-        var query = $"exceptions | where customDimensions.IsCrash != 'true' and timestamp > ago({days}d) | summarize count_sum = sum(itemCount) by problemId";
+        var queryFilter = GetFilter(filter);
+        
+        var query = $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by problemId";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
@@ -72,9 +78,11 @@ public partial class InsightsService : IInsightsService
         return result;
     }
     
-    public async Task<List<CountPerKey>>  GetCrashesGrouped(int days)
+    public async Task<List<CountPerKey>>  GetCrashesGrouped(GlobalFilter filter)
     {
-        var query = $"exceptions | where customDimensions.IsCrash == 'true' and timestamp > ago({days}d) | summarize count_sum = sum(itemCount) by strcat(problemId, \" - \", outerMessage)";
+        var queryFilter = GetFilter(filter);
+        
+        var query = $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by strcat(problemId, \" - \", outerMessage)";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
@@ -88,16 +96,20 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public Task<ErrorDetails> GetErrorDetails(string id, int days)
+    public Task<ErrorDetails> GetErrorDetails(string id, GlobalFilter filter)
     {
-        var query = $"exceptions | where customDimensions.IsCrash != 'true' and timestamp > ago({days}d) and problemId == '{id}'";
+        var queryFilter = GetFilter(filter);
+        
+        var query = $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) and problemId == '{id}'";
 
         return GetErrorDetails(query);
     }
 
-    public Task<ErrorDetails> GetCrashDetails(string id, int days)
+    public Task<ErrorDetails> GetCrashDetails(string id, GlobalFilter filter)
     {
-        var query = $"exceptions | where customDimensions.IsCrash == 'true' and timestamp > ago({days}d) and strcat(problemId, \" - \", outerMessage) == '{id}'";
+        var queryFilter = GetFilter(filter);
+        
+        var query = $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) and strcat(problemId, \" - \", outerMessage) == '{id}'";
 
         return GetErrorDetails(query);
     }
@@ -181,6 +193,43 @@ public partial class InsightsService : IInsightsService
 
         return result.OrderByDescending(x => x.Timestamp).ToList();
     }
+
+    public async Task<List<AvgPerKey>> GetDependencyAvgDurations(GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+        
+        var query = $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize avg = avg(duration) by data";
+
+        var queryResult = await GetQueryResult<QueryResult>(query);
+
+        var result = new List<AvgPerKey>();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            result.Add(new AvgPerKey(row.First().ToString(), double.Parse(row.Last().ToString())));
+        }
+
+        return result;
+    }
+    
+    public async Task<List<CountPerKey>> GetTopDependencies(GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+        
+        var query =
+            $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data";
+
+        var queryResult = await GetQueryResult<QueryResult>(query);
+
+        var result = new List<CountPerKey>();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            result.Add(new CountPerKey(row.First().ToString(), int.Parse(row.Last().ToString())));
+        }
+
+        return result;
+    }
     
     private async Task<T> GetQueryResult<T>(string query)
     {
@@ -231,6 +280,16 @@ public partial class InsightsService : IInsightsService
         }
 
         return data;
+    }
+
+    private string GetFilter(GlobalFilter filter)
+    {
+        if (filter.OperatingSystemFilterValue is not null)
+        {
+            return $" client_OS == '{filter.OperatingSystemFilterValue}' and";
+        }
+        
+        return String.Empty;
     }
 
     public class QueryResult

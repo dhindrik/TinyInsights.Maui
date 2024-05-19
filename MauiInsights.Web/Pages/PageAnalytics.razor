@@ -6,7 +6,7 @@
 @inject IInsightsService Service
 <RadzenStack Gap="20">
     <RadzenRow JustifyContent="JustifyContent.End">
-        <DaysFilter />
+        <GlobalFilters />
     </RadzenRow>
     <RadzenCard>
         <RadzenStack>
@@ -76,12 +76,12 @@
     {
         isLoadingPageViews = true;
         
-        var result = await Service.GetPageViewsPerDay(GlobalFilter.NumberOfDays);
+        var result = await Service.GetPageViewsPerDay(GlobalFilter);
         
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
         
-        for (int i = 0; i < GlobalFilter.NumberOfDays; i++)
+        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
         {
             var currentDate = date.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
@@ -101,7 +101,7 @@
     {
         isLoadingList = true;
 
-        var result = await Service.GetPageViewsGrouped(GlobalFilter.NumberOfDays);
+        var result = await Service.GetPageViewsGrouped(GlobalFilter);
 
         pageViews = result.OrderByDescending(x => x.Count).ToList();
         

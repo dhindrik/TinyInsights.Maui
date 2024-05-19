@@ -8,22 +8,24 @@ public interface IInsightsService
     Task<bool> ValidateToken(string appId, string token);
     
     #region Diagnistics
-    Task<List<CountPerDay>> GetCrashesPerDay(int days);
-    Task<List<CountPerDay>> GetErrorsPerDay(int days);
-    Task<List<CountPerKey>>  GetCrashesGrouped(int days);
-    Task<List<CountPerKey>> GetErrorsGrouped(int days);
-    Task<ErrorDetails> GetCrashDetails(string id, int days);
-    Task<ErrorDetails> GetErrorDetails(string id, int days);
+    Task<List<CountPerDay>> GetCrashesPerDay(GlobalFilter filter);
+    Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter);
+    Task<List<CountPerKey>>  GetCrashesGrouped(GlobalFilter filter);
+    Task<List<CountPerKey>> GetErrorsGrouped(GlobalFilter filter);
+    Task<ErrorDetails> GetCrashDetails(string id, GlobalFilter filter);
+    Task<ErrorDetails> GetErrorDetails(string id, GlobalFilter filter);
     Task<List<EventItem>> GetEventsByUser(string userId, DateTime timestamp);
+    Task<List<AvgPerKey>> GetDependencyAvgDurations(GlobalFilter filter);
+    Task<List<CountPerKey>> GetTopDependencies(GlobalFilter filter);
     #endregion
 
     #region Analytics
 
-    Task<List<CountPerDay>> GetPageViewsPerDay(int days);
-    Task<List<CountPerKey>> GetPageViewsGrouped(int days);
-    Task<List<CountPerKey>> GetEventsGrouped(int days);
-    Task<List<CountPerDay>> GetUsersPerDay(int days);
-    Task<List<CountPerKey>> GetUserPerCountry(int days);
+    Task<List<CountPerDay>> GetPageViewsPerDay(GlobalFilter filter);
+    Task<List<CountPerKey>> GetPageViewsGrouped(GlobalFilter filter);
+    Task<List<CountPerKey>> GetEventsGrouped(GlobalFilter filter);
+    Task<List<CountPerDay>> GetUsersPerDay(GlobalFilter filter);
+    Task<List<CountPerKey>> GetUserPerCountry(GlobalFilter filter);
 
     #endregion
 
@@ -42,6 +44,12 @@ public class CountPerDay(DateOnly date, int count) : CountPer(count)
 public class CountPerKey(string key, int count) : CountPer(count)
 {
     public string Key => key;
+}
+
+public class AvgPerKey(string key, double avg)
+{
+    public string Key => key;
+    public double Avg => avg;
 }
 
 

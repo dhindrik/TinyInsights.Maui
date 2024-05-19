@@ -7,7 +7,7 @@
 @inject IInsightsService Service
 <RadzenStack Gap="20">
     <RadzenRow JustifyContent="JustifyContent.End">
-        <DaysFilter />
+        <GlobalFilters />
     </RadzenRow>
     <RadzenCard>
         <RadzenStack>
@@ -77,12 +77,12 @@
     {
         isLoadingUsersPerDayViews = true;
         
-        var result = await Service.GetUsersPerDay(GlobalFilter.NumberOfDays);
+        var result = await Service.GetUsersPerDay(GlobalFilter);
         
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
         
-        for (int i = 0; i < GlobalFilter.NumberOfDays; i++)
+        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
         {
             var currentDate = date.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
@@ -102,7 +102,7 @@
     {
         isLoadingCountryList = true;
 
-        var result = await Service.GetUserPerCountry(GlobalFilter.NumberOfDays);
+        var result = await Service.GetUserPerCountry(GlobalFilter);
 
         usersPerCountry = result.OrderByDescending(x => x.Count).ToList();
         

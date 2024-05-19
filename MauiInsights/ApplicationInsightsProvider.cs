@@ -253,25 +253,40 @@ private const string userIdKey = nameof(userIdKey);
         return Task.CompletedTask;
     }
 
-    public Task TrackDependencyAsync(string dependencyType, string dependencyName, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception exception = null)
+    public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null)
     {
         try
         {
-            var dependency = new DependencyTelemetry(dependencyType, dependencyName, startTime, duration, success)
+            var fullUrl = data;
+            
+            if (data.Contains("?"))
             {
+                var split = data.Split("?");
+                data = split[0];
+            }
+            
+            var dependency = new DependencyTelemetry()
+            {
+                Type = dependencyType,
+                Name = dependencyName,
+                Data = data,
+                Timestamp = startTime, 
+                Success = success,
+                Duration = duration,
                 ResultCode = resultCode.ToString()
             };
-
+            
+            dependency.Properties.Add("FullUrl", fullUrl);
+            
             if (exception != null)
             {
-                var properties = new Dictionary<string, string>();
-                properties.Add("ExceptionMessage", exception.Message);
-                properties.Add("StackTrace", exception.StackTrace);
+                dependency.Properties.Add("ExceptionMessage", exception.Message);
+                dependency.Properties.Add("StackTrace", exception.StackTrace);
 
                 if (exception.InnerException != null)
                 {
-                    properties.Add("InnerExceptionMessage", exception.InnerException.Message);
-                    properties.Add("InnerExceptionStackTrace", exception.InnerException.StackTrace);
+                    dependency.Properties.Add("InnerExceptionMessage", exception.InnerException.Message);
+                    dependency.Properties.Add("InnerExceptionStackTrace", exception.InnerException.StackTrace);
                 }
             }
 

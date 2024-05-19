@@ -7,7 +7,7 @@
 @inject IInsightsService Service
 <RadzenStack Gap="20">
     <RadzenRow JustifyContent="JustifyContent.End">
-        <DaysFilter />
+        <GlobalFilters />
     </RadzenRow>
     <RadzenCard>
         <RadzenStack>
@@ -18,7 +18,6 @@
             }
             else
             {
-
                 <RadzenChart>
                     <RadzenLegend Visible="false"/>
                     <RadzenLineSeries Data="@errorsPerDays" CategoryProperty="Date" ValueProperty="Count">
@@ -109,17 +108,17 @@
         
         if (isCrash)
         {
-            result = await Service.GetCrashesPerDay(GlobalFilter.NumberOfDays);
+            result = await Service.GetCrashesPerDay(GlobalFilter);
         }
         else
         {
-            result = await Service.GetErrorsPerDay(GlobalFilter.NumberOfDays);
+            result = await Service.GetErrorsPerDay(GlobalFilter);
         }
         
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
         
-        for (int i = 0; i < GlobalFilter.NumberOfDays; i++)
+        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
         {
             var currentDate = date.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
@@ -144,13 +143,12 @@
 
         if (isCrash)
         {
-            result = await Service.GetCrashesGrouped(GlobalFilter.NumberOfDays);
+            result = await Service.GetCrashesGrouped(GlobalFilter);
         }
-        else
+        else 
         {
-            result = await Service.GetErrorsGrouped(GlobalFilter.NumberOfDays);
+            result = await Service.GetErrorsGrouped(GlobalFilter);
         }
-        
 
         errors = result.OrderByDescending(x => x.Count).ToList();
         
@@ -158,7 +156,6 @@
         
         await InvokeAsync(StateHasChanged);
     }
-    
 
     private record DayFilterItem(string Text, int Value);
 

@@ -1,0 +1,99 @@
+@page "/diagnostics/dependencies"
+@using MauiInsights.Web.Services
+
+@inherits MauiInsightsComponentBase
+
+@inject IInsightsService Service
+<RadzenStack Gap="20">
+    <RadzenRow JustifyContent="JustifyContent.End">
+        <GlobalFilters />
+    </RadzenRow>
+
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Top dependencies</h2>
+            @if (loadingTopDependencies)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            }
+            else
+            {
+                <RadzenDataGrid Data="topDependencies">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="CountPerKey" Title="Dependency" Property="@nameof(CountPerKey.Key)" />
+                        <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                    </Columns>
+                </RadzenDataGrid>
+            }
+        </RadzenStack>
+    </RadzenCard>
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Dependency duration</h2>
+            @if (loadingDependencyAvg)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            }
+            else
+            {
+                <RadzenDataGrid Data="dependencyDurations">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="AvgPerKey" Title="Dependency" Property="@nameof(AvgPerKey.Key)" />
+                        <RadzenDataGridColumn TItem="AvgPerKey" Title="Average duration (ms)" Property="@nameof(AvgPerKey.Avg)" FormatString="{0:N0}" Width="200px" />
+                    </Columns>
+                </RadzenDataGrid>
+            }
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    
+    [CascadingParameter]
+    public GlobalFilter GlobalFilter { get; set; }
+    
+    private bool loadingTopDependencies, loadingDependencyAvg = true;
+
+    private List<CountPerKey> topDependencies = new();
+    private List<AvgPerKey> dependencyDurations = new();
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var topTask = LoadTopDependencies();
+        var avgTask = LoadDependencyDuration();
+
+        await Task.WhenAll(topTask, avgTask);
+    }
+
+    private async Task LoadTopDependencies()
+    {
+        loadingTopDependencies = true;
+        
+        var dependencies = await Service.GetTopDependencies(GlobalFilter);
+        topDependencies = dependencies.OrderByDescending(x => x.Count).ToList();
+
+        loadingTopDependencies = false;
+        
+        StateHasChanged();
+    }
+    
+    private async Task LoadDependencyDuration()
+    {
+        loadingDependencyAvg = true;
+        
+        var dependencies = await Service.GetDependencyAvgDurations(GlobalFilter);
+        dependencyDurations = dependencies.OrderByDescending(x => x.Avg).ToList();
+
+        loadingDependencyAvg = false;
+        
+        StateHasChanged();
+    }
+    
+}

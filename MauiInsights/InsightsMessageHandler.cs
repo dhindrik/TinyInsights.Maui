@@ -2,7 +2,7 @@ namespace MauiInsights;
 
 public class InsightsMessageHandler : DelegatingHandler
 {
-    private IInsights insights;
+    private readonly IInsights insights;
     
     public InsightsMessageHandler(IInsights insights)
     {
@@ -21,7 +21,7 @@ public class InsightsMessageHandler : DelegatingHandler
 
             var endTime = DateTime.Now;
 
-            Exception exception = null;
+            Exception? exception = null;
 
             try
             {
@@ -32,7 +32,7 @@ public class InsightsMessageHandler : DelegatingHandler
                 exception = e;
             }
 
-            await insights.TrackDependencyAsync(request.RequestUri.Host, request.RequestUri.ToString(), startTime, endTime - startTime,
+            await insights.TrackDependencyAsync("HTTP", request.RequestUri.Host, request.RequestUri.ToString(), startTime, endTime - startTime,
                 response.IsSuccessStatusCode, (int)response.StatusCode, exception);
 
             return response;
@@ -40,7 +40,7 @@ public class InsightsMessageHandler : DelegatingHandler
         catch (Exception ex)
         {
             var endTime = DateTime.Now;
-            await insights.TrackDependencyAsync(request.RequestUri.Host, request.RequestUri.ToString(), startTime, endTime - startTime,
+            await insights.TrackDependencyAsync("HTTP",request.RequestUri.Host, request.RequestUri.ToString(), startTime, endTime - startTime,
                 false, 0, ex);
 
             throw;

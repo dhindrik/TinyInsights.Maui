@@ -10,18 +10,17 @@ public static class InsightsExtension
     
     public static MauiAppBuilder UseMauiInsights(this MauiAppBuilder appBuilder, string applicationInsightsConnectionString, Action<IInsightsProvider>? configureProvider = null)
     {
-        UseMauiInsights(appBuilder);
 
-        appBuilder.Services.AddSingleton<IInsightsProvider>((services) =>
+        appBuilder.Services.AddSingleton<IInsights>((services) =>
         {
             var provider = new ApplicationInsightsProvider(applicationInsightsConnectionString);
             
             configureProvider?.Invoke(provider);
 
-            var insights = services.GetRequiredService<IInsights>();
+            var insights = new Insights();
             insights.AddProvider(provider);
 
-            return provider;
+            return insights;
         });
 
         appBuilder.Services.AddTransient<InsightsMessageHandler>();

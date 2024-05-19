@@ -1,0 +1,30 @@
+<RadzenDropDown @bind-Value="@GlobalFilter.OperatingSystem" Data="operatingSystemFilter" TextProperty="Text" ValueProperty="Value"/>
+<RadzenDropDown @bind-Value="@GlobalFilter.NumberOfDays" Data="dayFilter" TextProperty="Text" ValueProperty="Value"/>
+
+@code {
+    [CascadingParameter]
+    public GlobalFilter GlobalFilter { get; set; }
+    
+    
+    private List<DayFilterItem> dayFilter = new()
+    {
+        new("3 days", 3),
+        new("7 days", 7),
+        new("14 days", 14),
+        new("30 days", 30),
+    };
+
+    private List<OperatingSystem> operatingSystemFilter = new List<OperatingSystem>()
+    {
+        new ("All operating systems", "all"),
+        new("iOS", "iOS"),
+        new("Android", "Android"),
+        new("Windows", "Windows"),
+        new("MacOS", "MacOS")
+    };
+    
+    private record DayFilterItem(string Text, int Value);
+
+    private record OperatingSystem(string Text, string Value);
+
+}

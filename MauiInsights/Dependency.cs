@@ -12,6 +12,7 @@ public class Dependency : IDisposable
 
     public string DependencyType { get; internal set; }
     public string DependencyName { get; internal set; }
+    public string Data { get; internal set; }
     public DateTimeOffset StartTime { get; private set; }
     public TimeSpan Duration { get; private set; }
 
@@ -42,7 +43,7 @@ public class Dependency : IDisposable
         {
             Duration = DateTimeOffset.Now - StartTime;
 
-            await insights.TrackDependencyAsync(DependencyType, DependencyName, StartTime, Duration, sucess, resultCode, exception);
+            await insights.TrackDependencyAsync(DependencyType, DependencyName, Data, StartTime, Duration, sucess, resultCode, exception);
 
             isFinished = true;
 

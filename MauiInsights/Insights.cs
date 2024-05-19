@@ -2,7 +2,7 @@ namespace MauiInsights;
 
 public class Insights : IInsights
 {
-    private List<IInsightsProvider> insightsProviders = new();
+    private readonly List<IInsightsProvider> insightsProviders = new();
 
     public void AddProvider(IInsightsProvider provider)
     {
@@ -53,14 +53,14 @@ public class Insights : IInsights
         return Task.CompletedTask;
     }
 
-    public Task TrackDependencyAsync(string dependencyType, string dependencyName, DateTimeOffset startTime, TimeSpan duration,
+    public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration,
         bool success, int resultCode = 0, Exception? exception = null)
     {
         var tasks = new List<Task>();
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
         {
-            var task = provider.TrackDependencyAsync(dependencyType, dependencyName, startTime, duration, success, resultCode, exception);
+            var task = provider.TrackDependencyAsync(dependencyType, dependencyName, data,startTime, duration, success, resultCode, exception);
             tasks.Add(task);
         }
 
@@ -69,12 +69,13 @@ public class Insights : IInsights
         return Task.CompletedTask;
     }
     
-    public Dependency CreateDependencyTracker(string dependencyType, string dependencyName)
+    public Dependency CreateDependencyTracker(string dependencyType, string dependencyName, string data)
     {
         var dependency = new Dependency(this)
         {
             DependencyType = dependencyType,
-            DependencyName = dependencyName
+            DependencyName = dependencyName,
+            Data = data
         };
 
         return dependency;
