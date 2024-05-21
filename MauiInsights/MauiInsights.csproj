@@ -20,7 +20,7 @@
         <Authors>Daniel Hindrikes</Authors>
         <Company />
         <Product>An Application Insights helper library for .NET MAUI.</Product>
-        <PackageIcon>logo.png</PackageIcon>
+        
         <Description>An Application Insights helper library for .NET MAUI.</Description>
         <Version>1.0.0</Version>
    
