@@ -1,6 +1,6 @@
 ﻿using Foundation;
 
-namespace MauiInsights.TestApp;
+namespace TinyInsights.TestApp;
 
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate

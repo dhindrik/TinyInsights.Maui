@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MauiInsights.Web", "MauiInsights.Web\MauiInsights.Web.csproj", "{A40E4E36-924E-4AC5-A60D-5321D7CEA729}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyInsights.Web", "TinyInsights.Web\TinyInsights.Web.csproj", "{A40E4E36-924E-4AC5-A60D-5321D7CEA729}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MauiInsights", "MauiInsights\MauiInsights.csproj", "{CD742E15-674D-41DB-8467-B8A83E26D5BC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyInsights", "TinyInsights\TinyInsights.csproj", "{CD742E15-674D-41DB-8467-B8A83E26D5BC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MauiInsights.TestApp", "MauiInsights.TestApp\MauiInsights.TestApp.csproj", "{606F1693-DAA1-4BEA-BF62-F21F0F509E75}"
 EndProject

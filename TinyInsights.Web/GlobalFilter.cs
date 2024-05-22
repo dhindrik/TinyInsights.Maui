@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace MauiInsights.Web;
+namespace TinyInsights.Web;
 public class GlobalFilter : INotifyPropertyChanged
 {
     private int numberOfDays = 30;

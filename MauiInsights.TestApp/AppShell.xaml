@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell
-    x:Class="MauiInsights.TestApp.AppShell"
+    x:Class="TinyInsights.TestApp.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:MauiInsights.TestApp"
+    xmlns:local="clr-namespace:TinyInsights.TestApp"
     Shell.FlyoutBehavior="Disabled"
-    Title="MauiInsights.TestApp">
+    Title="TinyInsights.TestApp">
 
     <ShellContent
         Title="Home"

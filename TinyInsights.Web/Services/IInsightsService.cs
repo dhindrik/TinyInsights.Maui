@@ -1,7 +1,4 @@
-using System.Runtime.InteropServices.JavaScript;
-using Microsoft.AspNetCore.Components.Web.Virtualization;
-
-namespace MauiInsights.Web.Services;
+namespace TinyInsights.Web.Services;
 
 public interface IInsightsService
 {

@@ -1,4 +1,4 @@
-namespace MauiInsights.Web.Services;
+namespace TinyInsights.Web.Services;
 
 public partial class InsightsService
 {
@@ -7,6 +7,7 @@ public partial class InsightsService
         var queryFilter = GetFilter(filter);
         
         var query = $"pageViews | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+
         var queryResult = await GetQueryResult<QueryResult>(query);
         var result = new List<CountPerDay>();
 

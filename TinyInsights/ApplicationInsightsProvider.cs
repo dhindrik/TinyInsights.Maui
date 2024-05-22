@@ -4,7 +4,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 
-namespace MauiInsights;
+namespace TinyInsights;
 
 public class ApplicationInsightsProvider : IInsightsProvider
 {

@@ -1,10 +1,11 @@
-namespace MauiInsights;
+namespace TinyInsights;
 
 public static class InsightsExtension
 {
     public static MauiAppBuilder UseMauiInsights(this MauiAppBuilder appBuilder)
     {
         appBuilder.Services.AddSingleton<IInsights, Insights>();
+        appBuilder.Services.AddTransient<InsightsMessageHandler>();
         return appBuilder;
     }
     

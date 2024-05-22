@@ -63,7 +63,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MauiInsights\MauiInsights.csproj" />
+      <ProjectReference Include="..\TinyInsights\TinyInsights.csproj" />
     </ItemGroup>
 
 </Project>

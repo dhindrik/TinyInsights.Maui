@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace MauiInsights.TestApp;
+namespace TinyInsights.TestApp;
 
 public static class MauiProgram
 {

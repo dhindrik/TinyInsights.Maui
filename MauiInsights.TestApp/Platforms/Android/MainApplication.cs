@@ -1,7 +1,7 @@
 ﻿using Android.App;
 using Android.Runtime;
 
-namespace MauiInsights.TestApp;
+namespace TinyInsights.TestApp;
 
 [Application]
 public class MainApplication : MauiApplication

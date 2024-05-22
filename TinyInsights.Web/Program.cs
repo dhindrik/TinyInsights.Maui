@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using MauiInsights.Web;
-using MauiInsights.Web.Services;
+using TinyInsights.Web;
+using TinyInsights.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Radzen;
 

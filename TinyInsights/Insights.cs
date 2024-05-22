@@ -1,4 +1,4 @@
-namespace MauiInsights;
+namespace TinyInsights;
 
 public class Insights : IInsights
 {

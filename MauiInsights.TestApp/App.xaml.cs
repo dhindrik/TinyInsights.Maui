@@ -1,4 +1,4 @@
-﻿namespace MauiInsights.TestApp;
+﻿namespace TinyInsights.TestApp;
 
 public partial class App : Application
 {

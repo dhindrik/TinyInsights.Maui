@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 
-namespace MauiInsights.Web;
+namespace TinyInsights.Web;
 
 public abstract class MauiInsightsComponentBase : ComponentBase
 {
