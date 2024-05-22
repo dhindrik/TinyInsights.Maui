@@ -1,16 +1,13 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
-name: PR
+name: Release
 
 on:
-  pull_request:
-    branches: [ "main" ]
+  release:
+    types: [published]
 
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -18,15 +15,15 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-        
+    
     - name: Install Maui
       run: dotnet workload install maui
-      
+        
     - name: Restore dependencies
-      run: dotnet restore MauiInsights/MauiInsights.csproj
+      run: dotnet restore TinyInsights/TinyInsights.csproj 
     
     - name: Build
-      run: dotnet build MauiInsights/MauiInsights.csproj --no-restore
-    
+      run: dotnet build TinyInsights/TinyInsights.csproj --no-restore
+      
     - name: Pack
-      run: dotnet pack MauiInsights/MauiInsights.csproj
+      run: dotnet pack TinyInsights/TinyInsights.csproj -p:PackageVersion=${{ github.ref_name }}

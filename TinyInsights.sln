@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyInsights.Web", "TinyIns
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyInsights", "TinyInsights\TinyInsights.csproj", "{CD742E15-674D-41DB-8467-B8A83E26D5BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MauiInsights.TestApp", "MauiInsights.TestApp\MauiInsights.TestApp.csproj", "{606F1693-DAA1-4BEA-BF62-F21F0F509E75}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyInsights.TestApp", "TinyInsights.TestApp\TinyInsights.TestApp.csproj", "{606F1693-DAA1-4BEA-BF62-F21F0F509E75}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{C4F61F00-5DBB-4913-93EF-2D11D056B4C3}"
 EndProject

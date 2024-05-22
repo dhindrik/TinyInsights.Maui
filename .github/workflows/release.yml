@@ -20,13 +20,13 @@ jobs:
       run: dotnet workload install maui
         
     - name: Restore dependencies
-      run: dotnet restore MauiInsights/MauiInsights.csproj 
+      run: dotnet restore TinyInsights/TinyInsights.csproj 
     
     - name: Build
-      run: dotnet build MauiInsights/MauiInsights.csproj --no-restore
+      run: dotnet build TinyInsights/TinyInsights.csproj --no-restore
     
     - name: Pack
-      run: dotnet pack MauiInsights/MauiInsights.csproj -p:PackageVersion=${{ github.ref_name }}
+      run: dotnet pack TinyInsights/TinyInsights.csproj -p:PackageVersion=${{ github.ref_name }}
 
     - name: Push
       run: dotnet nuget push '**/*.nupkg' --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json
