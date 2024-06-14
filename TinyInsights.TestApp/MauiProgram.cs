@@ -14,10 +14,13 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             })
-            .UseMauiInsights("InstrumentationKey=8b51208f-7926-4b7b-9867-16989206b950;IngestionEndpoint=https://swedencentral-0.in.applicationinsights.azure.com/;ApplicationId=0c04d3a0-9ee2-41a5-996e-526552dc730f",
+            .UseTinyInsights("InstrumentationKey=8b51208f-7926-4b7b-9867-16989206b950;IngestionEndpoint=https://swedencentral-0.in.applicationinsights.azure.com/;ApplicationId=0c04d3a0-9ee2-41a5-996e-526552dc730f",
                 (provider) =>
                 {
-                    
+                    provider.IsTrackDependencyEnabled = true;
+                    provider.IsTrackEventsEnabled = true;
+                    provider.IsTrackErrorsEnabled = true;
+                    provider.IsTrackPageViewsEnabled = true;
                 });
 
 #if DEBUG
