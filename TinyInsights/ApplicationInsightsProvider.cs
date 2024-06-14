@@ -17,6 +17,7 @@ private const string userIdKey = nameof(userIdKey);
     private TelemetryClient client;
 
     public bool IsTrackErrorsEnabled { get; set; } = true;
+    public bool IsTrackCrashesEnabled { get; set; } = true;
     public bool IsTrackPageViewsEnabled { get; set; } = true;
     public bool IsTrackEventsEnabled { get; set; } = true;
     public bool IsTrackDependencyEnabled { get; set; } = true;
@@ -47,12 +48,18 @@ private const string userIdKey = nameof(userIdKey);
 
     private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
     {
-        HandleCrash(e.Exception);
+        if(IsTrackCrashesEnabled)
+        {
+            HandleCrash(e.Exception);
+        }
     }
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        HandleCrash((Exception)e.ExceptionObject);
+        if(IsTrackCrashesEnabled)
+        {
+            HandleCrash((Exception)e.ExceptionObject);
+        }
     }
 
 #elif WINDOWS
@@ -82,7 +89,10 @@ private const string userIdKey = nameof(userIdKey);
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        HandleCrash(e.Exception);
+        if(IsTrackCrashesEnabled)
+        {
+            HandleCrash(e.Exception);
+        }
     }
 #endif
 

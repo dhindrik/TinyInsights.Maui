@@ -21,6 +21,7 @@ public static class MauiProgram
                     provider.IsTrackEventsEnabled = true;
                     provider.IsTrackErrorsEnabled = true;
                     provider.IsTrackPageViewsEnabled = true;
+                    provider.IsTrackCrashesEnabled = true;
                 });
 
 #if DEBUG
