@@ -1,9 +1,9 @@
 @page "/diagnostics/dependencies"
-@using TinyInsights.Web.Services
 
-@inherits MauiInsightsComponentBase
+@inherits TinyInsightsComponentBase
 
 @inject IInsightsService Service
+
 <RadzenStack Gap="20">
     <RadzenRow JustifyContent="JustifyContent.End">
         <GlobalFilters />
@@ -11,17 +11,66 @@
 
     <RadzenCard>
         <RadzenStack>
+            <h2>Failed dependencies per day</h2>
+            @if (loadingFailedDependenciesPerDays)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            }
+            else
+            {
+                <RadzenChart>
+                    <RadzenLegend Visible="false" />
+                    <RadzenLineSeries Data="@failedPerDays" CategoryProperty="Date" ValueProperty="Count">
+                        <RadzenMarkers MarkerType="MarkerType.Circle" />
+                        <RadzenSeriesDataLabels />
+                    </RadzenLineSeries>
+                    <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                </RadzenChart>
+            }
+        </RadzenStack>
+    </RadzenCard>
+
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Failed dependencies</h2>
+            @if (loadingFailedDependencies)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            }
+            else
+            {
+                <RadzenDataGrid Data="failedDependencies">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="CountPerKey" Title="Dependency" Property="@nameof(CountPerKey.Key)" />
+                        <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)"
+                            Width="100px" />
+                        <RadzenDataGridColumn TItem="CountPerKey" Width="100px" TextAlign="TextAlign.End">
+                            <Template>
+                                <a href="@($"/diagnostics/dependencies/failed/{context.Key}")">
+                                    <RadzenIcon Icon="arrow_forward" />
+                                </a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            }
+        </RadzenStack>
+    </RadzenCard>
+
+    <RadzenCard>
+        <RadzenStack>
             <h2>Top dependencies</h2>
             @if (loadingTopDependencies)
             {
-                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
             }
             else
             {
                 <RadzenDataGrid Data="topDependencies">
                     <Columns>
                         <RadzenDataGridColumn TItem="CountPerKey" Title="Dependency" Property="@nameof(CountPerKey.Key)" />
-                        <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                        <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)"
+                            Width="100px" />
                     </Columns>
                 </RadzenDataGrid>
             }
@@ -32,14 +81,15 @@
             <h2>Dependency duration</h2>
             @if (loadingDependencyAvg)
             {
-                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
             }
             else
             {
                 <RadzenDataGrid Data="dependencyDurations">
                     <Columns>
                         <RadzenDataGridColumn TItem="AvgPerKey" Title="Dependency" Property="@nameof(AvgPerKey.Key)" />
-                        <RadzenDataGridColumn TItem="AvgPerKey" Title="Average duration (ms)" Property="@nameof(AvgPerKey.Avg)" FormatString="{0:N0}" Width="200px" />
+                        <RadzenDataGridColumn TItem="AvgPerKey" Title="Average duration (ms)"
+                            Property="@nameof(AvgPerKey.Avg)" FormatString="{0:N0}" Width="200px" />
                     </Columns>
                 </RadzenDataGrid>
             }
@@ -48,15 +98,17 @@
 </RadzenStack>
 
 @code {
-    
-    [CascadingParameter]
-    public GlobalFilter GlobalFilter { get; set; }
-    
-    private bool loadingTopDependencies, loadingDependencyAvg = true;
 
-    private List<CountPerKey> topDependencies = new();
+    [CascadingParameter]
+    public required GlobalFilter GlobalFilter { get; set; }
+
+    private bool loadingTopDependencies = true, loadingDependencyAvg = true, loadingFailedDependencies = true,
+    loadingFailedDependenciesPerDays = true;
+
+    private List<CountPerKey> topDependencies = new(), failedDependencies = new();
     private List<AvgPerKey> dependencyDurations = new();
-    
+    private List<CountPerDay> failedPerDays = new();
+
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
@@ -68,32 +120,71 @@
     {
         var topTask = LoadTopDependencies();
         var avgTask = LoadDependencyDuration();
+        var failedTask = LoadFailedDependencies();
+        var failedPerDaysTask = LoadFailedDependenciesPerDays();
 
-        await Task.WhenAll(topTask, avgTask);
+        await Task.WhenAll(topTask, avgTask, failedTask, failedPerDaysTask);
     }
 
     private async Task LoadTopDependencies()
     {
         loadingTopDependencies = true;
-        
+
         var dependencies = await Service.GetTopDependencies(GlobalFilter);
         topDependencies = dependencies.OrderByDescending(x => x.Count).ToList();
 
         loadingTopDependencies = false;
-        
+
         StateHasChanged();
     }
-    
+
     private async Task LoadDependencyDuration()
     {
         loadingDependencyAvg = true;
-        
+
         var dependencies = await Service.GetDependencyAvgDurations(GlobalFilter);
         dependencyDurations = dependencies.OrderByDescending(x => x.Avg).ToList();
 
         loadingDependencyAvg = false;
-        
+
         StateHasChanged();
     }
-    
+
+    private async Task LoadFailedDependencies()
+    {
+        loadingFailedDependencies = true;
+
+        var dependencies = await Service.GetFailedDependencies(GlobalFilter);
+        failedDependencies = dependencies.OrderByDescending(x => x.Count).ToList();
+
+        loadingFailedDependencies = false;
+
+        StateHasChanged();
+    }
+
+    private async Task LoadFailedDependenciesPerDays()
+    {
+        loadingFailedDependenciesPerDays = true;
+
+        var result = await Service.GetFailedDependenciesPerDay(GlobalFilter);
+
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+        var days = new List<CountPerDay>();
+
+        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+        {
+            var currentDate = date.AddDays(i);
+            var day = result.SingleOrDefault(x => x.Date == currentDate);
+
+            var count = day?.Count ?? 0;
+
+            days.Add(new CountPerDay(currentDate, count));
+        }
+
+        failedPerDays = days;
+
+        loadingFailedDependenciesPerDays = false;
+
+        StateHasChanged();
+    }
 }

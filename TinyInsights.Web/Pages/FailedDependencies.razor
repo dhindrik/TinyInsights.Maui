@@ -1,0 +1,93 @@
+﻿@page "/diagnostics/dependencies/failed/{*Key}"
+
+@inherits TinyInsightsComponentBase
+
+@inject IInsightsService Service
+@inject DialogService DialogService
+
+<RadzenStack Gap="20">
+    <RadzenRow JustifyContent="JustifyContent.End">
+        <GlobalFilters />
+    </RadzenRow>
+
+    <RadzenCard>
+
+        <h2>Summary</h2>
+
+        @if (isLoading)
+        {
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+        }
+        else
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
+                <LabelValuePair Key="Count" Value="@data.Count.ToString()" />
+                <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()" />
+                <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))" />
+                <LabelValuePair Key="Affected operating systems"
+                    Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
+            </RadzenStack>
+        }
+
+    </RadzenCard>
+
+    <RadzenCard>
+        <h2>Failed dependencies</h2>
+        @if (isLoading)
+        {
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+        }
+        else
+        {
+            <RadzenDataGrid Data="data.Items">
+                <Columns>
+                    <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Timestamp" Width="150px"
+                        Property="@nameof(FailedDependencyItem.Timestamp)" />
+                    <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Result code" Width="100px"
+                        Property="@nameof(FailedDependencyItem.ResultCode)" />
+
+                    <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Url"
+                        Property="@nameof(FailedDependencyItem.FullUrl)" />
+                    <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Device OS" Width="100px"
+                        Property="@nameof(FailedDependencyItem.ClientOs)" />
+                    <RadzenDataGridColumn TItem="FailedDependencyItem" Width="100px">
+                        <Template>
+                            <RadzenButton Icon="description" Click="@(async (args) => await ShowAllProperties(context))" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        }
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public required string Key { get; set; }
+
+    private Services.Models.FailedDependencies data = new();
+    private bool isLoading = true;
+
+    [CascadingParameter]
+    public required GlobalFilter GlobalFilter { get; set; }
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+
+        data = await Service.GetFailedDependencies(Key, GlobalFilter);
+
+        isLoading = false;
+    }
+
+    private async Task ShowAllProperties(ErrorItem item)
+    {
+        await DialogService.OpenAsync<AllProperties>($"All properties",
+        new Dictionary<string, object>() { { "Properties", item.Data } },
+        new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true });
+    }
+}

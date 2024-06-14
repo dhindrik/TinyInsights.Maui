@@ -1,0 +1,1 @@
+﻿global using TinyInsights.Web.Services.Models;

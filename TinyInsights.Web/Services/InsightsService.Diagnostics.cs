@@ -247,6 +247,72 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
+    public async Task<List<CountPerKey>> GetFailedDependencies(GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+
+        var query =
+            $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data";
+
+        var queryResult = await GetQueryResult<QueryResult>(query);
+
+        var result = new List<CountPerKey>();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            result.Add(new CountPerKey(row.First().ToString(), int.Parse(row.Last().ToString())));
+        }
+
+        return result;
+    }
+
+    public async Task<FailedDependencies> GetFailedDependencies(string key, GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+
+        var query =
+            $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) and data == '{key}'";
+
+        var queryResult = await GetQueryResult<QueryResult>(query);
+
+        var result = new FailedDependencies();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            var data = GetData(queryResult, row);
+
+            var dependency = new FailedDependencyItem(data);
+            result.Items.Add(dependency);
+        }
+
+        result.AffectedUsersCount =
+            result.Items.Where(x => x.UserId is not null).Select(x => x.UserId).Distinct().Count();
+        result.AffectedAppVersions = result.Items.Where(x => x.AppVersion is not null).Select(x => x.AppVersion)
+            .Distinct().ToList();
+        result.AffectedOperatingSystems = result.Items.Where(x => x.ClientOs is not null).Select(x => x.ClientOs)
+            .Distinct().ToList();
+
+        return result;
+    }
+
+    public async Task<List<CountPerDay>> GetFailedDependenciesPerDay(GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+
+        var query =
+            $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+        var queryResult = await GetQueryResult<QueryResult>(query);
+        var result = new List<CountPerDay>();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            result.Add(new CountPerDay(DateOnly.FromDateTime(DateTime.Parse(row.First().ToString())),
+                int.Parse(row.Last().ToString())));
+        }
+
+        return result;
+    }
+
     private async Task<T> GetQueryResult<T>(string query)
     {
         var url = $"/v1/apps/{appId}/query";
@@ -285,6 +351,11 @@ public partial class InsightsService : IInsightsService
                 data.Add(nameof(CustomDimensions.Language), custom.Language);
                 data.Add(nameof(CustomDimensions.StackTrace), custom.StackTrace);
                 data.Add(nameof(CustomDimensions.Manufacturer), custom.Manufacturer);
+
+                if(custom.FullUrl is not null)
+                {
+                    data.Add(nameof(CustomDimensions.FullUrl), custom.FullUrl);
+                }
             }
             else
             {
@@ -311,28 +382,29 @@ public partial class InsightsService : IInsightsService
 }
 
 public class QueryResult
-    {
-        public List<Table> Tables { get; set; }
-    }
+{
+    public List<Table> Tables { get; set; }
+}
 
-    public class Column
-    {
-        public string Name { get; set; }
-        
-        public string Type { get; set; }
-    }
-    
-    public class Table
-    {
-        public List<Column> Columns { get; set; }
-        public List<List<object>> Rows { get; set; }
-    }
+public class Column
+{
+    public string Name { get; set; }
 
-    public class CustomDimensions
-    {
-        public string? AppBuildNumber { get; set; }
-        public string? AppVersion { get; set; }
-        public string? Language { get; set; }
-        public string? StackTrace { get; set; }
-        public string? Manufacturer { get; set; }
-    }
+    public string Type { get; set; }
+}
+
+public class Table
+{
+    public List<Column> Columns { get; set; }
+    public List<List<object>> Rows { get; set; }
+}
+
+public class CustomDimensions
+{
+    public string? AppBuildNumber { get; set; }
+    public string? AppVersion { get; set; }
+    public string? Language { get; set; }
+    public string? StackTrace { get; set; }
+    public string? Manufacturer { get; set; }
+    public string? FullUrl { get; set; }
+}

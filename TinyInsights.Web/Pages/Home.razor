@@ -1,6 +1,6 @@
 ﻿@page "/"
 
-@inherits MauiInsightsComponentBase
+@inherits TinyInsightsComponentBase
 
 @using System.ComponentModel.DataAnnotations
 @using TinyInsights.Web.Services
@@ -8,7 +8,6 @@
 @inject IInsightsService Service
 @inject DialogService DialogService
 
-<PageTitle>Home</PageTitle>
 <RadzenCard>
     <EditForm Model="_model" OnValidSubmit="Open">
         <RadzenStack>
@@ -24,9 +23,14 @@
 <RadzenCard>
     <h2>Get started</h2>
     To use this application you need to install and configurate the Nuget "TinyInsights" into your app. 
-    Read more here, <a href="https://github.com/dhindrik/TinyInsights">https://github.com/dhindrik/TinyInsights</a>
-    <h3>Get the Application id</h3>
-    <h3>Get API token</h3>
+    Read more here, <a href="https://github.com/dhindrik/TinyInsights.Maui">https://github.com/dhindrik/TinyInsights.Maui</a>
+    <h3>Get the Application id and API Token</h3>
+    <ul>
+        <li>Go to the Azure portal</li>
+        <li>Navigate to your Application Insights resource</li>
+        <li>Click on the API Access menu item</li>
+        <li>Copy the Application id and create a new API token</li>    
+    </ul>
 </RadzenCard>
 
 @code{

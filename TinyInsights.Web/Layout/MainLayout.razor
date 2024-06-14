@@ -1,15 +1,16 @@
 ﻿@inherits LayoutComponentBase
-<CascadingValue Value="IsLoggedIn">
-<CascadingValue Value="IsLoggedInChanged">
+<div>
+    <CascadingValue Value="IsLoggedIn">
+        <CascadingValue Value="IsLoggedInChanged">
             <RadzenLayout>
                 <RadzenHeader>
                     <RadzenStack>
-                        <h1>MAUI Insights</h1>
+                        <h1>TinyInsights</h1>
                     </RadzenStack>
 
                 </RadzenHeader>
                 <RadzenSidebar Expanded="true">
-                    <Menu/>
+                    <Menu />
                 </RadzenSidebar>
                 <RadzenBody>
                     <div>
@@ -19,12 +20,13 @@
             </RadzenLayout>
         </CascadingValue>
     </CascadingValue>
-<RadzenComponents/>
+    <RadzenComponents />
+</div>
 @code
 {
     public bool IsLoggedIn { get; set; }
     public EventCallback<bool> IsLoggedInChanged { get; set; }
-    
+
     protected override void OnInitialized()
     {
         base.OnInitialized();

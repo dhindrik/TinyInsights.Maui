@@ -1,22 +1,93 @@
 @page "/analytics/events/details/{*EventName}"
+@inherits TinyInsightsComponentBase
+
+@inject IInsightsService Service
 
 <RadzenStack>
     <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
         <a href="/analytics/events" title="Back">
-            <RadzenIcon Icon="arrow_back"/>
+            <RadzenIcon Icon="arrow_back" />
         </a>
         <GlobalFilters />
-        
-    </RadzenRow>
-<RadzenCard>
-    <h2>Event details</h2>
-    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap">
-        <LabelValuePair Key="Event name" Value="@EventName"/>
-    </RadzenStack>
-</RadzenCard>
-</RadzenStack>
 
+    </RadzenRow>
+    <RadzenCard>
+        <h2>Event details</h2>
+        <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap">
+            <LabelValuePair Key="Event name" Value="@EventName" />
+        </RadzenStack>
+    </RadzenCard>
+
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Events per day</h2>
+            @if (isLoadingPerDays)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            }
+            else
+            {
+                <RadzenChart>
+                    <RadzenLegend Visible="false" />
+                    <RadzenLineSeries Data="@perDays" CategoryProperty="Date" ValueProperty="Count">
+                        <RadzenMarkers MarkerType="MarkerType.Circle" />
+                        <RadzenSeriesDataLabels />
+                    </RadzenLineSeries>
+                    <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                </RadzenChart>
+            }
+        </RadzenStack>
+    </RadzenCard>
+
+</RadzenStack>
+∑
 @code {
     [Parameter]
     public required string EventName { get; set; }
+
+    [CascadingParameter]
+    public required GlobalFilter GlobalFilter { get; set; }
+
+    private List<CountPerDay> perDays = new();
+    private bool isLoadingPerDays = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var perDayTask = LoadEventsPerDay();
+
+        await Task.WhenAll(perDayTask);
+    }
+
+    private async Task LoadEventsPerDay()
+    {
+        isLoadingPerDays = true;
+
+        var result = await Service.GetEventsPerDay(EventName, GlobalFilter);
+
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+        var days = new List<CountPerDay>();
+
+        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+        {
+            var currentDate = date.AddDays(i);
+            var day = result.SingleOrDefault(x => x.Date == currentDate);
+
+            var count = day?.Count ?? 0;
+
+            days.Add(new CountPerDay(currentDate, count));
+        }
+
+        perDays = days;
+
+        isLoadingPerDays = false;
+
+        StateHasChanged();
+    }
 }

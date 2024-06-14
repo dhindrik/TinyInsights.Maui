@@ -1,8 +1,7 @@
 @page "/diagnostics/crashes/details/{*Id}"
 @page "/diagnostics/errors/details/{*Id}"
-@using TinyInsights.Web.Services
 
-@inherits MauiInsightsComponentBase
+@inherits TinyInsightsComponentBase
 
 @inject IInsightsService Service
 @inject DialogService DialogService
@@ -93,13 +92,13 @@
     public required string Id { get; set; }
     
     [CascadingParameter]
-    public GlobalFilter GlobalFilter { get; set; }
+    public required GlobalFilter GlobalFilter { get; set; }
 
     private bool isLoading = true;
     private bool isCrash;
-    private string backUrl,detailsHeader, listHeader = string.Empty;
+    private string backUrl = string.Empty,detailsHeader = string.Empty, listHeader = string.Empty;
 
-    private Services.ErrorDetails data = new();
+    private Services.Models.ErrorDetails data = new();
     
     protected override async Task OnParametersSetAsync()
     {

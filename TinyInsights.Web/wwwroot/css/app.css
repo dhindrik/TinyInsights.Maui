@@ -1,8 +1,16 @@
+:root {
+    --rz-primary: #6D8764;
+    --rz-on-primary-lighter:#6D8764;
+    --rz-primary-lighter: ##AFDBA0;
+    --rz-series-1: #866381;
+}
 body{
     padding: 0;
     margin: 0;
 }
-
+a{
+    color:#6D8764;
+}
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }
