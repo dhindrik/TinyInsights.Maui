@@ -23,6 +23,20 @@ a{
     color: red;
 }
 
+.rz-chip{
+    background-color: var(--rz-primary) !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+.rz-dropdown{
+    height: 50px;
+}
+
+.rz-dropdown-label {
+    margin: auto 0;
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;

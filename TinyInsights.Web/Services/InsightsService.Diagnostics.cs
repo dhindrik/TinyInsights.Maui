@@ -352,7 +352,7 @@ public partial class InsightsService : IInsightsService
                 data.Add(nameof(CustomDimensions.StackTrace), custom.StackTrace);
                 data.Add(nameof(CustomDimensions.Manufacturer), custom.Manufacturer);
 
-                if(custom.FullUrl is not null)
+                if (custom.FullUrl is not null)
                 {
                     data.Add(nameof(CustomDimensions.FullUrl), custom.FullUrl);
                 }
@@ -372,12 +372,28 @@ public partial class InsightsService : IInsightsService
 
     private string GetFilter(GlobalFilter filter)
     {
+        var filterBuilder = new StringBuilder();
+        filterBuilder.Append(" ");
+        
         if (filter.OperatingSystemFilterValue is not null)
         {
-            return $" client_OS == '{filter.OperatingSystemFilterValue}' and";
+            filterBuilder.Append($"client_OS == '{filter.OperatingSystemFilterValue}' and ");
         }
 
-        return String.Empty;
+        if(filter.AppVersions.Where(x => x != GlobalFilter.AppVersionsDefaultValue).Any())
+        {
+            filterBuilder.Append("customDimensions.AppBuildNumber in (");
+
+            foreach (var number in filter.AppBuildNumbers)
+            {
+                filterBuilder.Append($"'{number}',");
+            }
+
+            filterBuilder.Remove(filterBuilder.Length - 1, 1);
+            filterBuilder.Append(") and ");
+        }
+
+        return filterBuilder.ToString();
     }
 }
 

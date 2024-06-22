@@ -4,6 +4,8 @@ public interface IInsightsService
 {
     Task<bool> ValidateToken(string appId, string token);
 
+    Task<List<string>> GetUniqueAppVersions();
+
     #region Diagnostics
     Task<List<CountPerDay>> GetCrashesPerDay(GlobalFilter filter);
     Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter);
