@@ -35,6 +35,27 @@
 
     </RadzenCard>
     <RadzenCard>
+    <h2>Message</h2>
+        @if (isLoading)
+        {
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+        }
+        else
+        {
+            <p class="stacktrace">
+            @if (data.Items.Count > 0 && data.Items.First().Message is not null)
+            {
+                @data.Items.First().Message
+
+            }
+            else
+            {
+                <span>No message available</span>
+            }
+         </p>
+    }
+    </RadzenCard>
+    <RadzenCard>
         <h2>Stacktrace</h2>
         @if (isLoading)
         {

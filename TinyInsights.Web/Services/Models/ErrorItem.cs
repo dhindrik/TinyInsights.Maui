@@ -19,6 +19,7 @@ public class ErrorItem : LogItem
     public DateTime Timestamp => DateTime.Parse(GetData("timestamp")!);
 
     public string? StackTrace => GetData("StackTrace");
+    public string? Message => GetData("outerMessage");
 
     protected string? GetData(string key)
     {
