@@ -3,10 +3,11 @@ using System.Text.Json;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.Logging;
 
 namespace TinyInsights;
 
-public class ApplicationInsightsProvider : IInsightsProvider
+public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 {
 private const string userIdKey = nameof(userIdKey);
 
@@ -309,4 +310,61 @@ private const string userIdKey = nameof(userIdKey);
         
         return Task.CompletedTask;
     }
+
+#region ILogger
+    public async void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    {
+        if(!IsEnabled(logLevel))
+        {
+            return;
+        }
+
+        var logTask = logLevel switch {
+            LogLevel.Trace => TrackPageViewAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
+            LogLevel.Debug => Task.CompletedTask,
+            LogLevel.Information => TrackEventAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
+            LogLevel.Warning => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
+            LogLevel.Error => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
+            LogLevel.Critical => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
+            LogLevel.None => Task.CompletedTask,
+            _ => Task.CompletedTask
+        };
+
+        await logTask;
+    }
+
+    private string GetEventName(EventId eventId)
+    {
+        return eventId.Name ?? eventId.Id.ToString();
+    }
+
+    private Dictionary<string, string> GetLoggerData<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    {
+        return new Dictionary<string, string>() 
+            {
+                { "LogLevel", logLevel.ToString() },
+                { "EventId", eventId.ToString() },
+                { "EventName", eventId.Name?.ToString() ?? string.Empty },
+                { "State", state?.ToString() ?? string.Empty },
+                { "Message", formatter(state, exception) } 
+            };
+    }
+
+    public bool IsEnabled(LogLevel logLevel)
+    {
+        return logLevel switch {
+            LogLevel.Trace => IsTrackPageViewsEnabled,
+            LogLevel.Debug => false,
+            LogLevel.Information => IsTrackEventsEnabled,
+            LogLevel.Warning => IsTrackErrorsEnabled,
+            LogLevel.Error => IsTrackErrorsEnabled,
+            LogLevel.Critical => IsTrackCrashesEnabled,
+            LogLevel.None => false,
+            _ => false
+        };
+    }
+
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
+
+    #endregion
 }

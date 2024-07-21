@@ -8,6 +8,8 @@
             Padding="30,0"
             Spacing="25">
           
+            <Switch IsToggled="{Binding UseILogger, Mode=TwoWay}" />
+
             <Button x:Name="PageViewButton" Text="Track page view" Clicked="PageViewButton_OnClicked" />
             
             <Button x:Name="EventButton" Text="Track event" Clicked="EventButton_OnClicked" />

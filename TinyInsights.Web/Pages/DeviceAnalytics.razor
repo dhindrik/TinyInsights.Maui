@@ -1,0 +1,28 @@
+@page "/analytics/devices"
+
+@using TinyInsights.Web.Services
+
+@inherits TinyInsightsComponentBase
+
+@inject IInsightsService Service
+<RadzenStack Gap="20">
+<RadzenRow JustifyContent="JustifyContent.End">
+    <GlobalFilters />
+</RadzenRow>
+<RadzenCard>
+    <RadzenStack>
+        <h2>Idioms</h2>
+        @if (isLoadingIdiom)
+        {
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+        }
+        else
+        {
+          
+        }
+    </RadzenStack>
+</RadzenCard>
+</RadzenStack>
+@code {
+    private bool isLoadingIdiom = true;
+}
