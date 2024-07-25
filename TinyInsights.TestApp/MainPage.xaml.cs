@@ -54,6 +54,7 @@ public bool UseILogger
             if(UseILogger)
             {
                 logger.LogInformation("EventButton");
+                logger.LogDebug("EventButton clicked");
                 return;
             }
 
@@ -70,7 +71,7 @@ public bool UseILogger
             {
                 if(UseILogger)
                 {
-                    logger.LogError(1, ex, ex.Message);
+                    logger.LogError(ex, ex.Message);
                     return;
                 }
 

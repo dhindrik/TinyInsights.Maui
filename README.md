@@ -27,7 +27,7 @@ builder
 
 If you want, you can configure what type of events you want to track.
 ```csharp
-builder.UseMauiInsights("InstrumentationKey=8b51208f-7926-4b7b-9867-16989206b950;IngestionEndpoint=https://swedencentral-0.in.applicationinsights.azure.com/;ApplicationId=0c04d3a0-9ee2-41a5-996e-526552dc730f",
+builder.UseMauiInsights("{YOUR_CONNECTION_STRING}",
         (provider) =>
         {
             provider.IsTrackDependencyEnabled = true;
@@ -104,5 +104,66 @@ var dependency = insights.CreateDependencyTracker("BLOB",blobContainer.Uri.Host,
 await blob.DownloadToAsync(stream);
 dependency.Dispose();
 ```
+## Use with ILogger
+If you want, you can also use TinyInsights with the ILogger interface.
 
+In ***MauiProgram.cs***, you should call ***UseTinyInsights*** like below.
+```csharp
+var builder = MauiApp.CreateBuilder();
+builder
+  .UseMauiApp<App>()
+  .ConfigureFonts(fonts =>
+    {
+      fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+      fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+     })
+  .UseTinyInsightsAsILogger("{YOUR_CONNECTION_STRING}")
+```
 
+If you want, you can configure what type of events you want to track.
+```csharp
+builder.UseTinyInsightsAsILogger("{YOUR_CONNECTION_STRING}",
+        (provider) =>
+        {
+            provider.IsTrackDependencyEnabled = true;
+            provider.IsTrackEventsEnabled = true;
+            provider.IsTrackErrorsEnabled = true;
+            provider.IsTrackPageViewsEnabled = true;
+            provider.IsTrackCrashesEnabled = true;           
+        });
+```
+
+### Use ILogger
+To use **ILogger**, just inject the interface in the class you want to use it in.
+
+```csharp
+private readonly ILogger logger;
+
+public class MainViewModel(ILogger logger)
+{
+    this.logger = logger;
+}
+```
+
+#### Track page views
+```csharp
+logger.LogTrace("MainView");
+```
+
+#### Track event
+```csharp
+logger.LogInformation("EventButton");
+```
+
+#### Track error
+```csharp
+ logger.LogError(ex, ex.Message);
+ ```
+
+#### Track debug info
+
+ **LogDebug** will only work with the debugger attached because it is using **Debug.WriteLine**.
+
+ ```csharp
+logger.LogDebug("Debug message");
+```
