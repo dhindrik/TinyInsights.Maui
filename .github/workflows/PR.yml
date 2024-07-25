@@ -4,7 +4,6 @@ on:
   pull_request:
     branches: [ "main" ]
 
-
 jobs:
   build:
 
@@ -27,4 +26,4 @@ jobs:
       run: dotnet build TinyInsights/TinyInsights.csproj --no-restore
 
     - name: Pack
-      run: dotnet pack TinyInsights/TinyInsights.csproj -p:PackageVersion=${{ github.ref_name }}
+      run: dotnet pack TinyInsights/TinyInsights.csproj
