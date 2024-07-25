@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.ApplicationInsights;
@@ -136,7 +137,7 @@ private const string userIdKey = nameof(userIdKey);
 
             if (crashes != null)
             {
-
+                Debug.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
 
                 foreach (var crash in crashes)
                 {
@@ -217,6 +218,8 @@ private const string userIdKey = nameof(userIdKey);
     {
         try
         {
+            Debug.WriteLine($"TinyInsights: Tracking error {ex.Message}");
+
             if (properties == null)
             {
                 properties = new Dictionary<string, string>();
@@ -238,6 +241,8 @@ private const string userIdKey = nameof(userIdKey);
     {
         try
         {
+            Debug.WriteLine($"TinyInsights: Tracking event {eventName}");
+
             client.TrackEvent(eventName, properties);
             client.Flush();
         }
@@ -253,6 +258,8 @@ private const string userIdKey = nameof(userIdKey);
     {
         try
         {
+            Debug.WriteLine($"TinyInsights: Tracking page view {viewName}");
+
             client.TrackPageView(viewName);
             client.Flush();
         }
@@ -268,6 +275,8 @@ private const string userIdKey = nameof(userIdKey);
     {
         try
         {
+            Debug.WriteLine($"TinyInsights: Tracking dependency {dependencyName}");
+
             var fullUrl = data;
             
             if (data.Contains("?"))
@@ -321,7 +330,7 @@ private const string userIdKey = nameof(userIdKey);
 
         var logTask = logLevel switch {
             LogLevel.Trace => TrackPageViewAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
-            LogLevel.Debug => Task.CompletedTask,
+            LogLevel.Debug => TrackDebugAsync(eventId, state, exception),
             LogLevel.Information => TrackEventAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
             LogLevel.Warning => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
             LogLevel.Error => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
@@ -331,6 +340,12 @@ private const string userIdKey = nameof(userIdKey);
         };
 
         await logTask;
+    }
+
+    private Task TrackDebugAsync<TState>(EventId eventId, TState state, Exception? exception)
+    {
+        Debug.WriteLine($"TinyInsights: DebugLogging, Event: {GetEventName(eventId)}, State: {state}, Exception: {exception?.Message}");
+        return Task.CompletedTask;
     }
 
     private string GetEventName(EventId eventId)
@@ -354,7 +369,7 @@ private const string userIdKey = nameof(userIdKey);
     {
         return logLevel switch {
             LogLevel.Trace => IsTrackPageViewsEnabled,
-            LogLevel.Debug => false,
+            LogLevel.Debug => Debugger.IsAttached,
             LogLevel.Information => IsTrackEventsEnabled,
             LogLevel.Warning => IsTrackErrorsEnabled,
             LogLevel.Error => IsTrackErrorsEnabled,
