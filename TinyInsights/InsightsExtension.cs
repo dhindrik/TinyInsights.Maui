@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace TinyInsights;
 
 public static class InsightsExtension
@@ -28,4 +30,22 @@ public static class InsightsExtension
         
         return appBuilder;
     }
+
+public static MauiAppBuilder UseTinyInsightsAsILogger(this MauiAppBuilder appBuilder, string applicationInsightsConnectionString, Action<IInsightsProvider>? configureProvider = null)
+    {
+
+        appBuilder.Services.AddSingleton<ILogger>((services) =>
+        {
+            var provider = new ApplicationInsightsProvider(applicationInsightsConnectionString);
+            
+            configureProvider?.Invoke(provider);
+
+            return provider;
+        });
+
+        appBuilder.Services.AddTransient<InsightsMessageHandler>();
+        
+        return appBuilder;
+    }
+
 }
