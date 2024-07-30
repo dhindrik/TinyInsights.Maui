@@ -1,12 +1,14 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.Logging;
 
 namespace TinyInsights;
 
-public class ApplicationInsightsProvider : IInsightsProvider
+public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 {
 private const string userIdKey = nameof(userIdKey);
 
@@ -135,7 +137,7 @@ private const string userIdKey = nameof(userIdKey);
 
             if (crashes != null)
             {
-
+                Debug.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
 
                 foreach (var crash in crashes)
                 {
@@ -216,6 +218,8 @@ private const string userIdKey = nameof(userIdKey);
     {
         try
         {
+            Debug.WriteLine($"TinyInsights: Tracking error {ex.Message}");
+
             if (properties == null)
             {
                 properties = new Dictionary<string, string>();
@@ -237,6 +241,8 @@ private const string userIdKey = nameof(userIdKey);
     {
         try
         {
+            Debug.WriteLine($"TinyInsights: Tracking event {eventName}");
+
             client.TrackEvent(eventName, properties);
             client.Flush();
         }
@@ -252,6 +258,8 @@ private const string userIdKey = nameof(userIdKey);
     {
         try
         {
+            Debug.WriteLine($"TinyInsights: Tracking page view {viewName}");
+
             client.TrackPageView(viewName);
             client.Flush();
         }
@@ -267,6 +275,8 @@ private const string userIdKey = nameof(userIdKey);
     {
         try
         {
+            Debug.WriteLine($"TinyInsights: Tracking dependency {dependencyName}");
+
             var fullUrl = data;
             
             if (data.Contains("?"))
@@ -309,4 +319,67 @@ private const string userIdKey = nameof(userIdKey);
         
         return Task.CompletedTask;
     }
+
+#region ILogger
+    public async void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    {
+        if(!IsEnabled(logLevel))
+        {
+            return;
+        }
+
+        var logTask = logLevel switch {
+            LogLevel.Trace => TrackPageViewAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
+            LogLevel.Debug => TrackDebugAsync(eventId, state, exception),
+            LogLevel.Information => TrackEventAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
+            LogLevel.Warning => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
+            LogLevel.Error => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
+            LogLevel.Critical => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
+            LogLevel.None => Task.CompletedTask,
+            _ => Task.CompletedTask
+        };
+
+        await logTask;
+    }
+
+    private Task TrackDebugAsync<TState>(EventId eventId, TState state, Exception? exception)
+    {
+        Debug.WriteLine($"TinyInsights: DebugLogging, Event: {GetEventName(eventId)}, State: {state}, Exception: {exception?.Message}");
+        return Task.CompletedTask;
+    }
+
+    private string GetEventName(EventId eventId)
+    {
+        return eventId.Name ?? eventId.Id.ToString();
+    }
+
+    private Dictionary<string, string> GetLoggerData<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    {
+        return new Dictionary<string, string>() 
+            {
+                { "LogLevel", logLevel.ToString() },
+                { "EventId", eventId.ToString() },
+                { "EventName", eventId.Name?.ToString() ?? string.Empty },
+                { "State", state?.ToString() ?? string.Empty },
+                { "Message", formatter(state, exception) } 
+            };
+    }
+
+    public bool IsEnabled(LogLevel logLevel)
+    {
+        return logLevel switch {
+            LogLevel.Trace => IsTrackPageViewsEnabled,
+            LogLevel.Debug => Debugger.IsAttached,
+            LogLevel.Information => IsTrackEventsEnabled,
+            LogLevel.Warning => IsTrackErrorsEnabled,
+            LogLevel.Error => IsTrackErrorsEnabled,
+            LogLevel.Critical => IsTrackCrashesEnabled,
+            LogLevel.None => false,
+            _ => false
+        };
+    }
+
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
+
+    #endregion
 }
