@@ -135,7 +135,7 @@ private const string userIdKey = nameof(userIdKey);
         {
             var crashes = ReadCrashes();
 
-            if (crashes != null)
+            if (crashes.Count > 0)
             {
                 Debug.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
 
@@ -150,10 +150,10 @@ private const string userIdKey = nameof(userIdKey);
                         {"Source", crash.Source}
                     };
 
-
-
                     await TrackErrorAsync(ex, properties);
                 }
+
+                ResetCrashes();
             }
         }
         catch (Exception)
@@ -189,6 +189,18 @@ private const string userIdKey = nameof(userIdKey);
         return new List<Crash>();
     }
 
+    private void ResetCrashes()
+    {
+        try
+        {
+            var path = Path.Combine(logPath, crashLogFilename);
+            File.Delete(path);
+        }
+        catch (Exception)
+        {
+        }
+    }   
+    
     private void HandleCrash(Exception ex)
     {
         try
@@ -201,13 +213,7 @@ private const string userIdKey = nameof(userIdKey);
 
             var path = Path.Combine(logPath, crashLogFilename);
 
-            if (!File.Exists(path))
-            {
-                File.Create(path);
-            }
-
             System.IO.File.WriteAllText(path, json);
-
         }
         catch (Exception)
         {
