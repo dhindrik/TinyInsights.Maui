@@ -225,7 +225,7 @@ private const string userIdKey = nameof(userIdKey);
                 properties = new Dictionary<string, string>();
             }
 
-            properties.Add("StackTrace", ex.StackTrace);
+            properties.TryAdd("StackTrace", ex.StackTrace);
             
             client.TrackException(ex, properties);
             client.Flush();
