@@ -5,58 +5,85 @@
 @inherits TinyInsightsComponentBase
 
 @inject IInsightsService Service
-<RadzenStack Gap="20">
-    <RadzenRow JustifyContent="JustifyContent.End">
-        <GlobalFilters />
-    </RadzenRow>
-    <RadzenCard>
-        <RadzenStack>
-            <h2>Unique users per day</h2>
-            @if (isLoadingUsersPerDayViews)
-            {
-                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
-            }
-            else
-            {
-                <RadzenChart>
-                    <RadzenLegend Visible="false"/>
-                    <RadzenLineSeries Data="@usersPerDay" CategoryProperty="Date" ValueProperty="Count">
-                        <RadzenMarkers MarkerType="MarkerType.Circle"/>
-                        <RadzenSeriesDataLabels/>
-                    </RadzenLineSeries>
-                    <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
-                </RadzenChart>
-            }
-        </RadzenStack>
-    </RadzenCard>
-    <RadzenCard>
-        <RadzenStack>
-            <h2>Users per country</h2>
+<div>
+    <RadzenStack Gap="20">
+        <RadzenRow JustifyContent="JustifyContent.End">
+            <GlobalFilters />
+        </RadzenRow>
+        <RadzenCard>
+            <RadzenStack>
+                <h2>Unique users per day</h2>
+                @if (isLoadingUsersPerDayViews)
+                {
+                    <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                }
+                else
+                {
+                    <RadzenChart>
+                        <RadzenLegend Visible="false" />
+                        <RadzenLineSeries Data="@usersPerDay" CategoryProperty="Date" ValueProperty="Count">
+                            <RadzenMarkers MarkerType="MarkerType.Circle" />
+                            <RadzenSeriesDataLabels />
+                        </RadzenLineSeries>
+                        <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                    </RadzenChart>
+                }
+            </RadzenStack>
+        </RadzenCard>
+        <div class="wrapbox">
+            <div class="wrapitem">
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>Users per country</h2>
 
-            @if (isLoadingCountryList)
-            {
-                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
-            }
-            else
-            {
-            <RadzenDataGrid Data="usersPerCountry">
-                <Columns>
-                    <RadzenDataGridColumn TItem="CountPerKey" Title="Country" Property="@nameof(CountPerKey.Key)" />
-                    <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
-                </Columns>
-            </RadzenDataGrid>
-            }
-        </RadzenStack>
-    </RadzenCard>
-</RadzenStack>
+                    @if (isLoadingCountryList)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+                    else
+                    {
+                        <RadzenDataGrid Data="usersPerCountry">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="CountPerKey" Title="Country" Property="@nameof(CountPerKey.Key)" />
+                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                            </Columns>
+                        </RadzenDataGrid>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+            </div>
+            <div class="wrapitem">
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>Users per language</h2>
 
+                    @if (isLoadingCountryList)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+                    else
+                    {
+                        <RadzenDataGrid Data="usersPerLanguage">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="CountPerKey" Title="Language" Property="@nameof(CountPerKey.Key)" />
+                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                            </Columns>
+                        </RadzenDataGrid>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+            </div>
+        </div>
+    </RadzenStack>
+</div>
 @code {
     [CascadingParameter]
-    public GlobalFilter GlobalFilter  {get;set;}
-    
-    private bool isLoadingUsersPerDayViews, isLoadingCountryList = true;
+    public GlobalFilter GlobalFilter { get; set; }
+
+    private bool isLoadingUsersPerDayViews = true, isLoadingCountryList = true, isLoadingUsersPerLanguage;
     private List<CountPerDay> usersPerDay = new();
     private List<CountPerKey> usersPerCountry = new();
+    private List<CountPerKey> usersPerLanguage = new();
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
@@ -66,28 +93,26 @@
 
     private async Task LoadData()
     {
-        var graphTask = LoadGraph();
-        var listTask = LoadList();
 
-        await Task.WhenAll(graphTask, listTask);
+        await Task.WhenAll(LoadUsersPerDay(), LoadCountries(), LoadLanguageList());
     }
 
-    private async Task LoadGraph()
+    private async Task LoadUsersPerDay()
     {
         isLoadingUsersPerDayViews = true;
-        
+
         var result = await Service.GetUsersPerDay(GlobalFilter);
-        
+
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
-        
+
         for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
         {
             var currentDate = date.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
 
             var count = day?.Count ?? 0;
- 
+
             days.Add(new CountPerDay(currentDate, count));
         }
 
@@ -96,19 +121,33 @@
 
         await InvokeAsync(StateHasChanged);
     }
-    
-    private async Task LoadList()
+
+    private async Task LoadCountries()
     {
         isLoadingCountryList = true;
 
         var result = await Service.GetUserPerCountry(GlobalFilter);
 
         usersPerCountry = result.OrderByDescending(x => x.Count).ToList();
-        
+
         isLoadingCountryList = false;
-        
+
         await InvokeAsync(StateHasChanged);
     }
-    
+
+    private async Task LoadLanguageList()
+    {
+        isLoadingUsersPerLanguage = true;
+
+        var result = await Service.GetUserPerLanguage(GlobalFilter);
+
+        usersPerLanguage = result.OrderByDescending(x => x.Count).ToList();
+
+        isLoadingUsersPerLanguage = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
     private record DayFilterItem(string Text, int Value);
 }

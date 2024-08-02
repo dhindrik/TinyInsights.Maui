@@ -40,6 +40,19 @@ a{
     margin: auto 0;
 }
 
+.wrapbox {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: stretch;
+}
+
+.wrapitem {
+    max-width: 49%;
+    min-width: 300px;
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;

@@ -6,65 +6,93 @@
 
 @inject IInsightsService Service
 <RadzenStack Gap="20">
-<RadzenRow JustifyContent="JustifyContent.End">
-    <GlobalFilters />
-</RadzenRow>
-    <RadzenCard>
-        <RadzenStack>
-            <h2>Operating systems</h2>
-           
-            @if (isLoadingOperatingSystems)
-            {
-                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-            }
-            else
-            {
-                <RadzenChart>
-                    <RadzenPieSeries Data="@operatingSystemUsers" Title="Users" CategoryProperty="Key" ValueProperty="Count">
-                        <RadzenSeriesDataLabels Visible="true" />
-                    </RadzenPieSeries>
-                </RadzenChart>
-            }
-        </RadzenStack>
-    </RadzenCard>
-<RadzenCard>
-    <RadzenStack>
-        <h2>Idioms</h2>
-        @if (isLoadingIdiom)
-        {
-            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
-        }
-        else
-        {
-                <RadzenChart>
-                    <RadzenPieSeries Data="@idiomUsers" Title="Users" CategoryProperty="Key" ValueProperty="Count">
-                        <RadzenSeriesDataLabels Visible="true" />
-                    </RadzenPieSeries>
-                </RadzenChart>
-        }
-    </RadzenStack>
-</RadzenCard>
+    <RadzenRow JustifyContent="JustifyContent.End">
+        <GlobalFilters />
+    </RadzenRow>
+    <div class="wrapbox">
+        <div class="wrapitem">
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>Operating systems</h2>
+
+                    @if (isLoadingOperatingSystems)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+                    else
+                    {
+                        <RadzenChart>
+                            <RadzenPieSeries Data="@operatingSystemUsers" Title="Users" CategoryProperty="Key" ValueProperty="Percent">
+                                <RadzenSeriesDataLabels Visible="true" />
+                            </RadzenPieSeries>
+                        </RadzenChart>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </div>
+        <div>
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>Device types</h2>
+                    @if (isLoadingIdiom)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+                    else
+                    {
+                        <RadzenChart>
+                            <RadzenPieSeries Data="@idiomUsers" Title="Users" CategoryProperty="Key" ValueProperty="Percent">
+                                <RadzenSeriesDataLabels Visible="true" />
+                            </RadzenPieSeries>
+                        </RadzenChart>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </div>
+        <div>
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>Manufactures</h2>
+                    @if (isLoadingManufactures)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+                    else
+                    {
+                        <RadzenChart>
+                            <RadzenPieSeries Data="@manufactures" Title="Users" CategoryProperty="Key" ValueProperty="Percent">
+                                <RadzenSeriesDataLabels Visible="true" />
+                            </RadzenPieSeries>
+                        </RadzenChart>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </div>
+    </div>
 </RadzenStack>
 @code {
     [CascadingParameter]
     public GlobalFilter GlobalFilter { get; set; }
 
-    private bool isLoadingIdiom = true, isLoadingOperatingSystems = true;
+    private bool isLoadingIdiom = true, isLoadingOperatingSystems = true, isLoadingManufactures = true;
 
-    private List<CountPerKey> idiomUsers = new();
-    private List<CountPerKey> operatingSystemUsers = new();
+    private List<PercentPerKey> idiomUsers = new();
+    private List<PercentPerKey> operatingSystemUsers = new();
+    private List<PercentPerKey> manufactures = new();
 
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
 
-        await Task.WhenAll(LoadUserIdioms(), LoadUserOperatingSystems());
+        await Task.WhenAll(LoadUserIdioms(), LoadUserOperatingSystems(), LoadManufactures());
     }
 
     private async Task LoadUserIdioms()
     {
         isLoadingIdiom = true;
-        idiomUsers = await Service.GetUsersPerIdiom(GlobalFilter);
+        var result = await Service.GetUsersPerIdiom(GlobalFilter);
+        var total = result.Sum(x => x.Count);
+        idiomUsers = result.Select(x => new PercentPerKey(x.Key, Math.Round((x.Count / (double)total * 100),0))).ToList();
         isLoadingIdiom = false;
 
         StateHasChanged();
@@ -73,8 +101,21 @@
     private async Task LoadUserOperatingSystems()
     {
         isLoadingOperatingSystems = true;
-        operatingSystemUsers = await Service.GetUsersPerOperatingSystem(GlobalFilter);
+        var result = await Service.GetUsersPerOperatingSystem(GlobalFilter);
+        var total = result.Sum(x => x.Count);
+        operatingSystemUsers = result.Select(x => new PercentPerKey(x.Key, Math.Round((x.Count / (double)total * 100), 0))).ToList();
         isLoadingOperatingSystems = false;
+
+        StateHasChanged();
+    }
+
+    private async Task LoadManufactures()
+    {
+        isLoadingManufactures = true;
+        var result = await Service.GetUserPerManufacturer(GlobalFilter);
+        var total = result.Sum(x => x.Count);
+        manufactures = result.Select(x => new PercentPerKey(x.Key, Math.Round((x.Count / (double)total * 100), 0))).ToList();
+        isLoadingManufactures = false;
 
         StateHasChanged();
     }
