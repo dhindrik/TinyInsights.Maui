@@ -29,7 +29,8 @@ public interface IInsightsService
     Task<List<CountPerDay>> GetEventsPerDay(string eventName, GlobalFilter filter);
     Task<List<CountPerDay>> GetUsersPerDay(GlobalFilter filter);
     Task<List<CountPerKey>> GetUserPerCountry(GlobalFilter filter);
-
+    Task<List<CountPerKey>> GetUsersPerIdiom(GlobalFilter filter);
+    Task<List<CountPerKey>> GetUsersPerOperatingSystem(GlobalFilter filter);
     #endregion
 
 }

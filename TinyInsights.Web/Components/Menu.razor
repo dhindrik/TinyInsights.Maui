@@ -1,10 +1,11 @@
 @inherits TinyInsightsComponentBase
 
 <RadzenPanelMenu>
-    <RadzenPanelMenuItem Text="Home" Icon="home" Path="/" />
+  
     
     @if (IsLoggedIn)
     {
+        <RadzenPanelMenuItem Text="Dashboard" Icon="dashboard" Path="/dashboard" />
         <RadzenPanelMenuItem Text="Crashes" Icon="dangerous" Path="/diagnostics/crashes" />
         <RadzenPanelMenuItem Text="Errors" Icon="error" Path="/diagnostics/errors" />
         <RadzenPanelMenuItem Text="Dependencies" Icon="file_download" Path="/diagnostics/dependencies" />

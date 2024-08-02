@@ -1,0 +1,135 @@
+﻿@page "/dashboard"
+
+@using TinyInsights.Web.Services
+
+@inherits TinyInsightsComponentBase
+
+@inject IInsightsService Service
+<RadzenStack Gap="20">
+<RadzenRow JustifyContent="JustifyContent.End">
+    <GlobalFilters />
+</RadzenRow>
+<RadzenCard>
+    <RadzenStack>
+        <h2>Crashes and errors</h2>
+        @if (isLoadingGraph)
+        {
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+        }
+        else
+        {
+            <RadzenChart>
+                <RadzenLegend />
+                <RadzenLineSeries Data="@errorsPerDays" CategoryProperty="Date" ValueProperty="Count" Title="Errors">
+                    <RadzenMarkers MarkerType="MarkerType.Circle" />
+                    <RadzenSeriesDataLabels />
+                </RadzenLineSeries>
+                    <RadzenLineSeries Data="@crashesPerDays" CategoryProperty="Date" ValueProperty="Count" Title="Crashes">
+                        <RadzenMarkers MarkerType="MarkerType.Circle" />
+                        <RadzenSeriesDataLabels />
+                    </RadzenLineSeries>
+                <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+            </RadzenChart>
+        }
+    </RadzenStack>
+</RadzenCard>
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Users</h2>
+            @if (isLoadingUsersPerDayViews)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            }
+            else
+            {
+                <RadzenChart>
+                    <RadzenLegend Visible="false" />
+                    <RadzenLineSeries Data="@usersPerDay" CategoryProperty="Date" ValueProperty="Count">
+                        <RadzenMarkers MarkerType="MarkerType.Circle" />
+                        <RadzenSeriesDataLabels />
+                    </RadzenLineSeries>
+                    <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                </RadzenChart>
+            }
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+
+
+@code {
+    [CascadingParameter]
+    public GlobalFilter GlobalFilter { get; set; }
+
+    private List<CountPerDay> errorsPerDays = new();
+    private List<CountPerDay> crashesPerDays = new();
+    private List<CountPerDay> usersPerDay = new();
+    private bool isLoadingGraph = true; 
+    private bool isLoadingUsersPerDayViews = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        await Task.WhenAll(LoadGraph(), LoadUserGraph());
+    }
+
+    private async Task LoadGraph()
+    {
+        isLoadingGraph = true;
+
+       var crashTask = Service.GetCrashesPerDay(GlobalFilter);
+       var errorTask = Service.GetErrorsPerDay(GlobalFilter);
+
+       await Task.WhenAll(crashTask, errorTask);
+        
+
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+        var crashDays = new List<CountPerDay>();
+        var errorDays = new List<CountPerDay>();
+
+        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+        {
+            var currentDate = date.AddDays(i);
+            var crashDay = crashTask.Result.SingleOrDefault(x => x.Date == currentDate);
+            var errorDay = errorTask.Result.SingleOrDefault(x => x.Date == currentDate);
+
+            var crashCount = crashDay?.Count ?? 0;
+            var errorCount = errorDay?.Count ?? 0;
+
+            crashDays.Add(new CountPerDay(currentDate, crashCount));
+            errorDays.Add(new CountPerDay(currentDate, errorCount));
+        }
+
+        crashesPerDays = crashDays;
+        errorsPerDays = errorDays;
+
+        isLoadingGraph = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task LoadUserGraph()
+    {
+        isLoadingUsersPerDayViews = true;
+
+        var result = await Service.GetUsersPerDay(GlobalFilter);
+
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+        var days = new List<CountPerDay>();
+
+        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+        {
+            var currentDate = date.AddDays(i);
+            var day = result.SingleOrDefault(x => x.Date == currentDate);
+
+            var count = day?.Count ?? 0;
+
+            days.Add(new CountPerDay(currentDate, count));
+        }
+
+        usersPerDay = days;
+        isLoadingUsersPerDayViews = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+}

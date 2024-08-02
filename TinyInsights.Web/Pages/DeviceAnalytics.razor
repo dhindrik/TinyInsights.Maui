@@ -9,6 +9,24 @@
 <RadzenRow JustifyContent="JustifyContent.End">
     <GlobalFilters />
 </RadzenRow>
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Operating systems</h2>
+           
+            @if (isLoadingOperatingSystems)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            }
+            else
+            {
+                <RadzenChart>
+                    <RadzenPieSeries Data="@operatingSystemUsers" Title="Users" CategoryProperty="Key" ValueProperty="Count">
+                        <RadzenSeriesDataLabels Visible="true" />
+                    </RadzenPieSeries>
+                </RadzenChart>
+            }
+        </RadzenStack>
+    </RadzenCard>
 <RadzenCard>
     <RadzenStack>
         <h2>Idioms</h2>
@@ -18,11 +36,46 @@
         }
         else
         {
-          
+                <RadzenChart>
+                    <RadzenPieSeries Data="@idiomUsers" Title="Users" CategoryProperty="Key" ValueProperty="Count">
+                        <RadzenSeriesDataLabels Visible="true" />
+                    </RadzenPieSeries>
+                </RadzenChart>
         }
     </RadzenStack>
 </RadzenCard>
 </RadzenStack>
 @code {
-    private bool isLoadingIdiom = true;
+    [CascadingParameter]
+    public GlobalFilter GlobalFilter { get; set; }
+
+    private bool isLoadingIdiom = true, isLoadingOperatingSystems = true;
+
+    private List<CountPerKey> idiomUsers = new();
+    private List<CountPerKey> operatingSystemUsers = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        await Task.WhenAll(LoadUserIdioms(), LoadUserOperatingSystems());
+    }
+
+    private async Task LoadUserIdioms()
+    {
+        isLoadingIdiom = true;
+        idiomUsers = await Service.GetUsersPerIdiom(GlobalFilter);
+        isLoadingIdiom = false;
+
+        StateHasChanged();
+    }
+
+    private async Task LoadUserOperatingSystems()
+    {
+        isLoadingOperatingSystems = true;
+        operatingSystemUsers = await Service.GetUsersPerOperatingSystem(GlobalFilter);
+        isLoadingOperatingSystems = false;
+
+        StateHasChanged();
+    }
 }

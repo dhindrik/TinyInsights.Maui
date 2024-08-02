@@ -101,4 +101,40 @@ public partial class InsightsService
 
         return result;
     }
+
+    public async Task<List<CountPerKey>> GetUsersPerIdiom(GlobalFilter filter)
+    {
+
+        var queryFilter = GetFilter(filter);
+        var query = $"pageViews | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize PageViewsCount = dcount(user_Id) by client_Type";
+
+        var queryResult = await GetQueryResult<QueryResult>(query);
+
+        var result = new List<CountPerKey>();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            result.Add(new CountPerKey(row.First().ToString(), int.Parse(row.Last().ToString())));
+        }
+
+        return result;
+    }
+
+    public async Task<List<CountPerKey>> GetUsersPerOperatingSystem(GlobalFilter filter)
+    {
+
+        var queryFilter = GetFilter(filter);
+        var query = $"pageViews | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize PageViewsCount = dcount(user_Id) by client_OS";
+
+        var queryResult = await GetQueryResult<QueryResult>(query);
+
+        var result = new List<CountPerKey>();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            result.Add(new CountPerKey(row.First().ToString(), int.Parse(row.Last().ToString())));
+        }
+
+        return result;
+    }
 }

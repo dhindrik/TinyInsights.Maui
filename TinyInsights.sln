@@ -1,10 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyInsights.Web", "TinyInsights.Web\TinyInsights.Web.csproj", "{A40E4E36-924E-4AC5-A60D-5321D7CEA729}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35122.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyInsights.Web", "TinyInsights.Web\TinyInsights.Web.csproj", "{A40E4E36-924E-4AC5-A60D-5321D7CEA729}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyInsights", "TinyInsights\TinyInsights.csproj", "{CD742E15-674D-41DB-8467-B8A83E26D5BC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyInsights", "TinyInsights\TinyInsights.csproj", "{CD742E15-674D-41DB-8467-B8A83E26D5BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyInsights.TestApp", "TinyInsights.TestApp\TinyInsights.TestApp.csproj", "{606F1693-DAA1-4BEA-BF62-F21F0F509E75}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyInsights.TestApp", "TinyInsights.TestApp\TinyInsights.TestApp.csproj", "{606F1693-DAA1-4BEA-BF62-F21F0F509E75}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{C4F61F00-5DBB-4913-93EF-2D11D056B4C3}"
 EndProject
@@ -26,6 +29,9 @@ Global
 		{606F1693-DAA1-4BEA-BF62-F21F0F509E75}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{606F1693-DAA1-4BEA-BF62-F21F0F509E75}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{606F1693-DAA1-4BEA-BF62-F21F0F509E75}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{606F1693-DAA1-4BEA-BF62-F21F0F509E75} = {C4F61F00-5DBB-4913-93EF-2D11D056B4C3}

@@ -1,8 +1,11 @@
 :root {
     --rz-primary: #6D8764;
-    --rz-on-primary-lighter:#6D8764;
+    --rz-on-primary-lighter: #6D8764;
     --rz-primary-lighter: ##AFDBA0;
-    --rz-series-1: #866381;
+    --rz-series-1: #AFDCA0;
+    --rz-series-2: #FFB48F;
+    --rz-series-3: #646487;
+    --rz-series-4: #877064;
 }
 body{
     padding: 0;
