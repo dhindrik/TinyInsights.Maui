@@ -1,16 +1,16 @@
-using System.Diagnostics;
-using System.Globalization;
-using System.Text.Json;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using System.Globalization;
+using System.Text.Json;
 
 namespace TinyInsights;
 
 public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 {
-private const string userIdKey = nameof(userIdKey);
+    private const string userIdKey = nameof(userIdKey);
 
     private const string crashLogFilename = "crashes.mauiinsights";
 
@@ -50,7 +50,7 @@ private const string userIdKey = nameof(userIdKey);
 
     private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
     {
-        if(IsTrackCrashesEnabled)
+        if (IsTrackCrashesEnabled)
         {
             HandleCrash(e.Exception);
         }
@@ -58,7 +58,7 @@ private const string userIdKey = nameof(userIdKey);
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        if(IsTrackCrashesEnabled)
+        if (IsTrackCrashesEnabled)
         {
             HandleCrash((Exception)e.ExceptionObject);
         }
@@ -91,19 +91,38 @@ private const string userIdKey = nameof(userIdKey);
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        if(IsTrackCrashesEnabled)
+        if (IsTrackCrashesEnabled)
         {
             HandleCrash(e.Exception);
         }
     }
 #endif
 
+    public void OverrideAnonymousUserId(string userId)
+    {
+        SetUserId(userId);
+    }
+
+    public void GenerateNewAnonymousUserId()
+    {
+        var userId = Guid.NewGuid().ToString();
+        SetUserId(userId);
+
+    }
+
+    private void SetUserId(string userId)
+    {
+        Preferences.Set(userIdKey, userId);
+
+        AddMetaData();
+    }
+
     private void AddMetaData()
     {
         client.Context.Device.OperatingSystem = DeviceInfo.Platform.ToString();
         client.Context.Device.Model = DeviceInfo.Model;
         client.Context.Device.Type = DeviceInfo.Idiom.ToString();
-        
+
         //Role name will show device name if we don't set it to empty and we want it to be so anonymous as possible.
         client.Context.Cloud.RoleName = string.Empty;
         client.Context.Cloud.RoleInstance = string.Empty;
@@ -116,10 +135,7 @@ private const string userIdKey = nameof(userIdKey);
         }
         else
         {
-            var userId = Guid.NewGuid().ToString();
-            Preferences.Set(userIdKey, userId);
-
-            client.Context.User.Id = userId;
+            GenerateNewAnonymousUserId();
         }
 
         client.Context.GlobalProperties.TryAdd("Language", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
@@ -199,8 +215,8 @@ private const string userIdKey = nameof(userIdKey);
         catch (Exception)
         {
         }
-    }   
-    
+    }
+
     private void HandleCrash(Exception ex)
     {
         try
@@ -232,14 +248,14 @@ private const string userIdKey = nameof(userIdKey);
             }
 
             properties.TryAdd("StackTrace", ex.StackTrace);
-            
+
             client.TrackException(ex, properties);
             client.Flush();
         }
         catch (Exception)
         {
         }
-        
+
         return Task.CompletedTask;
     }
 
@@ -254,9 +270,9 @@ private const string userIdKey = nameof(userIdKey);
         }
         catch (Exception ex)
         {
-          
+
         }
-        
+
         return Task.CompletedTask;
     }
 
@@ -271,9 +287,9 @@ private const string userIdKey = nameof(userIdKey);
         }
         catch (Exception ex)
         {
-         
+
         }
-        
+
         return Task.CompletedTask;
     }
 
@@ -284,26 +300,26 @@ private const string userIdKey = nameof(userIdKey);
             Debug.WriteLine($"TinyInsights: Tracking dependency {dependencyName}");
 
             var fullUrl = data;
-            
+
             if (data.Contains("?"))
             {
                 var split = data.Split("?");
                 data = split[0];
             }
-            
+
             var dependency = new DependencyTelemetry()
             {
                 Type = dependencyType,
                 Name = dependencyName,
                 Data = data,
-                Timestamp = startTime, 
+                Timestamp = startTime,
                 Success = success,
                 Duration = duration,
                 ResultCode = resultCode.ToString()
             };
-            
+
             dependency.Properties.Add("FullUrl", fullUrl);
-            
+
             if (exception != null)
             {
                 dependency.Properties.Add("ExceptionMessage", exception.Message);
@@ -320,21 +336,22 @@ private const string userIdKey = nameof(userIdKey);
         }
         catch (Exception ex)
         {
-          
+
         }
-        
+
         return Task.CompletedTask;
     }
 
-#region ILogger
+    #region ILogger
     public async void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        if(!IsEnabled(logLevel))
+        if (!IsEnabled(logLevel))
         {
             return;
         }
 
-        var logTask = logLevel switch {
+        var logTask = logLevel switch
+        {
             LogLevel.Trace => TrackPageViewAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
             LogLevel.Debug => TrackDebugAsync(eventId, state, exception),
             LogLevel.Information => TrackEventAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
@@ -361,19 +378,20 @@ private const string userIdKey = nameof(userIdKey);
 
     private Dictionary<string, string> GetLoggerData<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        return new Dictionary<string, string>() 
+        return new Dictionary<string, string>()
             {
                 { "LogLevel", logLevel.ToString() },
                 { "EventId", eventId.ToString() },
                 { "EventName", eventId.Name?.ToString() ?? string.Empty },
                 { "State", state?.ToString() ?? string.Empty },
-                { "Message", formatter(state, exception) } 
+                { "Message", formatter(state, exception) }
             };
     }
 
     public bool IsEnabled(LogLevel logLevel)
     {
-        return logLevel switch {
+        return logLevel switch
+        {
             LogLevel.Trace => IsTrackPageViewsEnabled,
             LogLevel.Debug => Debugger.IsAttached,
             LogLevel.Information => IsTrackEventsEnabled,

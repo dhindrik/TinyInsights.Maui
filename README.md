@@ -50,17 +50,17 @@ public MainViewModel(IInsights insights)
   this.insights = insights;
 }
 ```
-***Track page views***
+#### Track page views
 ```csharp
 await insights.TrackPageViewAsync("MainView");
 ```
 
-***Track custom events***
+#### Track custom events
 ```csharp
 await insights.TrackEventAsync("AddButtonTapped");
 ```
 
-***Track exceptions***
+#### Track exceptions***
 ```csharp
 catch (Exception ex)
 {
@@ -68,7 +68,7 @@ catch (Exception ex)
 }
 ```
 
-***Track additional data***
+#### Track additional data
 For all the track methods, you can pass additional data by passing a Dictionary.
 ```csharp
 var data = new Dictionary<string, string>()
@@ -80,7 +80,7 @@ var data = new Dictionary<string, string>()
 await insights.TrackPageViewAsync("MainView", data);
 ```
 
-***Track dependencies***
+#### Track dependencies
 To automatically track HTTP calls you can use the ***InsightsMessageHandler*** together with the HttpClient.
 ```csharp
 private readonly InsightsMessageHandler insightsMessageHandler;
@@ -104,6 +104,18 @@ var dependency = insights.CreateDependencyTracker("BLOB",blobContainer.Uri.Host,
 await blob.DownloadToAsync(stream);
 dependency.Dispose();
 ```
+
+#### UserId
+By default a random UserId is generated for each user. If you want to set a specific UserId you can do it like below.
+```csharp
+ìnsights.OverrideAnonymousUserId("MyOwnUserId");
+```
+
+To generate a new random UserId you can call the method below.
+```csharp
+ìnsights.GenerateNewAnonymousUserId();
+```
+
 ## Use with ILogger
 If you want, you can also use TinyInsights with the ILogger interface.
 

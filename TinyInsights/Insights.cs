@@ -8,7 +8,7 @@ public class Insights : IInsights
     {
         insightsProviders.Add(provider);
     }
-    
+
     public Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null)
     {
         var tasks = new List<Task>();
@@ -49,7 +49,7 @@ public class Insights : IInsights
         }
 
         _ = Task.WhenAll(tasks);
-        
+
         return Task.CompletedTask;
     }
 
@@ -60,15 +60,15 @@ public class Insights : IInsights
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
         {
-            var task = provider.TrackDependencyAsync(dependencyType, dependencyName, data,startTime, duration, success, resultCode, exception);
+            var task = provider.TrackDependencyAsync(dependencyType, dependencyName, data, startTime, duration, success, resultCode, exception);
             tasks.Add(task);
         }
 
-        _ =  Task.WhenAll(tasks);
-        
+        _ = Task.WhenAll(tasks);
+
         return Task.CompletedTask;
     }
-    
+
     public Dependency CreateDependencyTracker(string dependencyType, string dependencyName, string data)
     {
         var dependency = new Dependency(this)
@@ -79,5 +79,21 @@ public class Insights : IInsights
         };
 
         return dependency;
+    }
+
+    public void OverrideAnonymousUserId(string userId)
+    {
+        foreach (var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
+        {
+            provider.OverrideAnonymousUserId(userId);
+        }
+    }
+
+    public void GenerateNewAnonymousUserId()
+    {
+        foreach (var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
+        {
+            provider.GenerateNewAnonymousUserId();
+        }
     }
 }
