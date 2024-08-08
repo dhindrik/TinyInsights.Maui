@@ -1,11 +1,19 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.ComponentModel.DataAnnotations
+@inject NavigationManager NavigationManager
+@inherits LayoutComponentBase
 <div>
     <CascadingValue Value="IsLoggedIn">
         <CascadingValue Value="IsLoggedInChanged">
             <RadzenLayout>
                 <RadzenHeader>
-                    <RadzenStack>
+                    <RadzenStack JustifyContent="JustifyContent.SpaceBetween" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"> 
                         <h1>TinyInsights</h1>
+                        @if (IsLoggedIn)
+                        {
+                            <EditForm Model="Model" OnValidSubmit="Search">
+                                 <RadzenTextBox class="search" @bind-Value="@Model.Search" Placeholder="Search for a user id" />
+                            </EditForm>
+                        }
                     </RadzenStack>
 
                 </RadzenHeader>
@@ -27,10 +35,24 @@
     public bool IsLoggedIn { get; set; }
     public EventCallback<bool> IsLoggedInChanged { get; set; }
 
+    public SearchModel Model { get; set; } = new SearchModel();
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
 
         IsLoggedInChanged = EventCallback.Factory.Create<bool>(this, x => IsLoggedIn = x);
+    }
+
+    private void Search()
+    {
+        NavigationManager.NavigateTo($"/SearchResult/{Model.Search}");
+    }
+
+    public class SearchModel
+    {
+        [Required]
+        [MinLength(1)]
+        public string? Search { get; set; } 
     }
 }

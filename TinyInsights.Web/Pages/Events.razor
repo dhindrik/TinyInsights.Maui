@@ -11,12 +11,12 @@ else
 {
     <RadzenDataGrid Data="events">
         <Columns>
-            <RadzenDataGridColumn TItem="EventItem" Width="100px">
+            <RadzenDataGridColumn TItem="EventItem" Width="100px" Title="Event type">
                 <Template>
-                        <RadzenIcon Icon="@GetIcon(context.EventType)" title="Page View" />
+                        <RadzenIcon Icon="@GetIcon(context.EventType)" title="@GetName(context.EventType)" />                   
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="EventItem" Title="Timestamp" Property="@nameof(EventItem.Timestamp)" />
+            <RadzenDataGridColumn TItem="EventItem" Title="Timestamp" Width="200px" Property="@nameof(EventItem.Timestamp)" />
             <RadzenDataGridColumn TItem="EventItem" Title="Name" Property="@nameof(EventItem.Name)" />
             <RadzenDataGridColumn TItem="EventItem"  Width="100px">
                 <Template>
@@ -28,10 +28,14 @@ else
 }
 
 @code {
+
+    [CascadingParameter]
+    public required GlobalFilter GlobalFilter { get; set; }
+
     [Parameter]
     public required string UserId { get; set; }
     [Parameter]
-    public required DateTime Timestamp { get; set; }
+    public required DateTime? Timestamp { get; set; }
 
     private bool isLoading = true;
     private List<EventItem> events = new();
@@ -40,7 +44,15 @@ else
     {
         await base.OnParametersSetAsync();
 
-        events = await Service.GetEventsByUser(UserId, Timestamp);
+        if(Timestamp.HasValue)
+        {
+            events = await Service.GetEventsByUser(UserId, Timestamp.Value);
+        }
+        else
+        {
+            events = await Service.GetEventsByUser(UserId, GlobalFilter);
+        }
+        
         
         isLoading = false;
     }
@@ -58,6 +70,15 @@ else
         EventType.PageView => "visibility",
         EventType.Crash => "dangerous",
         EventType.Error => "error",
+        _ => string.Empty
+    };
+
+    private string GetName(EventType eventType) => eventType switch
+    {
+        EventType.CustomEvent => "Custom event",
+        EventType.PageView => "Page view",
+        EventType.Crash => "Crash",
+        EventType.Error => "Error",
         _ => string.Empty
     };
 

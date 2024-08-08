@@ -5,3 +5,8 @@ h1{
 h1:focus-visible {
     outline: none;
 }
+
+::deep .search {
+    margin-right: 20px;
+    width:500px;
+}

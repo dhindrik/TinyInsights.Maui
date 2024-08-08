@@ -14,6 +14,7 @@ public interface IInsightsService
     Task<ErrorDetails> GetCrashDetails(string id, GlobalFilter filter);
     Task<ErrorDetails> GetErrorDetails(string id, GlobalFilter filter);
     Task<List<EventItem>> GetEventsByUser(string userId, DateTime timestamp);
+    Task<List<EventItem>> GetEventsByUser(string userId, GlobalFilter filter);
     Task<List<AvgPerKey>> GetDependencyAvgDurations(GlobalFilter filter);
     Task<List<CountPerKey>> GetTopDependencies(GlobalFilter filter);
     Task<List<CountPerKey>> GetFailedDependencies(GlobalFilter filter);

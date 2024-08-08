@@ -1,0 +1,25 @@
+﻿@page "/SearchResult/{UserId}"
+
+<RadzenStack Gap="20">
+    <RadzenRow JustifyContent="JustifyContent.End">
+        <GlobalFilters />
+    </RadzenRow>
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Events for user</h2>
+
+               <Events UserId="@UserId" />
+            
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public required string UserId { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+    }
+}

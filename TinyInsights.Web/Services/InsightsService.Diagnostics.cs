@@ -146,10 +146,20 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
+    public Task<List<EventItem>> GetEventsByUser(string userId, GlobalFilter filter)
+    {
+        return GetEventsByUser(userId, DateTime.Now, DateTime.Now.AddDays(-filter.NumberOfDays));
+    }
+
     public async Task<List<EventItem>> GetEventsByUser(string userId, DateTime timestamp)
     {
-        var toDate = timestamp.ToUniversalTime().ToString("o");
-        var fromDate = timestamp.AddHours(-1).ToUniversalTime().ToString("o");
+        return await GetEventsByUser(userId, timestamp, timestamp.AddHours(-1));
+    }
+
+    private async Task<List<EventItem>> GetEventsByUser(string userId, DateTime to, DateTime from)
+    {
+        var toDate = to.ToUniversalTime().ToString("o");
+        var fromDate = from.ToUniversalTime().ToString("o");
 
         var eventQuery =
             $"customEvents| where user_Id == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
@@ -208,6 +218,8 @@ public partial class InsightsService : IInsightsService
 
         return result.OrderByDescending(x => x.Timestamp).ToList();
     }
+
+
 
     public async Task<List<AvgPerKey>> GetDependencyAvgDurations(GlobalFilter filter)
     {
@@ -374,13 +386,13 @@ public partial class InsightsService : IInsightsService
     {
         var filterBuilder = new StringBuilder();
         filterBuilder.Append(" ");
-        
+
         if (filter.OperatingSystemFilterValue is not null)
         {
             filterBuilder.Append($"client_OS == '{filter.OperatingSystemFilterValue}' and ");
         }
 
-        if(filter.AppVersions.Where(x => x != GlobalFilter.AppVersionsDefaultValue).Any())
+        if (filter.AppVersions.Where(x => x != GlobalFilter.AppVersionsDefaultValue).Any())
         {
             filterBuilder.Append("customDimensions.AppBuildNumber in (");
 
