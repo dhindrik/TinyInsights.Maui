@@ -60,7 +60,7 @@ await insights.TrackPageViewAsync("MainView");
 await insights.TrackEventAsync("AddButtonTapped");
 ```
 
-#### Track exceptions***
+#### Track exceptions
 ```csharp
 catch (Exception ex)
 {
