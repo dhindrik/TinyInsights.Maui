@@ -12,7 +12,7 @@ public class ErrorItem : LogItem
     public string? ClientType => GetData("client_Type");
     public string? ClientModel => GetData("client_Model");
     public string? ClientOs => GetData("client_OS");
-    public string? ClientOsVersion => GetData("OperatingSystemVersion");
+    public string? ClientOsVersion => GetData("OperatingSystemVersion") ?? GetData("client_Browser");
     public string? ClientCity => GetData("client_City");
     public string? ClientState => GetData("client_StateOrProvince");
     public string? ClientCountry => GetData("client_CountryOrRegion");
