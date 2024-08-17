@@ -148,14 +148,16 @@
     private async Task LoadData()
     {
         isLoading = true;
+        // Replace ' with the \'
+        var escapedId = Id.Replace("'", "\\'");
 
         if (isCrash)
         {
-            data = await Service.GetCrashDetails(Id, GlobalFilter);
+            data = await Service.GetCrashDetails(escapedId, GlobalFilter);
         }
         else
         {
-            data = await Service.GetErrorDetails(Id, GlobalFilter);
+            data = await Service.GetErrorDetails(escapedId, GlobalFilter);
         }
 
         isLoading = false;
