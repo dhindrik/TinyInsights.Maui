@@ -15,8 +15,9 @@ public class Dependency : IDisposable
     public string Data { get; internal set; }
     public DateTimeOffset StartTime { get; private set; }
     public TimeSpan Duration { get; private set; }
+    public HttpMethod? HttpMethod { get; internal set; }
 
-    private SemaphoreSlim semaphore = new SemaphoreSlim(1,1);
+    private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
     private bool isFinished;
 
@@ -43,11 +44,11 @@ public class Dependency : IDisposable
         {
             Duration = DateTimeOffset.Now - StartTime;
 
-            await insights.TrackDependencyAsync(DependencyType, DependencyName, Data, StartTime, Duration, sucess, resultCode, exception);
+            await insights.TrackDependencyAsync(DependencyType, DependencyName, Data, HttpMethod, StartTime, Duration, sucess, resultCode, exception);
 
             isFinished = true;
 
-            semaphore.Release(); 
+            semaphore.Release();
         }
     }
 }

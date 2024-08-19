@@ -293,7 +293,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         return Task.CompletedTask;
     }
 
-    public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null)
+    public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, HttpMethod? httpMethod, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null)
     {
         try
         {
@@ -315,10 +315,15 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 Timestamp = startTime,
                 Success = success,
                 Duration = duration,
-                ResultCode = resultCode.ToString()
+                ResultCode = resultCode.ToString(),
             };
 
             dependency.Properties.Add("FullUrl", fullUrl);
+
+            if (httpMethod != null)
+            {
+                dependency.Properties.Add("HttpMethod", httpMethod.ToString());
+            }
 
             if (exception != null)
             {
@@ -340,6 +345,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
 
         return Task.CompletedTask;
+    }
+
+    public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null)
+    {
+        return TrackDependencyAsync(dependencyType, dependencyName, data, null, startTime, duration, success, resultCode, exception);
     }
 
     #region ILogger

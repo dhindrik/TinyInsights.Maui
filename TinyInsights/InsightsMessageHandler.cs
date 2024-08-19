@@ -3,11 +3,11 @@ namespace TinyInsights;
 public class InsightsMessageHandler : DelegatingHandler
 {
     private readonly IInsights insights;
-    
+
     public InsightsMessageHandler(IInsights insights)
     {
         this.insights = insights;
-        
+
         InnerHandler = new HttpClientHandler();
     }
 
@@ -32,7 +32,7 @@ public class InsightsMessageHandler : DelegatingHandler
                 exception = e;
             }
 
-            await insights.TrackDependencyAsync("HTTP", request.RequestUri.Host, request.RequestUri.ToString(), startTime, endTime - startTime,
+            await insights.TrackDependencyAsync("HTTP", request.RequestUri.Host, request.RequestUri.ToString(), request.Method, startTime, endTime - startTime,
                 response.IsSuccessStatusCode, (int)response.StatusCode, exception);
 
             return response;
@@ -40,7 +40,7 @@ public class InsightsMessageHandler : DelegatingHandler
         catch (Exception ex)
         {
             var endTime = DateTime.Now;
-            await insights.TrackDependencyAsync("HTTP",request.RequestUri.Host, request.RequestUri.ToString(), startTime, endTime - startTime,
+            await insights.TrackDependencyAsync("HTTP", request.RequestUri.Host, request.RequestUri.ToString(), startTime, endTime - startTime,
                 false, 0, ex);
 
             throw;

@@ -56,11 +56,17 @@ public class Insights : IInsights
     public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration,
         bool success, int resultCode = 0, Exception? exception = null)
     {
+        return TrackDependencyAsync(dependencyType, dependencyName, data, null, startTime, duration, success, resultCode, exception);
+    }
+
+    public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, HttpMethod? httpMethod, DateTimeOffset startTime, TimeSpan duration,
+       bool success, int resultCode = 0, Exception? exception = null)
+    {
         var tasks = new List<Task>();
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
         {
-            var task = provider.TrackDependencyAsync(dependencyType, dependencyName, data, startTime, duration, success, resultCode, exception);
+            var task = provider.TrackDependencyAsync(dependencyType, dependencyName, data, httpMethod, startTime, duration, success, resultCode, exception);
             tasks.Add(task);
         }
 
@@ -76,6 +82,19 @@ public class Insights : IInsights
             DependencyType = dependencyType,
             DependencyName = dependencyName,
             Data = data
+        };
+
+        return dependency;
+    }
+
+    public Dependency CreateDependencyTracker(string dependencyType, string dependencyName, string data, HttpMethod httpMethod)
+    {
+        var dependency = new Dependency(this)
+        {
+            DependencyType = dependencyType,
+            DependencyName = dependencyName,
+            Data = data,
+            HttpMethod = httpMethod
         };
 
         return dependency;
