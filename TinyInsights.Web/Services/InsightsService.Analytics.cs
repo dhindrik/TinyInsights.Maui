@@ -56,7 +56,7 @@ public partial class InsightsService
     public Task<List<CountPerKey>> GetUserPerLanguage(GlobalFilter filter)
     {
         var queryFilter = GetFilter(filter);
-        var query = $"pageViews | extend language = tostring(customDimensions.Language) | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize PageViewsCount = dcount(user_Id) by language";
+        var query = $"pageViews | extend language = tostring(customDimensions.Language) | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize arg_max(timestamp, *) by user_Id | summarize PageViewsCount = dcount(user_Id) by language";
 
         return GetPerKeyResult(query);
     }

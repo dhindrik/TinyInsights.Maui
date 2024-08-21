@@ -98,6 +98,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     }
 #endif
 
+    public void AddGlobalProperty(string key, string value)
+    {
+        client.Context.GlobalProperties[key] = value;
+    }
+
     public void OverrideAnonymousUserId(string userId)
     {
         SetUserId(userId);

@@ -4,6 +4,14 @@ public class Insights : IInsights
 {
     private readonly List<IInsightsProvider> insightsProviders = new();
 
+    public void AddGlobalProperty(string key, string value)
+    {
+        foreach(var provider in insightsProviders.Where(x => x.IsTrackErrorsEnabled))
+        {
+            provider.AddGlobalProperty(key, value);
+        }
+    }
+
     public void AddProvider(IInsightsProvider provider)
     {
         insightsProviders.Add(provider);

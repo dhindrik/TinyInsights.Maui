@@ -4,6 +4,8 @@ public interface IInsights
 {
     void AddProvider(IInsightsProvider provider);
 
+    void AddGlobalProperty(string key, string value);
+
     Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null);
 
     Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null);

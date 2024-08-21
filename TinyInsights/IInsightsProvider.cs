@@ -8,6 +8,8 @@ public interface IInsightsProvider
     bool IsTrackEventsEnabled { get; set; }
     bool IsTrackDependencyEnabled { get; set; }
 
+    void AddGlobalProperty(string key, string value);
+
     Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null);
 
     Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null);
