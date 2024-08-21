@@ -8,7 +8,7 @@ public interface IInsightsProvider
     bool IsTrackEventsEnabled { get; set; }
     bool IsTrackDependencyEnabled { get; set; }
 
-    void AddGlobalProperty(string key, string value);
+    void UpsertGlobalProperty(string key, string value);
 
     Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null);
 

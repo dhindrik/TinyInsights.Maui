@@ -4,7 +4,7 @@ public interface IInsights
 {
     void AddProvider(IInsightsProvider provider);
 
-    void AddGlobalProperty(string key, string value);
+    void UpsertGlobalProperty(string key, string value);
 
     Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null);
 
