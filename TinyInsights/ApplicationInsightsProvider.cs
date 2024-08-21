@@ -21,6 +21,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public bool IsTrackErrorsEnabled { get; set; } = true;
     public bool IsTrackCrashesEnabled { get; set; } = true;
     public bool IsTrackPageViewsEnabled { get; set; } = true;
+    public bool IsAutoTrackPageViewsEnabled { get; set; } = true;
     public bool IsTrackEventsEnabled { get; set; } = true;
     public bool IsTrackDependencyEnabled { get; set; } = true;
 
@@ -29,7 +30,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-
+       
         var configuration = new TelemetryConfiguration()
         {
             ConnectionString = connectionString
@@ -46,6 +47,18 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
 
         Task.Run(SendCrashes);
+
+        if(IsAutoTrackPageViewsEnabled)
+        {
+            Microsoft.Maui.Handlers.PageHandler.Mapper.AppendToMapping(nameof(IContentView.Content), (_, view) =>
+            {
+                Type viewType = view.GetType();
+                if(view is Page)
+                {
+                    TrackPageViewAsync(viewType.FullName ?? viewType.Name, new Dictionary<string, string> { { "DisplayName", viewType.Name } });
+                }
+            });
+        }
     }
 
     private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
