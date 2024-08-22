@@ -9,6 +9,8 @@ public interface IInsightsProvider
     bool IsTrackEventsEnabled { get; set; }
     bool IsTrackDependencyEnabled { get; set; }
 
+    void ConfigureAutoPageTracking();
+
     void UpsertGlobalProperty(string key, string value);
 
     Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null);

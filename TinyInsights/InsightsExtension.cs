@@ -23,6 +23,8 @@ public static class InsightsExtension
 #endif
             configureProvider?.Invoke(provider);
 
+            provider.ConfigureAutoPageTracking();
+
             var insights = new Insights();
             insights.AddProvider(provider);
 

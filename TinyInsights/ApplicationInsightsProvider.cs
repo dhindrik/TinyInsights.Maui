@@ -4,6 +4,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
 namespace TinyInsights;
@@ -49,18 +50,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
 
         Task.Run(SendCrashes);
-
-        if(IsAutoTrackPageViewsEnabled)
-        {
-            Microsoft.Maui.Handlers.PageHandler.Mapper.AppendToMapping(nameof(IContentView.Content), (_, view) =>
-            {
-                Type viewType = view.GetType();
-                if(view is Page)
-                {
-                    TrackPageViewAsync(viewType.FullName ?? viewType.Name, new Dictionary<string, string> { { "DisplayName", viewType.Name } });
-                }
-            });
-        }
+ 
     }
 
     private void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
@@ -113,6 +103,28 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 #endif
+
+    public void ConfigureAutoPageTracking()
+    {
+        if(IsAutoTrackPageViewsEnabled)
+        {
+            Microsoft.Maui.Handlers.PageHandler.Mapper.AppendToMapping(nameof(IContentView.Content), (_, view) =>
+            {
+                Type viewType = view.GetType();
+                if(view is Page page)
+                {
+                    // Tracks on first load
+                    TrackPageViewAsync(viewType.FullName ?? viewType.Name, new Dictionary<string, string> { { "DisplayName", viewType.Name } });
+
+                    // Tracks on return
+                    page.Appearing += (s, e) =>
+                    {
+                        TrackPageViewAsync(viewType.FullName ?? viewType.Name, new Dictionary<string, string> { { "DisplayName", viewType.Name } });
+                    };
+                }
+            });
+        }
+    }
 
     public void UpsertGlobalProperty(string key, string value)
     {

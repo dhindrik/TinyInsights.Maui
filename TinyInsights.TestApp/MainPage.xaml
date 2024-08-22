@@ -17,6 +17,7 @@
             <Button x:Name="ExceptionButton" Text="Track exception" Clicked="ExceptionButton_OnClicked" />
             <Button x:Name="TrackHttpButton" Text="Track http request" Clicked="TrackHttpButton_OnClicked" />
             <Button x:Name="CrashButtom" Text="Crash app" Clicked="CrashButtom_OnClicked" />
+            <Button  Text="Test page automatic page tracking" Clicked="NewPageButton_Clicked" />
         </VerticalStackLayout>
     </ScrollView>
 
