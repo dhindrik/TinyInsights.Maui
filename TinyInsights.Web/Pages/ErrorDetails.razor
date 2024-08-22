@@ -1,15 +1,18 @@
 @page "/diagnostics/crashes/details/{*Id}"
 @page "/diagnostics/errors/details/{*Id}"
+@using System.Web
+@using System.Text.RegularExpressions
 
 @inherits TinyInsightsComponentBase
 
 @inject IInsightsService Service
 @inject DialogService DialogService
 
+
 <RadzenStack>
     <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
         <a href="@backUrl" title="Back">
-            <RadzenIcon Icon="arrow_back"/>
+            <RadzenIcon Icon="arrow_back" />
         </a>
         <GlobalFilters />
 
@@ -20,53 +23,53 @@
 
         @if (isLoading)
         {
-            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
         }
         else
         {
             <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
-                <LabelValuePair Key="Count" Value="@data.Count.ToString()"/>
-                <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()"/>
-                <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))"/>
-                <LabelValuePair Key="Affected operating systems" Value="@(string.Join(", ", data.AffectedOperatingSystems))"/>
+                <LabelValuePair Key="Count" Value="@data.Count.ToString()" />
+                <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()" />
+                <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))" />
+                <LabelValuePair Key="Affected operating systems" Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
             </RadzenStack>
         }
 
     </RadzenCard>
     <RadzenCard>
-    <h2>Message</h2>
+        <h2>Message</h2>
         @if (isLoading)
         {
-            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
         }
         else
         {
             <p class="stacktrace">
-            @if (data.Items.Count > 0 && data.Items.First().Message is not null)
-            {
-                @data.Items.First().Message
-
-            }
-            else
-            {
-                <span>No message available</span>
-            }
-         </p>
-    }
+                @if (data.Items.Count > 0 && data.Items.First().Message is not null)
+                {
+                    @data.Items.First().Message
+                }
+                else
+                {
+                    <span>No message available</span>
+                }
+            </p>
+        }
     </RadzenCard>
     <RadzenCard>
         <h2>Stacktrace</h2>
         @if (isLoading)
         {
-        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
-}
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+        }
         else
         {
             <p class="stacktrace">
                 @if (data.Items.Count > 0 && data.Items.First().StackTrace is not null)
                 {
-                    @data.Items.First().StackTrace
-
+                    <code>
+                        @((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@data.Items.First().StackTrace ?? string.Empty), "\r?\n|\r", "<br />"));
+                    </code>
                 }
                 else
                 {
@@ -79,25 +82,25 @@
         <h2>@listHeader</h2>
         @if (isLoading)
         {
-        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
         }
         else
         {
             <RadzenDataGrid Data="data.Items">
                 <Columns>
-                    <RadzenDataGridColumn TItem="ErrorItem" Title="Timestamp" Property="@nameof(ErrorItem.Timestamp)"/>
-                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device" Property="@nameof(ErrorItem.ClientModel)"/>
-                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS" Property="@nameof(ErrorItem.ClientOs)"/>
-                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS version" Property="@nameof(ErrorItem.ClientOsVersion)"/>
-                    <RadzenDataGridColumn TItem="ErrorItem" Title="Country" Property="@nameof(ErrorItem.ClientCountry)"/>
+                    <RadzenDataGridColumn TItem="ErrorItem" Title="Timestamp" Property="@nameof(ErrorItem.Timestamp)" />
+                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device" Property="@nameof(ErrorItem.ClientModel)" />
+                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS" Property="@nameof(ErrorItem.ClientOs)" />
+                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS version" Property="@nameof(ErrorItem.ClientOsVersion)" />
+                    <RadzenDataGridColumn TItem="ErrorItem" Title="Country" Property="@nameof(ErrorItem.ClientCountry)" />
                     <RadzenDataGridColumn TItem="ErrorItem" Width="100px">
                         <Template>
-                            <RadzenButton Icon="description" Click="@(async (args) => await ShowAllProperties(context))"/>
+                            <RadzenButton Icon="description" Click="@(async (args) => await ShowAllProperties(context))" />
                         </Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="ErrorItem" Width="100px">
                         <Template>
-                            <RadzenButton Icon="format_list_numbered" Click="@(async (args) => await ShowEvents(context))"/>
+                            <RadzenButton Icon="format_list_numbered" Click="@(async (args) => await ShowEvents(context))" />
                         </Template>
                     </RadzenDataGridColumn>
                 </Columns>
@@ -110,16 +113,16 @@
 @code {
     [Parameter]
     public required string Id { get; set; }
-    
+
     [CascadingParameter]
     public required GlobalFilter GlobalFilter { get; set; }
 
     private bool isLoading = true;
     private bool isCrash;
-    private string backUrl = string.Empty,detailsHeader = string.Empty, listHeader = string.Empty;
+    private string backUrl = string.Empty, detailsHeader = string.Empty, listHeader = string.Empty;
 
     private Services.Models.ErrorDetails data = new();
-    
+
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
@@ -162,14 +165,14 @@
     {
         await DialogService.OpenAsync<AllProperties>($"All properties",
             new Dictionary<string, object>() { { "Properties", item.Data } },
-            new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true});
+            new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true });
     }
-    
+
     private async Task ShowEvents(ErrorItem item)
     {
         await DialogService.OpenAsync<Events>($"Recent events",
             new Dictionary<string, object>() { { "UserId", item.UserId }, { "Timestamp", item.Timestamp } },
-            new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true});
+            new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true });
     }
 }
 
