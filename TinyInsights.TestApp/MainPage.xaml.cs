@@ -95,4 +95,9 @@ public partial class MainPage : ContentPage
     {
         throw new Exception("Crash Boom Bang!");
     }
+
+    private async void NewPageButton_Clicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new NewPage());
+    }
 }
