@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace TinyInsights.TestApp;
 
@@ -18,8 +19,6 @@ public partial class MainPage : ContentPage
         insights.OverrideAnonymousUserId("TestUser");
 
         InitializeComponent();
-
-
     }
 
     private bool useILogger;
@@ -99,5 +98,10 @@ public partial class MainPage : ContentPage
     private async void NewPageButton_Clicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new NewPage());
+    }
+
+    private void Button_Clicked(object sender, EventArgs e)
+    {
+        Debug.WriteLine($"Memory: {GC.GetTotalMemory(true)}");
     }
 }
