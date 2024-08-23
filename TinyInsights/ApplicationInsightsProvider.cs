@@ -156,41 +156,36 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
-            Debug.WriteLine("TinyInsights: Sending crashes");
-
             var crashes = ReadCrashes();
 
-            if(crashes is null)
+            if(crashes is null || crashes.Count == 0)
             {
                 return;
             }
 
-            if(crashes.Count > 0)
+            Debug.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
+
+            foreach(var crash in crashes)
             {
-                Debug.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
+                var ex = crash.GetException();
 
-                foreach(var crash in crashes)
+                if (ex is null)
                 {
-                    var ex = crash.GetException();
-
-                    if (ex is null)
-                    {
-                        continue;
-                    }
-
-                    var properties = new Dictionary<string, string>
-                    {
-                        { "IsCrash", "true" },
-                        { "StackTrace", crash.StackTrace ?? string.Empty },
-                        { "ExceptionType", crash.ExceptionType },
-                        { "Source", crash.Source ?? string.Empty }
-                    };
-
-                    await TrackErrorAsync(ex, properties);
+                    continue;
                 }
 
-                ResetCrashes();
+                var properties = new Dictionary<string, string>
+                {
+                    { "IsCrash", "true" },
+                    { "StackTrace", crash.StackTrace ?? string.Empty },
+                    { "ExceptionType", crash.ExceptionType },
+                    { "Source", crash.Source ?? string.Empty }
+                };
+
+                await TrackErrorAsync(ex, properties);
             }
+
+            ResetCrashes();
         }
         catch(Exception)
         {
