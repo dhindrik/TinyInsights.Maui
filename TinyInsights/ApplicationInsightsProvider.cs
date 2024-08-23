@@ -43,6 +43,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception)
         {
+            Debug.WriteLine("TinyInsights: Error creating TelemetryClient");
         }
 
         Task.Run(SendCrashes);
@@ -82,6 +83,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception)
         {
+            Debug.WriteLine("TinyInsights: Error creating TelemetryClient");
         }
 
         AddMetaData();
@@ -154,6 +156,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
+            Debug.WriteLine("TinyInsights: Sending crashes");
+
             var crashes = ReadCrashes();
 
             if (crashes.Count > 0)
@@ -179,6 +183,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception)
         {
+            Debug.WriteLine("TinyInsights: Error sending crashes");
         }
     }
 
@@ -186,6 +191,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
+            Debug.WriteLine("TinyInsights: Read crashes");
+
             var path = Path.Combine(logPath, crashLogFilename);
 
             if (!File.Exists(path))
@@ -205,6 +212,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception)
         {
+            Debug.WriteLine("TinyInsights: Error reading crashes");
         }
 
         return new List<Crash>();
@@ -214,11 +222,14 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
+            Debug.WriteLine("TinyInsights: Reset crashes");
+
             var path = Path.Combine(logPath, crashLogFilename);
             File.Delete(path);
         }
         catch (Exception)
         {
+            Debug.WriteLine("TinyInsights: Error clearing crashes");
         }
     }
 
@@ -226,6 +237,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
+            Debug.WriteLine("TinyInsights: Handle crashes");
+
             var crashes = ReadCrashes();
 
             crashes.Add(new Crash(ex));
@@ -238,6 +251,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception)
         {
+            Debug.WriteLine("TinyInsights: Error handling crashes");
         }
     }
 
@@ -259,6 +273,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception)
         {
+            Debug.WriteLine("TinyInsights: Error tracking error");
         }
 
         return Task.CompletedTask;
@@ -273,9 +288,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             client.TrackEvent(eventName, properties);
             client.Flush();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-
+            Debug.WriteLine("TinyInsights: Error tracking event");
         }
 
         return Task.CompletedTask;
@@ -285,14 +300,14 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
-            Debug.WriteLine($"TinyInsights: Tracking page view {viewName}");
+            Debug.WriteLine($"TinyInsights: tracking page view {viewName}");
 
             client.TrackPageView(viewName);
             client.Flush();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-
+            Debug.WriteLine("TinyInsights: Error tracking page view");
         }
 
         return Task.CompletedTask;
@@ -344,9 +359,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             client.TrackDependency(dependency);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-
+            Debug.WriteLine("TinyInsights: Error tracking dependency");
         }
 
         return Task.CompletedTask;
