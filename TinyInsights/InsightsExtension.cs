@@ -13,8 +13,7 @@ public static class InsightsExtension
 
     public static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string applicationInsightsConnectionString, Action<IInsightsProvider>? configureProvider = null)
     {
-
-        appBuilder.Services.AddSingleton<IInsights>((services) =>
+        appBuilder.Services.AddSingleton<IInsights>((_) =>
         {
 #if WINDOWS
 
@@ -37,8 +36,7 @@ public static class InsightsExtension
 
     public static MauiAppBuilder UseTinyInsightsAsILogger(this MauiAppBuilder appBuilder, string applicationInsightsConnectionString, Action<IInsightsProvider>? configureProvider = null)
     {
-
-        appBuilder.Services.AddSingleton<ILogger>((services) =>
+        appBuilder.Services.AddSingleton<ILogger>((_) =>
         {
 #if WINDOWS
             var provider = new ApplicationInsightsProvider(MauiWinUIApplication.Current, applicationInsightsConnectionString);
@@ -55,5 +53,4 @@ public static class InsightsExtension
 
         return appBuilder;
     }
-
 }

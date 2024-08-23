@@ -25,6 +25,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public bool IsTrackDependencyEnabled { get; set; } = true;
 
 #if IOS || MACCATALYST || ANDROID
+
     public ApplicationInsightsProvider(string connectionString)
     {
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -41,7 +42,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             AddMetaData();
         }
-        catch (Exception)
+        catch(Exception)
         {
             Debug.WriteLine("TinyInsights: Error creating TelemetryClient");
         }
@@ -49,9 +50,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         Task.Run(SendCrashes);
     }
 
-    private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+    private void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        if (IsTrackCrashesEnabled)
+        if(IsTrackCrashesEnabled)
         {
             HandleCrash(e.Exception);
         }
@@ -59,7 +60,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        if (IsTrackCrashesEnabled)
+        if(IsTrackCrashesEnabled)
         {
             HandleCrash((Exception)e.ExceptionObject);
         }
@@ -114,7 +115,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         var userId = Guid.NewGuid().ToString();
         SetUserId(userId);
-
     }
 
     private void SetUserId(string userId)
@@ -134,7 +134,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         client.Context.Cloud.RoleName = string.Empty;
         client.Context.Cloud.RoleInstance = string.Empty;
 
-        if (Preferences.ContainsKey(userIdKey))
+        if(Preferences.ContainsKey(userIdKey))
         {
             var userId = Preferences.Get(userIdKey, string.Empty);
 
@@ -160,19 +160,30 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             var crashes = ReadCrashes();
 
-            if (crashes.Count > 0)
+            if(crashes is null)
+            {
+                return;
+            }
+
+            if(crashes.Count > 0)
             {
                 Debug.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
 
-                foreach (var crash in crashes)
+                foreach(var crash in crashes)
                 {
                     var ex = crash.GetException();
+
+                    if (ex is null)
+                    {
+                        continue;
+                    }
+
                     var properties = new Dictionary<string, string>
                     {
                         { "IsCrash", "true" },
-                        {"StackTrace", crash.StackTrace },
-                        {"ExceptionType", crash.ExceptionType },
-                        {"Source", crash.Source}
+                        { "StackTrace", crash.StackTrace ?? string.Empty },
+                        { "ExceptionType", crash.ExceptionType },
+                        { "Source", crash.Source ?? string.Empty }
                     };
 
                     await TrackErrorAsync(ex, properties);
@@ -181,13 +192,13 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 ResetCrashes();
             }
         }
-        catch (Exception)
+        catch(Exception)
         {
             Debug.WriteLine("TinyInsights: Error sending crashes");
         }
     }
 
-    private List<Crash> ReadCrashes()
+    private List<Crash>? ReadCrashes()
     {
         try
         {
@@ -195,27 +206,21 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             var path = Path.Combine(logPath, crashLogFilename);
 
-            if (!File.Exists(path))
+            if(!File.Exists(path))
             {
-                return new List<Crash>();
+                return null;
             }
 
             var json = File.ReadAllText(path);
 
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                return new List<Crash>();
-            }
-
-            return JsonSerializer.Deserialize<List<Crash>>(json);
-
+            return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<List<Crash>>(json);
         }
-        catch (Exception)
+        catch(Exception)
         {
             Debug.WriteLine("TinyInsights: Error reading crashes");
         }
 
-        return new List<Crash>();
+        return null;
     }
 
     private void ResetCrashes()
@@ -227,7 +232,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             var path = Path.Combine(logPath, crashLogFilename);
             File.Delete(path);
         }
-        catch (Exception)
+        catch(Exception)
         {
             Debug.WriteLine("TinyInsights: Error clearing crashes");
         }
@@ -239,7 +244,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             Debug.WriteLine("TinyInsights: Handle crashes");
 
-            var crashes = ReadCrashes();
+            var crashes = ReadCrashes() ?? [];
 
             crashes.Add(new Crash(ex));
 
@@ -247,9 +252,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             var path = Path.Combine(logPath, crashLogFilename);
 
-            System.IO.File.WriteAllText(path, json);
+            File.WriteAllText(path, json);
         }
-        catch (Exception)
+        catch(Exception)
         {
             Debug.WriteLine("TinyInsights: Error handling crashes");
         }
@@ -261,17 +266,17 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             Debug.WriteLine($"TinyInsights: Tracking error {ex.Message}");
 
-            if (properties == null)
-            {
-                properties = new Dictionary<string, string>();
-            }
+            properties ??= [];
 
-            properties.TryAdd("StackTrace", ex.StackTrace);
+            if(ex.StackTrace is not null)
+            {
+                properties.TryAdd("StackTrace", ex.StackTrace);
+            }
 
             client.TrackException(ex, properties);
             client.Flush();
         }
-        catch (Exception)
+        catch(Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking error");
         }
@@ -288,7 +293,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             client.TrackEvent(eventName, properties);
             client.Flush();
         }
-        catch (Exception)
+        catch(Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking event");
         }
@@ -305,7 +310,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             client.TrackPageView(viewName);
             client.Flush();
         }
-        catch (Exception)
+        catch(Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking page view");
         }
@@ -321,7 +326,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             var fullUrl = data;
 
-            if (data.Contains("?"))
+            if(data.Contains('?'))
             {
                 var split = data.Split("?");
                 data = split[0];
@@ -340,17 +345,17 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             dependency.Properties.Add("FullUrl", fullUrl);
 
-            if (httpMethod != null)
+            if(httpMethod is not null)
             {
                 dependency.Properties.Add("HttpMethod", httpMethod.ToString());
             }
 
-            if (exception != null)
+            if(exception is not null)
             {
                 dependency.Properties.Add("ExceptionMessage", exception.Message);
                 dependency.Properties.Add("StackTrace", exception.StackTrace);
 
-                if (exception.InnerException != null)
+                if(exception.InnerException is not null)
                 {
                     dependency.Properties.Add("InnerExceptionMessage", exception.InnerException.Message);
                     dependency.Properties.Add("InnerExceptionStackTrace", exception.InnerException.StackTrace);
@@ -359,7 +364,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             client.TrackDependency(dependency);
         }
-        catch (Exception)
+        catch(Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking dependency");
         }
@@ -373,9 +378,10 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     }
 
     #region ILogger
+
     public async void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        if (!IsEnabled(logLevel))
+        if(!IsEnabled(logLevel))
         {
             return;
         }
@@ -395,27 +401,27 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         await logTask;
     }
 
-    private Task TrackDebugAsync<TState>(EventId eventId, TState state, Exception? exception)
+    private static Task TrackDebugAsync<TState>(EventId eventId, TState state, Exception? exception)
     {
         Debug.WriteLine($"TinyInsights: DebugLogging, Event: {GetEventName(eventId)}, State: {state}, Exception: {exception?.Message}");
         return Task.CompletedTask;
     }
 
-    private string GetEventName(EventId eventId)
+    private static string GetEventName(EventId eventId)
     {
         return eventId.Name ?? eventId.Id.ToString();
     }
 
-    private Dictionary<string, string> GetLoggerData<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    private static Dictionary<string, string> GetLoggerData<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         return new Dictionary<string, string>()
-            {
-                { "LogLevel", logLevel.ToString() },
-                { "EventId", eventId.ToString() },
-                { "EventName", eventId.Name?.ToString() ?? string.Empty },
-                { "State", state?.ToString() ?? string.Empty },
-                { "Message", formatter(state, exception) }
-            };
+        {
+            { "LogLevel", logLevel.ToString() },
+            { "EventId", eventId.ToString() },
+            { "EventName", eventId.Name?.ToString() ?? string.Empty },
+            { "State", state?.ToString() ?? string.Empty },
+            { "Message", formatter(state, exception) }
+        };
     }
 
     public bool IsEnabled(LogLevel logLevel)
@@ -435,5 +441,5 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
 
-    #endregion
+    #endregion ILogger
 }

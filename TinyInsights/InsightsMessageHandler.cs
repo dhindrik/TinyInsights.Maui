@@ -27,34 +27,34 @@ public class InsightsMessageHandler : DelegatingHandler
             {
                 response.EnsureSuccessStatusCode();
             }
-            catch (Exception e)
+            catch(Exception e)
             {
                 exception = e;
             }
 
             await insights.TrackDependencyAsync(
-                "HTTP", 
-                request.RequestUri?.Host ?? "Unknown host", 
-                request.RequestUri?.ToString() ?? string.Empty, 
-                request.Method, 
-                startTime, 
+                "HTTP",
+                request.RequestUri?.Host ?? "Unknown host",
+                request.RequestUri?.ToString() ?? string.Empty,
+                request.Method,
+                startTime,
                 endTime - startTime,
                 response.IsSuccessStatusCode,
-                (int)response.StatusCode, 
+                (int)response.StatusCode,
                 exception);
 
             return response;
         }
-        catch (Exception ex)
+        catch(Exception ex)
         {
             var endTime = DateTime.Now;
             await insights.TrackDependencyAsync(
-                "HTTP", 
-                request.RequestUri?.Host ?? "Unknown host", 
-                request.RequestUri?.ToString() ?? string.Empty, 
+                "HTTP",
+                request.RequestUri?.Host ?? "Unknown host",
+                request.RequestUri?.ToString() ?? string.Empty,
                 startTime,
                 endTime - startTime,
-                false, 
+                false,
                 0,
                 ex);
 
