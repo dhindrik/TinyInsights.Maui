@@ -10,14 +10,14 @@ public class Dependency : IDisposable
         StartTime = DateTimeOffset.Now;
     }
 
-    public string DependencyType { get; internal set; }
-    public string DependencyName { get; internal set; }
-    public string Data { get; internal set; }
+    public string DependencyType { get; internal set; } = string.Empty;
+    public string DependencyName { get; internal set; } = string.Empty;
+    public string Data { get; internal set; } = string.Empty;
     public DateTimeOffset StartTime { get; private set; }
     public TimeSpan Duration { get; private set; }
     public HttpMethod? HttpMethod { get; internal set; }
 
-    private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+    private readonly SemaphoreSlim semaphore = new(1, 1);
 
     private bool isFinished;
 
@@ -26,25 +26,25 @@ public class Dependency : IDisposable
         Task.Run(() => Finish(true));
     }
 
-    public Task Finish(bool sucess, int resultCode = 0)
+    public Task Finish(bool success, int resultCode = 0)
     {
-        return Finish(sucess, resultCode, null);
+        return Finish(success, resultCode, null);
     }
 
-    public Task Finish(bool sucess, Exception exception)
+    public Task Finish(bool success, Exception exception)
     {
-        return Finish(sucess, 0, exception);
+        return Finish(success, 0, exception);
     }
 
-    public async Task Finish(bool sucess, int resultCode, Exception exception = null)
+    public async Task Finish(bool success, int resultCode, Exception? exception = null)
     {
         await semaphore.WaitAsync();
 
-        if (!isFinished)
+        if(!isFinished)
         {
             Duration = DateTimeOffset.Now - StartTime;
 
-            await insights.TrackDependencyAsync(DependencyType, DependencyName, Data, HttpMethod, StartTime, Duration, sucess, resultCode, exception);
+            await insights.TrackDependencyAsync(DependencyType, DependencyName, Data, HttpMethod, StartTime, Duration, success, resultCode, exception);
 
             isFinished = true;
 

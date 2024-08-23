@@ -2,10 +2,6 @@ namespace TinyInsights;
 
 public class Crash
 {
-    public Crash()
-    {
-    }
-
     public Crash(Exception exception)
     {
         Message = exception.Message;
@@ -15,14 +11,25 @@ public class Crash
     }
 
     public string Message { get; init; }
-    public string StackTrace { get; init; }
+    public string? StackTrace { get; init; }
     public string ExceptionType { get; init; }
-    public string Source { get; init; }
+    public string? Source { get; init; }
 
-    public Exception GetException()
+    public Exception? GetException()
     {
-        var ex = (Exception)Activator.CreateInstance(Type.GetType(ExceptionType), args: Message);
-        ex.Source = Source;
+        var type = Type.GetType(ExceptionType);
+
+        if(type is null)
+        {
+            return null;
+        }
+
+        var ex = Activator.CreateInstance(type, args: Message) as Exception;
+
+        if(ex is not null)
+        {
+            ex.Source = Source;
+        }
 
         return ex;
     }
