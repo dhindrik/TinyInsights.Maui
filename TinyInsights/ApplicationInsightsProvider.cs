@@ -2,6 +2,8 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography.X509Certificates;
@@ -117,10 +119,18 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                     TrackPageViewAsync(viewType.FullName ?? viewType.Name, new Dictionary<string, string> { { "DisplayName", viewType.Name } });
 
                     // Tracks on return
-                    page.Appearing += (s, e) =>
+                    //page.Appearing += (s, e) =>
+                    //{
+                    //    TrackPageViewAsync(viewType.FullName ?? viewType.Name, new Dictionary<string, string> { { "DisplayName", viewType.Name } });
+                    //};
+
+                    WeakEventHandler<EventArgs> weakHandler = new(OnAppearing);
+                    page.Appearing += weakHandler.Handler;
+
+                    void OnAppearing(object? _, EventArgs e)
                     {
                         TrackPageViewAsync(viewType.FullName ?? viewType.Name, new Dictionary<string, string> { { "DisplayName", viewType.Name } });
-                    };
+                    }
                 }
             });
         }
