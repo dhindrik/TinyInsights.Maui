@@ -124,13 +124,30 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                     //    TrackPageViewAsync(viewType.FullName ?? viewType.Name, new Dictionary<string, string> { { "DisplayName", viewType.Name } });
                     //};
 
-                    WeakEventHandler<EventArgs> weakHandler = new(OnAppearing);
-                    page.Appearing += weakHandler.Handler;
+                    //WeakEventHandler<EventArgs> weakHandler = new(OnAppearing);
+                    //page.Appearing += weakHandler.Handler;
 
-                    void OnAppearing(object? _, EventArgs e)
+                    //void OnAppearing(object? _, EventArgs e)
+                    //{
+                    //    TrackPageViewAsync(viewType.FullName ?? viewType.Name, new Dictionary<string, string> { { "DisplayName", viewType.Name } });
+                    //}
+
+
+
+                    WeakEventManager onAppearingWeakEventManager = new();
+                    page.Appearing += (s, e) =>
+                    {
+                        Debug.WriteLine("TinyInsights: Page Appearing event triggered");
+                        onAppearingWeakEventManager.HandleEvent(s, e, nameof(OnAppearing));
+                    };
+                    onAppearingWeakEventManager.AddEventHandler(OnAppearing, nameof(OnAppearing));
+
+                    void OnAppearing(object? sender, EventArgs e)
                     {
                         TrackPageViewAsync(viewType.FullName ?? viewType.Name, new Dictionary<string, string> { { "DisplayName", viewType.Name } });
                     }
+
+
                 }
             });
         }
