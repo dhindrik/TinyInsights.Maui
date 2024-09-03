@@ -9,7 +9,7 @@ public interface IInsightsProvider
     bool IsTrackEventsEnabled { get; set; }
     bool IsTrackDependencyEnabled { get; set; }
 
-    void ConfigureAutoPageTracking();
+    void Initialize();
 
     void UpsertGlobalProperty(string key, string value);
 
