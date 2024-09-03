@@ -10,6 +10,7 @@ namespace TinyInsights;
 
 public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 {
+    private static ApplicationInsightsProvider provider;
     private const string userIdKey = nameof(userIdKey);
 
     private const string crashLogFilename = "crashes.mauiinsights";
@@ -30,6 +31,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 #if IOS || MACCATALYST || ANDROID
     public ApplicationInsightsProvider(string connectionString)
     {
+        provider = this;
+
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
@@ -57,6 +60,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 #elif WINDOWS
     public ApplicationInsightsProvider(MauiWinUIApplication app, string connectionString)
     {
+        provider = this;
+
         app.UnhandledException += App_UnhandledException;
 
         telemetryConfiguration = new TelemetryConfiguration()
@@ -107,7 +112,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     private static void OnAppearing(object? sender, Page e)
     {
         var pageType = e.GetType();
-        //TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } });
+        provider.TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } });
     }
 
     public void UpsertGlobalProperty(string key, string value)
