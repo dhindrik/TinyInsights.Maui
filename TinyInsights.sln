@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyInsights.TestApp", "Tin
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{C4F61F00-5DBB-4913-93EF-2D11D056B4C3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyInsights.WebServer", "TinyInsights.WebServer\TinyInsights.WebServer.csproj", "{A803C1DB-22A0-4B48-A87E-D9815782547E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,11 +32,18 @@ Global
 		{606F1693-DAA1-4BEA-BF62-F21F0F509E75}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{606F1693-DAA1-4BEA-BF62-F21F0F509E75}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{606F1693-DAA1-4BEA-BF62-F21F0F509E75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A803C1DB-22A0-4B48-A87E-D9815782547E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A803C1DB-22A0-4B48-A87E-D9815782547E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A803C1DB-22A0-4B48-A87E-D9815782547E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A803C1DB-22A0-4B48-A87E-D9815782547E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{606F1693-DAA1-4BEA-BF62-F21F0F509E75} = {C4F61F00-5DBB-4913-93EF-2D11D056B4C3}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B22FA052-C4FE-4685-B660-995482C7D251}
 	EndGlobalSection
 EndGlobal
