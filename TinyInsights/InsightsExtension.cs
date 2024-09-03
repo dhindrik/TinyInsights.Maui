@@ -23,6 +23,8 @@ public static class InsightsExtension
 #endif
             configureProvider?.Invoke(provider);
 
+            provider.Initialize();
+
             var insights = new Insights();
             insights.AddProvider(provider);
 
@@ -45,6 +47,8 @@ public static class InsightsExtension
 #endif
 
             configureProvider?.Invoke(provider);
+
+            provider.Initialize();
 
             return provider;
         });

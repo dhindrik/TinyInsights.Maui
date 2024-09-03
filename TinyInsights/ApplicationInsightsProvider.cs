@@ -10,6 +10,7 @@ namespace TinyInsights;
 
 public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 {
+    private static ApplicationInsightsProvider provider;
     private const string userIdKey = nameof(userIdKey);
 
     private const string crashLogFilename = "crashes.mauiinsights";
@@ -18,27 +19,72 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     private TelemetryClient client;
 
+    private readonly TelemetryConfiguration telemetryConfiguration;
+
     public bool IsTrackErrorsEnabled { get; set; } = true;
     public bool IsTrackCrashesEnabled { get; set; } = true;
     public bool IsTrackPageViewsEnabled { get; set; } = true;
+    public bool IsAutoTrackPageViewsEnabled { get; set; } = true;
     public bool IsTrackEventsEnabled { get; set; } = true;
     public bool IsTrackDependencyEnabled { get; set; } = true;
 
 #if IOS || MACCATALYST || ANDROID
-
     public ApplicationInsightsProvider(string connectionString)
     {
+        provider = this;
+
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-        var configuration = new TelemetryConfiguration()
+        telemetryConfiguration = new TelemetryConfiguration()
         {
             ConnectionString = connectionString
         };
 
+        void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+        {
+            if(IsTrackCrashesEnabled)
+            {
+                HandleCrash(e.Exception);
+            }
+        }
+
+        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            if(IsTrackCrashesEnabled)
+            {
+                HandleCrash((Exception)e.ExceptionObject);
+            }
+        }
+    }
+#elif WINDOWS
+    public ApplicationInsightsProvider(MauiWinUIApplication app, string connectionString)
+    {
+        provider = this;
+
+        app.UnhandledException += App_UnhandledException;
+
+        telemetryConfiguration = new TelemetryConfiguration()
+        {
+            ConnectionString = connectionString
+        };
+
+        void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+        {
+            if (IsTrackCrashesEnabled)
+            {
+                HandleCrash(e.Exception);
+            }
+        }
+    }
+#endif
+
+    public static bool IsInitialized { get; private set; }
+    public void Initialize()
+    {
         try
         {
-            client = new TelemetryClient(configuration);
+            client = new TelemetryClient(telemetryConfiguration);
 
             AddMetaData();
         }
@@ -47,59 +93,27 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Debug.WriteLine("TinyInsights: Error creating TelemetryClient");
         }
 
-        Task.Run(SendCrashes);
-    }
-
-    private void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
-    {
-        if(IsTrackCrashesEnabled)
+        if(IsInitialized)
         {
-            HandleCrash(e.Exception);
-        }
-    }
-
-    private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-    {
-        if(IsTrackCrashesEnabled)
-        {
-            HandleCrash((Exception)e.ExceptionObject);
-        }
-    }
-
-#elif WINDOWS
-    public ApplicationInsightsProvider(MauiWinUIApplication app, string connectionString)
-    {
-        app.UnhandledException += App_UnhandledException;
-
-        var configuration = new TelemetryConfiguration()
-        {
-            ConnectionString = connectionString
-        };
-
-        try
-        {
-            client = new TelemetryClient(configuration);
-
-            AddMetaData();
-        }
-        catch (Exception)
-        {
-            Debug.WriteLine("TinyInsights: Error creating TelemetryClient");
+            return;
         }
 
-        AddMetaData();
+        if(Application.Current is not null && IsAutoTrackPageViewsEnabled)
+        {
+            WeakEventHandler<Page> weakHandler = new(OnAppearing);
+            Application.Current.PageAppearing += weakHandler.Handler;
+        }
 
         Task.Run(SendCrashes);
+
+        IsInitialized = true;
     }
 
-    private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+    private static void OnAppearing(object? sender, Page e)
     {
-        if (IsTrackCrashesEnabled)
-        {
-            HandleCrash(e.Exception);
-        }
+        var pageType = e.GetType();
+        provider.TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } });
     }
-#endif
 
     public void UpsertGlobalProperty(string key, string value)
     {

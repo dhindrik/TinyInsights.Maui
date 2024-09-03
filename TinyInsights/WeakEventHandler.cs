@@ -6,10 +6,11 @@ internal class WeakEventHandler<TEventArgs>
 
     public WeakEventHandler(EventHandler<TEventArgs> handler)
     {
+        WeakEventManager test = new WeakEventManager();
         _weakHandler = new WeakReference<EventHandler<TEventArgs>>(handler);
     }
 
-    public void Handler(object sender, TEventArgs e)
+    public void Handler(object? sender, TEventArgs e)
     {
         if (_weakHandler.TryGetTarget(out var handler))
         {

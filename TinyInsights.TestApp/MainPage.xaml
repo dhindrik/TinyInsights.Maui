@@ -1,22 +1,40 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="TinyInsights.TestApp.MainPage">
+<ContentPage
+    x:Class="TinyInsights.TestApp.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
     <ScrollView Padding="20">
-        <VerticalStackLayout
-            Spacing="25">
-          <HorizontalStackLayout Spacing="10">
-          
-            <Switch IsToggled="{Binding UseILogger, Mode=TwoWay}" />
-            <Label Text="Use ILogger" />
-</HorizontalStackLayout>
-            <Button x:Name="PageViewButton" Text="Track page view" Clicked="PageViewButton_OnClicked" />
-            
-            <Button x:Name="EventButton" Text="Track event" Clicked="EventButton_OnClicked" />
-            <Button x:Name="ExceptionButton" Text="Track exception" Clicked="ExceptionButton_OnClicked" />
-            <Button x:Name="TrackHttpButton" Text="Track http request" Clicked="TrackHttpButton_OnClicked" />
-            <Button x:Name="CrashButtom" Text="Crash app" Clicked="CrashButtom_OnClicked" />
+        <VerticalStackLayout Spacing="25">
+            <HorizontalStackLayout Spacing="10">
+
+                <Switch IsToggled="{Binding UseILogger, Mode=TwoWay}" />
+                <Label Text="Use ILogger" />
+            </HorizontalStackLayout>
+            <Button
+                x:Name="PageViewButton"
+                Clicked="PageViewButton_OnClicked"
+                Text="Track page view" />
+
+            <Button
+                x:Name="EventButton"
+                Clicked="EventButton_OnClicked"
+                Text="Track event" />
+            <Button
+                x:Name="ExceptionButton"
+                Clicked="ExceptionButton_OnClicked"
+                Text="Track exception" />
+            <Button
+                x:Name="TrackHttpButton"
+                Clicked="TrackHttpButton_OnClicked"
+                Text="Track http request" />
+            <Button
+                x:Name="CrashButtom"
+                Clicked="CrashButtom_OnClicked"
+                Text="Crash app" />
+            <Button Clicked="NewPageButton_Clicked" Text="Test page automatic page tracking" />
+
+            <Button Clicked="Button_Clicked" Text="clear gc" />
         </VerticalStackLayout>
     </ScrollView>
 

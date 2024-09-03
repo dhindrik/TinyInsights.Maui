@@ -5,8 +5,11 @@ public interface IInsightsProvider
     bool IsTrackErrorsEnabled { get; set; }
     public bool IsTrackCrashesEnabled { get; set; }
     bool IsTrackPageViewsEnabled { get; set; }
+    bool IsAutoTrackPageViewsEnabled { get; set; }
     bool IsTrackEventsEnabled { get; set; }
     bool IsTrackDependencyEnabled { get; set; }
+
+    void Initialize();
 
     void UpsertGlobalProperty(string key, string value);
 
