@@ -64,14 +64,4 @@
     <ItemGroup>
       <ProjectReference Include="..\TinyInsights\TinyInsights.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <MauiXaml Update="NewPage.xaml">
-        <Generator>MSBuild:Compile</Generator>
-      </MauiXaml>
-      <MauiXaml Update="NewPage1.xaml">
-        <Generator>MSBuild:Compile</Generator>
-      </MauiXaml>
-    </ItemGroup>
-
 </Project>
