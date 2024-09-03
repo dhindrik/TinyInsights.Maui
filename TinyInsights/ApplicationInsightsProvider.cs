@@ -134,23 +134,23 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             //! Important: Checks if the property exists to avoid overridden ones set by the user.
             if(!_globalProperties.ContainsKey("Language"))
             {
-                UpsertGlobalProperty("Language", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+                _client.Context.GlobalProperties["Language"] = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
             }
             if(!_globalProperties.ContainsKey("Manufacturer"))
             {
-                UpsertGlobalProperty("Manufacturer", DeviceInfo.Manufacturer);
+                _client.Context.GlobalProperties["Manufacturer"] = DeviceInfo.Manufacturer;
             }
             if(!_globalProperties.ContainsKey("AppVersion"))
             {
-                UpsertGlobalProperty("AppVersion", AppInfo.VersionString);
+                _client.Context.GlobalProperties["AppVersion"] = AppInfo.VersionString;
             }
             if(!_globalProperties.ContainsKey("AppBuildNumber"))
             {
-                UpsertGlobalProperty("AppBuildNumber", AppInfo.BuildString);
+                _client.Context.GlobalProperties["AppBuildNumber"] = AppInfo.BuildString;
             }
             if(!_globalProperties.ContainsKey("OperatingSystemVersion"))
             {
-                UpsertGlobalProperty("OperatingSystemVersion", DeviceInfo.VersionString);
+                _client.Context.GlobalProperties["OperatingSystemVersion"] = DeviceInfo.VersionString;
             }
 
             Task.Run(SendCrashes);
