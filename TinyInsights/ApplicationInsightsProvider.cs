@@ -80,6 +80,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             return;
         }
 
+        CreateTelemetryClient();
+
         if(Application.Current is not null && IsAutoTrackPageViewsEnabled)
         {
             WeakEventHandler<Page> weakHandler = new(OnAppearing);
@@ -174,27 +176,20 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public void OverrideAnonymousUserId(string userId)
     {
-        SetUserId(userId);
-    }
-
-    public string GenerateNewAnonymousUserId()
-    {
-        var userId = Guid.NewGuid().ToString();
-        SetUserId(userId);
-
-        return userId;
-    }
-
-    private void SetUserId(string userId)
-    {
         Preferences.Set(userIdKey, userId);
-
         if(Client is not null)
         {
             Client.Context.User.Id = Preferences.Get(userIdKey, GenerateNewAnonymousUserId());
         }
     }
 
+    public string GenerateNewAnonymousUserId()
+    {
+        var userId = Guid.NewGuid().ToString();
+        Preferences.Set(userIdKey, userId);
+
+        return userId;
+    }
 
     private async Task SendCrashes()
     {
