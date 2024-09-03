@@ -25,5 +25,5 @@ public interface IInsightsProvider
 
     void OverrideAnonymousUserId(string userId);
 
-    void GenerateNewAnonymousUserId();
+    string GenerateNewAnonymousUserId();
 }

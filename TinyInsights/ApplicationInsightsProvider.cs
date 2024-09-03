@@ -4,12 +4,14 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
+using System.Net.NetworkInformation;
 using System.Text.Json;
 
 namespace TinyInsights;
 
 public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 {
+    private readonly string _connectionString;
     private static ApplicationInsightsProvider provider;
     private const string userIdKey = nameof(userIdKey);
 
@@ -17,9 +19,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     private readonly string logPath = FileSystem.CacheDirectory;
 
-    private TelemetryClient client;
-
-    private readonly TelemetryConfiguration telemetryConfiguration;
+    private TelemetryClient? _client;
+    private TelemetryClient? Client => _client ?? CreateTelemetryClient();
 
     public bool IsTrackErrorsEnabled { get; set; } = true;
     public bool IsTrackCrashesEnabled { get; set; } = true;
@@ -31,15 +32,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 #if IOS || MACCATALYST || ANDROID
     public ApplicationInsightsProvider(string connectionString)
     {
+        _connectionString = connectionString;
         provider = this;
 
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-
-        telemetryConfiguration = new TelemetryConfiguration()
-        {
-            ConnectionString = connectionString
-        };
 
         void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
@@ -60,14 +57,10 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 #elif WINDOWS
     public ApplicationInsightsProvider(MauiWinUIApplication app, string connectionString)
     {
+        _connectionString = connectionString;
         provider = this;
 
         app.UnhandledException += App_UnhandledException;
-
-        telemetryConfiguration = new TelemetryConfiguration()
-        {
-            ConnectionString = connectionString
-        };
 
         void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
@@ -82,16 +75,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public static bool IsInitialized { get; private set; }
     public void Initialize()
     {
-        try
-        {
-            client = new TelemetryClient(telemetryConfiguration);
-
-            AddMetaData();
-        }
-        catch(Exception)
-        {
-            Debug.WriteLine("TinyInsights: Error creating TelemetryClient");
-        }
+        CreateTelemetryClient();
 
         if(IsInitialized)
         {
@@ -115,61 +99,107 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         provider.TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } });
     }
 
+    readonly Dictionary<string, string> _globalProperties = [];
+    private TelemetryClient? CreateTelemetryClient()
+    {
+        if(_client is not null)
+        {
+            return _client;
+        }
+
+        try
+        {
+            var configuration = new TelemetryConfiguration()
+            {
+                ConnectionString = _connectionString
+            };
+
+            _client = new TelemetryClient(configuration);
+
+            _client.Context.Device.OperatingSystem = DeviceInfo.Platform.ToString();
+            _client.Context.Device.Model = DeviceInfo.Model;
+            _client.Context.Device.Type = DeviceInfo.Idiom.ToString();
+
+            // Role name will show device name if we don't set it to empty and we want it to be so anonymous as possible.
+            _client.Context.Cloud.RoleName = string.Empty;
+            _client.Context.Cloud.RoleInstance = string.Empty;
+            _client.Context.User.Id = Preferences.Get(userIdKey, GenerateNewAnonymousUserId());
+
+            // Add any global properties, the user has already added
+            foreach(KeyValuePair<string, string> property in _globalProperties)
+            {
+                _client.Context.GlobalProperties[property.Key] = property.Value;
+            }
+
+            //! Important: Checks if the property exists to avoid overridden ones set by the user.
+            if(!_globalProperties.ContainsKey("Language"))
+            {
+                _client.Context.GlobalProperties["Language"] = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            }
+            if(!_globalProperties.ContainsKey("Manufacturer"))
+            {
+                _client.Context.GlobalProperties["Manufacturer"] = DeviceInfo.Manufacturer;
+            }
+            if(!_globalProperties.ContainsKey("AppVersion"))
+            {
+                _client.Context.GlobalProperties["AppVersion"] = AppInfo.VersionString;
+            }
+            if(!_globalProperties.ContainsKey("AppBuildNumber"))
+            {
+                _client.Context.GlobalProperties["AppBuildNumber"] = AppInfo.BuildString;
+            }
+            if(!_globalProperties.ContainsKey("OperatingSystemVersion"))
+            {
+                _client.Context.GlobalProperties["OperatingSystemVersion"] = DeviceInfo.VersionString;
+            }
+
+            Task.Run(SendCrashes);
+
+            return _client;
+        }
+        catch(Exception)
+        {
+            Debug.WriteLine("TinyInsights: Error creating TelemetryClient");
+        }
+
+        return null;
+    }
+
     public void UpsertGlobalProperty(string key, string value)
     {
-        client.Context.GlobalProperties[key] = value;
+        _globalProperties[key] = value;
+        if(Client is not null)
+        {
+            Client.Context.GlobalProperties[key] = value;
+        }
     }
 
     public void OverrideAnonymousUserId(string userId)
     {
-        SetUserId(userId);
+        Preferences.Set(userIdKey, userId);
+        if(Client is not null)
+        {
+            Client.Context.User.Id = Preferences.Get(userIdKey, GenerateNewAnonymousUserId());
+        }
     }
 
-    public void GenerateNewAnonymousUserId()
+    public string GenerateNewAnonymousUserId()
     {
         var userId = Guid.NewGuid().ToString();
-        SetUserId(userId);
-    }
-
-    private void SetUserId(string userId)
-    {
         Preferences.Set(userIdKey, userId);
 
-        AddMetaData();
-    }
-
-    private void AddMetaData()
-    {
-        client.Context.Device.OperatingSystem = DeviceInfo.Platform.ToString();
-        client.Context.Device.Model = DeviceInfo.Model;
-        client.Context.Device.Type = DeviceInfo.Idiom.ToString();
-
-        //Role name will show device name if we don't set it to empty and we want it to be so anonymous as possible.
-        client.Context.Cloud.RoleName = string.Empty;
-        client.Context.Cloud.RoleInstance = string.Empty;
-
-        if(Preferences.ContainsKey(userIdKey))
-        {
-            var userId = Preferences.Get(userIdKey, string.Empty);
-
-            client.Context.User.Id = userId;
-        }
-        else
-        {
-            GenerateNewAnonymousUserId();
-        }
-
-        client.Context.GlobalProperties.TryAdd("Language", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
-        client.Context.GlobalProperties.TryAdd("Manufacturer", DeviceInfo.Manufacturer);
-        client.Context.GlobalProperties.TryAdd("AppVersion", AppInfo.VersionString);
-        client.Context.GlobalProperties.TryAdd("AppBuildNumber", AppInfo.BuildString);
-        client.Context.GlobalProperties.TryAdd("OperatingSystemVersion", DeviceInfo.VersionString);
+        return userId;
     }
 
     private async Task SendCrashes()
     {
         try
         {
+            if(Client is null)
+            {
+                return;
+            }
+
             var crashes = ReadCrashes();
 
             if(crashes is null || crashes.Count == 0)
@@ -273,6 +303,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
+            if(Client is null)
+            {
+                return Task.CompletedTask;
+            }
+
             Debug.WriteLine($"TinyInsights: Tracking error {ex.Message}");
 
             properties ??= [];
@@ -282,8 +317,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 properties.TryAdd("StackTrace", ex.StackTrace);
             }
 
-            client.TrackException(ex, properties);
-            client.Flush();
+            Client.TrackException(ex, properties);
+            Client.Flush();
         }
         catch(Exception)
         {
@@ -297,10 +332,15 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
+            if(Client is null)
+            {
+                return Task.CompletedTask;
+            }
+
             Debug.WriteLine($"TinyInsights: Tracking event {eventName}");
 
-            client.TrackEvent(eventName, properties);
-            client.Flush();
+            Client.TrackEvent(eventName, properties);
+            Client.Flush();
         }
         catch(Exception)
         {
@@ -314,10 +354,15 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
+            if(Client is null)
+            {
+                return Task.CompletedTask;
+            }
+
             Debug.WriteLine($"TinyInsights: tracking page view {viewName}");
 
-            client.TrackPageView(viewName);
-            client.Flush();
+            Client.TrackPageView(viewName);
+            Client.Flush();
         }
         catch(Exception)
         {
@@ -331,6 +376,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
+            if(Client is null)
+            {
+                return Task.CompletedTask;
+            }
+
             Debug.WriteLine($"TinyInsights: Tracking dependency {dependencyName}");
 
             var fullUrl = data;
@@ -371,7 +421,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 }
             }
 
-            client.TrackDependency(dependency);
+            Client.TrackDependency(dependency);
         }
         catch(Exception)
         {
