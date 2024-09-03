@@ -108,12 +108,12 @@ dependency.Dispose();
 #### UserId
 By default a random UserId is generated for each user. If you want to set a specific UserId you can do it like below.
 ```csharp
-ìnsights.OverrideAnonymousUserId("MyOwnUserId");
+Ã¬nsights.OverrideAnonymousUserId("MyOwnUserId");
 ```
 
 To generate a new random UserId you can call the method below.
 ```csharp
-ìnsights.GenerateNewAnonymousUserId();
+Ã¬nsights.GenerateNewAnonymousUserId();
 ```
 
 ## Use with ILogger
@@ -141,7 +141,8 @@ builder.UseTinyInsightsAsILogger("{YOUR_CONNECTION_STRING}",
             provider.IsTrackEventsEnabled = true;
             provider.IsTrackErrorsEnabled = true;
             provider.IsTrackPageViewsEnabled = true;
-            provider.IsTrackCrashesEnabled = true;           
+            provider.IsTrackCrashesEnabled = true;
+            provider.IsAutoTrackPageViewsEnabled = true;           
         });
 ```
 
@@ -158,6 +159,7 @@ public class MainViewModel(ILogger logger)
 ```
 
 #### Track page views
+By default, page views are automatically tracked. But you can turn that off, and do it manually if you prefer.
 ```csharp
 logger.LogTrace("MainView");
 ```
