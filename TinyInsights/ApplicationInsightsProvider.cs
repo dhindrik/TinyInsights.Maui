@@ -75,12 +75,12 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public static bool IsInitialized { get; private set; }
     public void Initialize()
     {
+        CreateTelemetryClient();
+
         if(IsInitialized)
         {
             return;
         }
-
-        CreateTelemetryClient();
 
         if(Application.Current is not null && IsAutoTrackPageViewsEnabled)
         {
