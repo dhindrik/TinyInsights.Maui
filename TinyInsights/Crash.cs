@@ -2,6 +2,12 @@ namespace TinyInsights;
 
 public class Crash
 {
+    public Crash()
+    {
+        Message = string.Empty;
+        ExceptionType = string.Empty;
+    }
+
     public Crash(Exception exception)
     {
         Message = exception.Message;

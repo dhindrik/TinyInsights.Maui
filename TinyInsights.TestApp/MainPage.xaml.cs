@@ -7,13 +7,11 @@ public partial class MainPage : ContentPage
 {
     private readonly IInsights insights;
     private readonly InsightsMessageHandler insightsMessageHandler;
-    private readonly ILogger logger;
 
-    public MainPage(IInsights insights, InsightsMessageHandler insightsMessageHandler, ILogger logger)
+    public MainPage(IInsights insights, InsightsMessageHandler insightsMessageHandler)
     {
         this.insights = insights;
         this.insightsMessageHandler = insightsMessageHandler;
-        this.logger = logger;
 
         BindingContext = this;
         insights.OverrideAnonymousUserId("TestUser");
@@ -21,25 +19,8 @@ public partial class MainPage : ContentPage
         InitializeComponent();
     }
 
-    private bool useILogger;
-    public bool UseILogger
-    {
-        get => useILogger;
-        set
-        {
-            useILogger = value;
-            OnPropertyChanged(nameof(UseILogger));
-        }
-    }
-
     private async void PageViewButton_OnClicked(object? sender, EventArgs e)
     {
-        if (UseILogger)
-        {
-            logger.LogTrace("MainView");
-            return;
-        }
-
         var data = new Dictionary<string, string>()
         {
             {"key", "value"},
@@ -52,13 +33,6 @@ public partial class MainPage : ContentPage
 
     private async void EventButton_OnClicked(object? sender, EventArgs e)
     {
-        if (UseILogger)
-        {
-            logger.LogInformation("EventButton");
-            logger.LogDebug("EventButton clicked");
-            return;
-        }
-
         await insights.TrackEventAsync("EventButton");
     }
 
@@ -70,12 +44,6 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            if (UseILogger)
-            {
-                logger.LogError(ex, ex.Message);
-                return;
-            }
-
             await insights.TrackErrorAsync(ex);
         }
     }
