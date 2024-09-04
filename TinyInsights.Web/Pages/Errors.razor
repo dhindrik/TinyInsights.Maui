@@ -94,10 +94,17 @@
 
     private async Task LoadData()
     {
-        var graphTask = LoadGraph();
-        var listTask = LoadList();
+        try
+        {
+            var graphTask = LoadGraph();
+            var listTask = LoadList();
 
-        await Task.WhenAll(graphTask, listTask);
+            await Task.WhenAll(graphTask, listTask);
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
     }
 
     private async Task LoadGraph()

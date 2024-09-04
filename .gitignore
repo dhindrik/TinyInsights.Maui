@@ -404,3 +404,4 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+/TinyInsights.WebServer/appsettings.local.json

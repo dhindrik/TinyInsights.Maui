@@ -1,0 +1,40 @@
+﻿@page "/login"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Identity.Web
+@using TinyInsights.Web
+@using TinyInsights.Web.Services
+
+@inherits TinyInsightsComponentBase
+
+@attribute [Authorize]
+
+@inject ITokenAcquisition TokenAquisition
+@inject IInsightsService Service
+@inject IConfiguration Configuration
+
+@code {
+
+    [CascadingParameter] public EventCallback<bool> IsLoggedInChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        var token = await TokenAquisition.GetAccessTokenForAppAsync("https://api.applicationinsights.io/.default");
+        var appId = Configuration.GetValue<string>("ApplicationInsightsAppId");
+
+        var result = await Service.AddAndValidateBearer(appId!, token);
+
+        if (result.Succeed)
+        {
+            await IsLoggedInChanged.InvokeAsync(true);
+            NavigationManager.NavigateTo("/dashboard");
+        }
+    }
+}

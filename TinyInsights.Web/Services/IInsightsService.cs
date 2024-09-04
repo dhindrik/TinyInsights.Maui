@@ -2,7 +2,8 @@ namespace TinyInsights.Web.Services;
 
 public interface IInsightsService
 {
-    Task<bool> ValidateToken(string appId, string token);
+    Task<bool> AddAndValidateApiKey(string appId, string apiKey);
+    Task<(bool Succeed, string? ErrorMessage)> AddAndValidateBearer(string appId, string token);
 
     Task<List<string>> GetUniqueAppVersions();
 

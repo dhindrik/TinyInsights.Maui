@@ -1,9 +1,9 @@
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Radzen;
 using TinyInsights.Web;
 using TinyInsights.Web.Services;
-using Microsoft.AspNetCore.Components;
-using Radzen;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -16,10 +16,11 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://api.applicationinsights.io/") });
 
 builder.Services.AddSingleton<IInsightsService, InsightsService>();
+builder.Services.AddSingleton<GlobalFilter>();
 
-builder.Services.AddCascadingValue( x =>
+builder.Services.AddCascadingValue(provider =>
 {
-    var filter = new GlobalFilter();
+    var filter = provider.GetRequiredService<GlobalFilter>();
     var source = new CascadingValueSource<GlobalFilter>(filter, isFixed: false);
 
     filter.PropertyChanged += (sender, eventArgs) => source.NotifyChangedAsync();

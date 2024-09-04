@@ -77,11 +77,18 @@
 
     private async Task LoadData()
     {
-        isLoading = true;
+        try
+        {
+            isLoading = true;
 
-        data = await Service.GetFailedDependencies(Key, GlobalFilter);
+            data = await Service.GetFailedDependencies(Key, GlobalFilter);
 
-        isLoading = false;
+            isLoading = false;
+        }
+        catch(Exception ex)
+        {
+            HandleException(ex);
+        }
     }
 
     private async Task ShowAllProperties(ErrorItem item)

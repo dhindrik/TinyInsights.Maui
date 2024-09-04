@@ -1,6 +1,18 @@
 ﻿<Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[]{typeof(TinyInsights.Web.App).Assembly}">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(TinyInsights.Web.Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        <Microsoft.AspNetCore.Components.Authorization.AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(TinyInsights.Web.Layout.MainLayout)">
+            <Authorizing>
+                <p>Please wait, we are authorizing you...</p>
+            </Authorizing>
+            <NotAuthorized>
+                <p>You are not authorized to access this resource.</p>
+            </NotAuthorized>
+        </Microsoft.AspNetCore.Components.Authorization.AuthorizeRouteView>
     </Found>
+    <NotFound>
+        <PageTitle>Not Found</PageTitle>
+        <LayoutView Layout="typeof(TinyInsights.Web.Layout.MainLayout)">
+            <p>Sorry, there's nothing at this adress</p>
+        </LayoutView>
+    </NotFound>
 </Router>
