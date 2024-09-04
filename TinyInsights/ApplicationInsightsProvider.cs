@@ -82,8 +82,12 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             return;
         }
 
-        if(Application.Current is not null && IsAutoTrackPageViewsEnabled)
+        if(IsAutoTrackPageViewsEnabled)
         {
+            if(Application.Current is null)
+            {
+                throw new NullReferenceException("Unable to configure `IsAutoTrackPageViewsEnabled` as `Application.Current` is null. You can eihter set `IsAutoTrackPageViewsEnabled` to false to ignore this issue, or check out this link for a possible reason - https://github.com/dhindrik/TinyInsights.Maui/issues/21");
+            }
             WeakEventHandler<Page> weakHandler = new(OnAppearing);
             Application.Current.PageAppearing += weakHandler.Handler;
         }
