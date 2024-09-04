@@ -5,6 +5,8 @@ namespace TinyInsights.Web.Services;
 
 public partial class InsightsService : IInsightsService
 {
+    public event EventHandler UnAuthorized;
+
     private readonly HttpClient httpClient;
 
     private string? appId;
@@ -15,17 +17,36 @@ public partial class InsightsService : IInsightsService
         httpClient.BaseAddress = new Uri("https://api.applicationinsights.io/");
     }
 
-    public async Task<bool> ValidateToken(string appId, string token)
+    public async Task<bool> AddAndValidateApiKey(string appId, string apiKey)
     {
         this.appId = appId;
 
-        httpClient.DefaultRequestHeaders.Add("x-api-key", token);
+        httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
 
         var url = $"/v1/apps/{appId}/events/$all?$top=5";
 
         var response = await httpClient.GetAsync(url);
 
         return response.IsSuccessStatusCode;
+    }
+
+    public async Task<(bool Succeed, string? ErrorMessage)> AddAndValidateBearer(string appId, string token)
+    {
+        this.appId = appId;
+
+        httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var url = $"/v1/apps/{appId}/events/$all?$top=5";
+
+        var response = await httpClient.GetAsync(url);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseContent = await response.Content.ReadAsStringAsync();
+            return (false, responseContent);
+        }
+
+        return (true, null);
     }
 
     public async Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter)
@@ -333,6 +354,11 @@ public partial class InsightsService : IInsightsService
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await httpClient.PostAsync(url, content);
+
+        if (response.IsSuccessStatusCode is false && (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.NotFound))
+        {
+            throw new UnauthorizedAccessException();
+        }
 
         var responseContent = await response.Content.ReadAsStringAsync();
 

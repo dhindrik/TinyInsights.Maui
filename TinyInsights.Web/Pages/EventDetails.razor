@@ -60,9 +60,16 @@
 
     private async Task LoadData()
     {
-        var perDayTask = LoadEventsPerDay();
+        try
+        {
+            var perDayTask = LoadEventsPerDay();
 
-        await Task.WhenAll(perDayTask);
+            await Task.WhenAll(perDayTask);
+        }
+        catch(Exception ex)
+        {
+           HandleException(ex);
+        }
     }
 
     private async Task LoadEventsPerDay()

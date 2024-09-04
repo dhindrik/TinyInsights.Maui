@@ -118,12 +118,19 @@
 
     private async Task LoadData()
     {
-        var topTask = LoadTopDependencies();
-        var avgTask = LoadDependencyDuration();
-        var failedTask = LoadFailedDependencies();
-        var failedPerDaysTask = LoadFailedDependenciesPerDays();
+        try
+        {
+            var topTask = LoadTopDependencies();
+            var avgTask = LoadDependencyDuration();
+            var failedTask = LoadFailedDependencies();
+            var failedPerDaysTask = LoadFailedDependenciesPerDays();
 
-        await Task.WhenAll(topTask, avgTask, failedTask, failedPerDaysTask);
+            await Task.WhenAll(topTask, avgTask, failedTask, failedPerDaysTask);
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
     }
 
     private async Task LoadTopDependencies()

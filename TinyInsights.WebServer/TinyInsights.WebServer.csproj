@@ -14,4 +14,8 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Identity.Web.UI" Version="3.1.0" />
+  </ItemGroup>
+
 </Project>

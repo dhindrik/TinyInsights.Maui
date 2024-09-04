@@ -77,35 +77,41 @@
     {
         isLoadingGraph = true;
 
-       var crashTask = Service.GetCrashesPerDay(GlobalFilter);
-       var errorTask = Service.GetErrorsPerDay(GlobalFilter);
-
-       await Task.WhenAll(crashTask, errorTask);
-        
-
-        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
-        var crashDays = new List<CountPerDay>();
-        var errorDays = new List<CountPerDay>();
-
-        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+        try
         {
-            var currentDate = date.AddDays(i);
-            var crashDay = crashTask.Result.SingleOrDefault(x => x.Date == currentDate);
-            var errorDay = errorTask.Result.SingleOrDefault(x => x.Date == currentDate);
+            var crashTask = Service.GetCrashesPerDay(GlobalFilter);
+            var errorTask = Service.GetErrorsPerDay(GlobalFilter);
 
-            var crashCount = crashDay?.Count ?? 0;
-            var errorCount = errorDay?.Count ?? 0;
+            await Task.WhenAll(crashTask, errorTask);
 
-            crashDays.Add(new CountPerDay(currentDate, crashCount));
-            errorDays.Add(new CountPerDay(currentDate, errorCount));
+            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+            var crashDays = new List<CountPerDay>();
+            var errorDays = new List<CountPerDay>();
+
+            for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+            {
+                var currentDate = date.AddDays(i);
+                var crashDay = crashTask.Result.SingleOrDefault(x => x.Date == currentDate);
+                var errorDay = errorTask.Result.SingleOrDefault(x => x.Date == currentDate);
+
+                var crashCount = crashDay?.Count ?? 0;
+                var errorCount = errorDay?.Count ?? 0;
+
+                crashDays.Add(new CountPerDay(currentDate, crashCount));
+                errorDays.Add(new CountPerDay(currentDate, errorCount));
+            }
+
+            crashesPerDays = crashDays;
+            errorsPerDays = errorDays;
+
+            isLoadingGraph = false;
+
+            await InvokeAsync(StateHasChanged);
         }
-
-        crashesPerDays = crashDays;
-        errorsPerDays = errorDays;
-
-        isLoadingGraph = false;
-
-        await InvokeAsync(StateHasChanged);
+        catch(Exception ex)
+        {
+            HandleException(ex);
+        }
     }
     private async Task LoadUserGraph()
     {

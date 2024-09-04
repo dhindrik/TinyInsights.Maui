@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyInsights.TestApp", "Tin
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{C4F61F00-5DBB-4913-93EF-2D11D056B4C3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyInsights.WebServer", "TinyInsights.WebServer\TinyInsights.WebServer.csproj", "{A803C1DB-22A0-4B48-A87E-D9815782547E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyInsights.WebServer", "TinyInsights.WebServer\TinyInsights.WebServer.csproj", "{A803C1DB-22A0-4B48-A87E-D9815782547E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

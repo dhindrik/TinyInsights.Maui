@@ -93,8 +93,14 @@
 
     private async Task LoadData()
     {
-
-        await Task.WhenAll(LoadUsersPerDay(), LoadCountries(), LoadLanguageList());
+        try
+        {
+            await Task.WhenAll(LoadUsersPerDay(), LoadCountries(), LoadLanguageList());
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
     }
 
     private async Task LoadUsersPerDay()

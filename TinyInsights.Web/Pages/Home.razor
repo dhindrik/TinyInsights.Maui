@@ -37,13 +37,23 @@
     [CascadingParameter] public EventCallback<bool> IsLoggedInChanged { get; set; }
     private readonly AuthModel _model = new();
 
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        if (!OperatingSystem.IsBrowser())
+        {
+            NavigationManager.NavigateTo("/login");   
+        }
+    }
+
     public async Task Open()
     {
         try
         {
             if (_model.ApplicationId is not null && _model.ApiKey is not null)
             {
-                var result = await Service.ValidateToken(_model.ApplicationId, _model.ApiKey);
+                var result = await Service.AddAndValidateApiKey(_model.ApplicationId, _model.ApiKey);
 
                 if (result)
                 {

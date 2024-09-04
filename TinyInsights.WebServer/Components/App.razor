@@ -7,13 +7,14 @@
     <base href="/" />
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css">
     <link rel="stylesheet" href="css/app.css" />
-    <link rel="stylesheet" href="TinyInsights.WebServer.styles.css" />
+    <link rel="stylesheet" href="TinyInsights.Web.styles.css" />
     <HeadOutlet />
 </head>
 
 <body>
-    <Routes />
+    <Routes @rendermode="new InteractiveServerRenderMode(false)" />
     <script src="_framework/blazor.web.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
 </body>
 
 </html>

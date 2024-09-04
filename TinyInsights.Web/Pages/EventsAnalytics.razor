@@ -38,10 +38,10 @@
 </RadzenStack>
 
 @code {
-    
+
     [CascadingParameter]
     public GlobalFilter GlobalFilter  {get;set;}
-    
+
     private bool isLoadingPageViews, isLoadingList = true;
     private List<CountPerKey> events = new();
 
@@ -54,9 +54,16 @@
 
     private async Task LoadData()
     {
-        var listTask = LoadList();
+        try
+        {
+            var listTask = LoadList();
 
-        await Task.WhenAll(listTask);
+            await Task.WhenAll(listTask);
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
     }
     
     private async Task LoadList()

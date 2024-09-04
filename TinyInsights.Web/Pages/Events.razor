@@ -1,11 +1,13 @@
 @using TinyInsights.Web.Services
 
+@inherits TinyInsightsComponentBase
+
 @inject IInsightsService Service
 @inject DialogService DialogService
 
 @if (isLoading)
 {
-    <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+    <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
 }
 else
 {
@@ -13,14 +15,14 @@ else
         <Columns>
             <RadzenDataGridColumn TItem="EventItem" Width="100px" Title="Event type">
                 <Template>
-                        <RadzenIcon Icon="@GetIcon(context.EventType)" title="@GetName(context.EventType)" />                   
+                    <RadzenIcon Icon="@GetIcon(context.EventType)" title="@GetName(context.EventType)" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="EventItem" Title="Timestamp" Width="200px" Property="@nameof(EventItem.Timestamp)" />
             <RadzenDataGridColumn TItem="EventItem" Title="Name" Property="@nameof(EventItem.Name)" />
-            <RadzenDataGridColumn TItem="EventItem"  Width="100px">
+            <RadzenDataGridColumn TItem="EventItem" Width="100px">
                 <Template>
-                    <RadzenButton Icon="description" Click="@(async (args) => await ShowAllProperties(context))"/>
+                    <RadzenButton Icon="description" Click="@(async (args) => await ShowAllProperties(context))" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -44,16 +46,22 @@ else
     {
         await base.OnParametersSetAsync();
 
-        if(Timestamp.HasValue)
+        try
         {
-            events = await Service.GetEventsByUser(UserId, Timestamp.Value);
+            if (Timestamp.HasValue)
+            {
+                events = await Service.GetEventsByUser(UserId, Timestamp.Value);
+            }
+            else
+            {
+                events = await Service.GetEventsByUser(UserId, GlobalFilter);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            events = await Service.GetEventsByUser(UserId, GlobalFilter);
+            HandleException(ex);
         }
-        
-        
+
         isLoading = false;
     }
 
@@ -61,7 +69,7 @@ else
     {
         await DialogService.OpenAsync<AllProperties>($"All properties",
             new Dictionary<string, object>() { { "Properties", item.Data } },
-            new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true});
+            new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true });
     }
 
     private string GetIcon(EventType eventType) => eventType switch

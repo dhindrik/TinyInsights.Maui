@@ -84,7 +84,14 @@
     {
         await base.OnParametersSetAsync();
 
-        await Task.WhenAll(LoadUserIdioms(), LoadUserOperatingSystems(), LoadManufactures());
+        try
+        {
+            await Task.WhenAll(LoadUserIdioms(), LoadUserOperatingSystems(), LoadManufactures());
+        }
+        catch(Exception ex)
+        {
+           HandleException(ex);
+        }
     }
 
     private async Task LoadUserIdioms()

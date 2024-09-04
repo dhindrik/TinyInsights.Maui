@@ -1,13 +1,26 @@
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Identity.Web;
 using Radzen;
 using TinyInsights.Web;
 using TinyInsights.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+#if DEBUG
+builder.Configuration.AddJsonFile("appsettings.local.json");
+#endif
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+         .AddMicrosoftIdentityWebApp(builder.Configuration, "AzureAd")
+           .EnableTokenAcquisitionToCallDownstreamApi(["https://api.applicationinsights.io/.default"])
+           .AddInMemoryTokenCaches();
+
+builder.Services.AddControllers();
 
 builder.Services.AddRadzenComponents();
 
@@ -15,11 +28,12 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://api.applicationinsights.io/") });
 
-builder.Services.AddSingleton<IInsightsService, InsightsService>();
+builder.Services.AddScoped<IInsightsService, InsightsService>();
+builder.Services.AddScoped<GlobalFilter>();
 
-builder.Services.AddCascadingValue(x =>
+builder.Services.AddCascadingValue(provider =>
 {
-    var filter = new GlobalFilter();
+    var filter = provider.GetRequiredService<GlobalFilter>();
     var source = new CascadingValueSource<GlobalFilter>(filter, isFixed: false);
 
     filter.PropertyChanged += (sender, eventArgs) => source.NotifyChangedAsync();
@@ -43,7 +57,13 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
 app.MapRazorComponents<TinyInsights.WebServer.Components.App>()
     .AddInteractiveServerRenderMode().AddAdditionalAssemblies(typeof(TinyInsights.Web._Imports).Assembly); ;
+
 
 app.Run();
