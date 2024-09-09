@@ -4,7 +4,6 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
-using System.Net.NetworkInformation;
 using System.Text.Json;
 
 namespace TinyInsights;
@@ -30,6 +29,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public bool IsTrackDependencyEnabled { get; set; } = true;
 
 #if IOS || MACCATALYST || ANDROID
+
     public ApplicationInsightsProvider(string connectionString)
     {
         _connectionString = connectionString;
@@ -54,6 +54,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
         }
     }
+
 #elif WINDOWS
     public ApplicationInsightsProvider(MauiWinUIApplication app, string connectionString)
     {
@@ -73,6 +74,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 #endif
 
     public static bool IsInitialized { get; private set; }
+
     public void Initialize()
     {
         CreateTelemetryClient();
@@ -86,7 +88,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             if(Application.Current is null)
             {
-                throw new NullReferenceException("Unable to configure `IsAutoTrackPageViewsEnabled` as `Application.Current` is null. You can eihter set `IsAutoTrackPageViewsEnabled` to false to ignore this issue, or check out this link for a possible reason - https://github.com/dhindrik/TinyInsights.Maui/issues/21");
+                throw new NullReferenceException("Unable to configure `IsAutoTrackPageViewsEnabled` as `Application.Current` is null. You can either set `IsAutoTrackPageViewsEnabled` to false to ignore this issue, or check out this link for a possible reason - https://github.com/dhindrik/TinyInsights.Maui/issues/21");
             }
             WeakEventHandler<Page> weakHandler = new(OnAppearing);
             Application.Current.PageAppearing += weakHandler.Handler;
@@ -104,6 +106,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     }
 
     readonly Dictionary<string, string> _globalProperties = [];
+
     private TelemetryClient? CreateTelemetryClient()
     {
         if(_client is not null)
@@ -127,7 +130,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             // Role name will show device name if we don't set it to empty and we want it to be so anonymous as possible.
             _client.Context.Cloud.RoleName = string.Empty;
             _client.Context.Cloud.RoleInstance = string.Empty;
-            _client.Context.User.Id = Preferences.Get(userIdKey, GenerateNewAnonymousUserId());
+            _client.Context.User.Id = GetUserId();
 
             // Add any global properties, the user has already added
             foreach(KeyValuePair<string, string> property in _globalProperties)
@@ -183,8 +186,15 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         Preferences.Set(userIdKey, userId);
         if(Client is not null)
         {
-            Client.Context.User.Id = Preferences.Get(userIdKey, GenerateNewAnonymousUserId());
+            Client.Context.User.Id = userId;
         }
+    }
+
+    private string GetUserId()
+    {
+        var userId = Preferences.Get(userIdKey, null);
+
+        return userId ?? GenerateNewAnonymousUserId();
     }
 
     public string GenerateNewAnonymousUserId()
@@ -217,7 +227,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             {
                 var ex = crash.GetException();
 
-                if (ex is null)
+                if(ex is null)
                 {
                     continue;
                 }
