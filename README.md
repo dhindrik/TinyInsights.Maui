@@ -2,7 +2,7 @@
 
 TinyInsights is a library for tracking and a website for showing insights for your .NET MAUI app. Data will be saved in Application Insights. The website will help you to show the data in a more mobile app-friendly user interface.
 
-You can try out the website here, https://mauiinsights.z6.web.core.windows.net/. No data is saved in the application. This web assembly page can be used until March 2025, when access with API-key will stop working. After that you have to set up a application in Entra. For about how to setup the website for your application, read this, **[How to set up and configure the web site](other_file.md)**.
+You can try out the website here, https://mauiinsights.z6.web.core.windows.net/. No data is saved in the application. This web assembly page can be used until March 2025, when access with API-key will stop working. After that you have to set up a application in Entra. For about how to setup the website for your application, read this, **[How to set up and configure the web site](docs/SetupServerSite.md)**.
 
 ## Add TinyInsights to your app
 Install the latest version of the package ***TinyInsights.Maui.AppInsights*** to your app project.
