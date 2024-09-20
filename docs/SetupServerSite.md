@@ -8,31 +8,42 @@ That means that the users need to be authenticated with Entra ID.  TinyInsights 
 1. Sign in to the **Azure Portal**.
 2. Navigate to **Microsoft Entra ID**.
 3. In the left menu, expand **Manage** and go to **App registrations**.
+
 ![App registrations in menu](images/setup-server/appreg.png)
 4. Click **New registration** at the top menu bar.
+
 ![New app registrations in menu](images/setup-server/new.png)
 5. Give the application a name, TinyInsights for example. Add a redirect url with web as the platform. The uri should be the uri to your site, edning with **/signin-oidc**.
+
 ![App registration form](images/setup-server/new-form.png)
 6. Save
 
 7. Go to **Api Permissions** 
+
 ![App permissions in menu](images/setup-server/api-permissions.png)
 
 8. Click **Add a permission** 
+
 ![App permissions in menu](images/setup-server/add-permission.png)
 9. Select the tab **APIs my organization uses** and search for **Application Insights API** and select it.
+
 ![Application Insights API](images/setup-server/search-api.png)
 10. Select **Application permissions** and Save.
+
 ![Application Insights API](images/setup-server/data-read.png)
 11. Click **Grant admin consent for...** 
 12. Navigate to your Application Insights instance.
 13. Click **Access control(IAM)** in the menu.
+
 ![Access control in menu](images/setup-server/access-control.png)
 14. Click **Add**  and then **Add role assignment**
+
 ![Access control in menu](images/setup-server/add-role.png)
 15. Select the reader role.
+
 ![Access control in menu](images/setup-server/reader-role.png)
 16. Then add the app as a member of that role.
+
 ![Access control in menu](images/setup-server/add-app.png)
 17. Save
 
