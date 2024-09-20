@@ -1,8 +1,9 @@
 # How to set up and configure the web site
-From March 2025, API Key will not longer be an option for authenticate against the Azure Application Insights API.
+From March 2026, API Key will not longer be an option for authenticate against the Azure Application Insights API.
 
 That means that the users need to be authenticated with Entra ID.  TinyInsights has a Blazor server application that can be deployed to your environment so you can continue to use it to visualize the data you have logged to Application Insights. The reason a server solution is used, is that is will be more secured to store the Entra settings on a server.
 
+YOu can also watch this video about how to set it up, https://youtu.be/MIuG2gPtMrc
 
 ## Configure Azure and Entra
 1. Sign in to the **Azure Portal**.
