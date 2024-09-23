@@ -112,6 +112,14 @@ public class Insights : IInsights
         }
     }
 
+    public void OverrideCloudRoleName(string cloudRoleName)
+    {
+        foreach(var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
+        {
+            provider.OverrideCloudRoleName(cloudRoleName);
+        }
+    }
+
     public void GenerateNewAnonymousUserId()
     {
         foreach(var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))

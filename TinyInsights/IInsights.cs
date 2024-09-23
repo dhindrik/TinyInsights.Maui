@@ -21,5 +21,7 @@ public interface IInsights
 
     void OverrideAnonymousUserId(string userId);
 
+    void OverrideCloudRoleName(string cloudRoleName);
+
     void GenerateNewAnonymousUserId();
 }

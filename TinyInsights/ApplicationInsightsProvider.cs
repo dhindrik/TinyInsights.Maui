@@ -13,6 +13,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     private readonly string _connectionString;
     private static ApplicationInsightsProvider provider;
     private const string userIdKey = nameof(userIdKey);
+    private const string cloudRoleNameKey = nameof(cloudRoleNameKey);
 
     private const string crashLogFilename = "crashes.mauiinsights";
 
@@ -127,8 +128,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             _client.Context.Device.Model = DeviceInfo.Model;
             _client.Context.Device.Type = DeviceInfo.Idiom.ToString();
 
-            // Role name will show device name if we don't set it to empty and we want it to be so anonymous as possible.
-            _client.Context.Cloud.RoleName = string.Empty;
+            _client.Context.Cloud.RoleName = GetCloudRoleName();
             _client.Context.Cloud.RoleInstance = string.Empty;
             _client.Context.User.Id = GetUserId();
 
@@ -190,11 +190,28 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
+    public void OverrideCloudRoleName(string cloudRoleName)
+    {
+        Preferences.Set(cloudRoleNameKey, cloudRoleName);
+        if(Client is not null)
+        {
+            Client.Context.Cloud.RoleName = cloudRoleName;
+        }
+    }
+
     private string GetUserId()
     {
         var userId = Preferences.Get(userIdKey, null);
 
         return userId ?? GenerateNewAnonymousUserId();
+    }
+
+    private static string GetCloudRoleName()
+    {
+        var cloudRoleName = Preferences.Get(cloudRoleNameKey, null);
+
+        // If we don't have a role name we explicitly set it to empty, otherwise it will show device name and we want to be as anonymous as possible.
+        return cloudRoleName ?? string.Empty;
     }
 
     public string GenerateNewAnonymousUserId()
