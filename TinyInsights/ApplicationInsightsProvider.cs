@@ -74,18 +74,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 #elif NET8_0_OR_GREATER
     public ApplicationInsightsProvider(string connectionString)
     {
-        _connectionString = connectionString;
-        provider = this;
-
-        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-
-        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            if (IsTrackCrashesEnabled)
-            {
-                HandleCrash((Exception)e.ExceptionObject);
-            }
-        }
+        // Do nothing. The net8.0 target exists for enabling unit testing, not for actual use.
     }
 #endif
 
