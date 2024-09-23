@@ -116,6 +116,19 @@ To generate a new random UserId you can call the method below.
 ìnsights.GenerateNewAnonymousUserId();
 ```
 
+### Set and update global properties
+It is possible to set/update global properties with the UpsertGlobalProperties method.
+```csharp
+insights.UpsertGlobalProperty("language", "sv-SE");
+````
+
+For predefined properties on the Client object, like RoleName you can use, Cloud.RoleName as key.
+```csharp
+insights.UpsertGlobalProperty("Cloud.RoleName", "MyRoleName");
+````
+Right now Cloud.RoleName, Cloud.RoleInstance, Device.Id, Device.Type, Device.Model and Device.OperatingSystem are supported to change that way.
+
+
 ## Use with ILogger
 If you want, you can also use TinyInsights with the ILogger interface.
 
