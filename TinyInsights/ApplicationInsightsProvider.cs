@@ -40,7 +40,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
-            if(IsTrackCrashesEnabled)
+            if (IsTrackCrashesEnabled)
             {
                 HandleCrash(e.Exception);
             }
@@ -48,7 +48,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            if(IsTrackCrashesEnabled)
+            if (IsTrackCrashesEnabled)
             {
                 HandleCrash((Exception)e.ExceptionObject);
             }
@@ -79,14 +79,14 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         CreateTelemetryClient();
 
-        if(IsInitialized)
+        if (IsInitialized)
         {
             return;
         }
 
-        if(IsAutoTrackPageViewsEnabled)
+        if (IsAutoTrackPageViewsEnabled)
         {
-            if(Application.Current is null)
+            if (Application.Current is null)
             {
                 throw new NullReferenceException("Unable to configure `IsAutoTrackPageViewsEnabled` as `Application.Current` is null. You can either set `IsAutoTrackPageViewsEnabled` to false to ignore this issue, or check out this link for a possible reason - https://github.com/dhindrik/TinyInsights.Maui/issues/21");
             }
@@ -109,7 +109,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     private TelemetryClient? CreateTelemetryClient()
     {
-        if(_client is not null)
+        if (_client is not null)
         {
             return _client;
         }
@@ -133,38 +133,22 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             _client.Context.User.Id = GetUserId();
 
             // Add any global properties, the user has already added
-            foreach(KeyValuePair<string, string> property in _globalProperties)
+            foreach (var property in _globalProperties)
             {
                 _client.Context.GlobalProperties[property.Key] = property.Value;
             }
 
-            //! Important: Checks if the property exists to avoid overridden ones set by the user.
-            if(!_globalProperties.ContainsKey("Language"))
-            {
-                _client.Context.GlobalProperties["Language"] = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-            }
-            if(!_globalProperties.ContainsKey("Manufacturer"))
-            {
-                _client.Context.GlobalProperties["Manufacturer"] = DeviceInfo.Manufacturer;
-            }
-            if(!_globalProperties.ContainsKey("AppVersion"))
-            {
-                _client.Context.GlobalProperties["AppVersion"] = AppInfo.VersionString;
-            }
-            if(!_globalProperties.ContainsKey("AppBuildNumber"))
-            {
-                _client.Context.GlobalProperties["AppBuildNumber"] = AppInfo.BuildString;
-            }
-            if(!_globalProperties.ContainsKey("OperatingSystemVersion"))
-            {
-                _client.Context.GlobalProperties["OperatingSystemVersion"] = DeviceInfo.VersionString;
-            }
+            _client.Context.GlobalProperties.TryAdd("Language", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+            _client.Context.GlobalProperties.TryAdd("Manufacturer", DeviceInfo.Manufacturer);
+            _client.Context.GlobalProperties.TryAdd("AppVersion", AppInfo.VersionString);
+            _client.Context.GlobalProperties.TryAdd("AppBuildNumber", AppInfo.BuildString);
+            _client.Context.GlobalProperties.TryAdd("OperatingSystemVersion", DeviceInfo.VersionString);
 
             Task.Run(SendCrashes);
 
             return _client;
         }
-        catch(Exception)
+        catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error creating TelemetryClient");
         }
@@ -174,17 +158,44 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public void UpsertGlobalProperty(string key, string value)
     {
-        _globalProperties[key] = value;
-        if(Client is not null)
+        if (Client is null)
         {
-            Client.Context.GlobalProperties[key] = value;
+            return;
         }
+
+        switch (key)
+        {
+            case "Cloud.RoleName":
+                Client.Context.Cloud.RoleName = value;
+                return;
+            case "Cloud.RoleInstance":
+                Client.Context.Cloud.RoleInstance = value;
+                return;
+
+            case "Device.OperatingSystem":
+                Client.Context.Device.OperatingSystem = value;
+                return;
+            case "Device.Model":
+                Client.Context.Device.Model = value;
+                return;
+            case "Device.Type":
+                Client.Context.Device.Type = value;
+                return;
+            case "Device.Id":
+                Client.Context.Device.Id = value;
+                return;
+        }
+
+        _globalProperties[key] = value;
+
+        Client.Context.GlobalProperties[key] = value;
+
     }
 
     public void OverrideAnonymousUserId(string userId)
     {
         Preferences.Set(userIdKey, userId);
-        if(Client is not null)
+        if (Client is not null)
         {
             Client.Context.User.Id = userId;
         }
@@ -209,25 +220,25 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
-            if(Client is null)
+            if (Client is null)
             {
                 return;
             }
 
             var crashes = ReadCrashes();
 
-            if(crashes is null || crashes.Count == 0)
+            if (crashes is null || crashes.Count == 0)
             {
                 return;
             }
 
             Debug.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
 
-            foreach(var crash in crashes)
+            foreach (var crash in crashes)
             {
                 var ex = crash.GetException();
 
-                if(ex is null)
+                if (ex is null)
                 {
                     continue;
                 }
@@ -245,7 +256,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             ResetCrashes();
         }
-        catch(Exception)
+        catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error sending crashes");
         }
@@ -259,7 +270,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             var path = Path.Combine(logPath, crashLogFilename);
 
-            if(!File.Exists(path))
+            if (!File.Exists(path))
             {
                 return null;
             }
@@ -268,7 +279,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<List<Crash>>(json);
         }
-        catch(Exception)
+        catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error reading crashes");
         }
@@ -285,7 +296,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             var path = Path.Combine(logPath, crashLogFilename);
             File.Delete(path);
         }
-        catch(Exception)
+        catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error clearing crashes");
         }
@@ -307,7 +318,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             File.WriteAllText(path, json);
         }
-        catch(Exception)
+        catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error handling crashes");
         }
@@ -317,7 +328,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
-            if(Client is null)
+            if (Client is null)
             {
                 return Task.CompletedTask;
             }
@@ -326,7 +337,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             properties ??= [];
 
-            if(ex.StackTrace is not null)
+            if (ex.StackTrace is not null)
             {
                 properties.TryAdd("StackTrace", ex.StackTrace);
             }
@@ -334,7 +345,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Client.TrackException(ex, properties);
             Client.Flush();
         }
-        catch(Exception)
+        catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking error");
         }
@@ -346,7 +357,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
-            if(Client is null)
+            if (Client is null)
             {
                 return Task.CompletedTask;
             }
@@ -356,7 +367,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Client.TrackEvent(eventName, properties);
             Client.Flush();
         }
-        catch(Exception)
+        catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking event");
         }
@@ -368,7 +379,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
-            if(Client is null)
+            if (Client is null)
             {
                 return Task.CompletedTask;
             }
@@ -378,7 +389,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Client.TrackPageView(viewName);
             Client.Flush();
         }
-        catch(Exception)
+        catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking page view");
         }
@@ -390,7 +401,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
-            if(Client is null)
+            if (Client is null)
             {
                 return Task.CompletedTask;
             }
@@ -399,7 +410,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             var fullUrl = data;
 
-            if(data.Contains('?'))
+            if (data.Contains('?'))
             {
                 var split = data.Split("?");
                 data = split[0];
@@ -418,17 +429,17 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             dependency.Properties.Add("FullUrl", fullUrl);
 
-            if(httpMethod is not null)
+            if (httpMethod is not null)
             {
                 dependency.Properties.Add("HttpMethod", httpMethod.ToString());
             }
 
-            if(exception is not null)
+            if (exception is not null)
             {
                 dependency.Properties.Add("ExceptionMessage", exception.Message);
                 dependency.Properties.Add("StackTrace", exception.StackTrace);
 
-                if(exception.InnerException is not null)
+                if (exception.InnerException is not null)
                 {
                     dependency.Properties.Add("InnerExceptionMessage", exception.InnerException.Message);
                     dependency.Properties.Add("InnerExceptionStackTrace", exception.InnerException.StackTrace);
@@ -437,7 +448,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             Client.TrackDependency(dependency);
         }
-        catch(Exception)
+        catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking dependency");
         }
@@ -454,7 +465,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public async void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        if(!IsEnabled(logLevel))
+        if (!IsEnabled(logLevel))
         {
             return;
         }
