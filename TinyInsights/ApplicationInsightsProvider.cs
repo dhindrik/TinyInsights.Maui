@@ -71,6 +71,22 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
         }
     }
+#elif NET8_0_OR_GREATER
+    public ApplicationInsightsProvider(string connectionString)
+    {
+        _connectionString = connectionString;
+        provider = this;
+
+        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            if (IsTrackCrashesEnabled)
+            {
+                HandleCrash((Exception)e.ExceptionObject);
+            }
+        }
+    }
 #endif
 
     public static bool IsInitialized { get; private set; }
