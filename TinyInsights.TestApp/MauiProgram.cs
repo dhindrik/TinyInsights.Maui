@@ -26,11 +26,26 @@ public static class MauiProgram
                     provider.IsAutoTrackPageViewsEnabled = true;
                 });
 
+        builder.Services.AddSingleton<ILogger>((serviceProvider) =>
+        {
+            var insights = serviceProvider.GetRequiredService<IInsights>();
+            var providers = insights.GetProviders();
+
+            if (providers.Any())
+            {
+                return (ILogger)providers.First();
+            }
+
+            throw new InvalidOperationException("No insights provider found");
+        });
+
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
 
         builder.Services.AddTransient<MainPage>();
+        builder.Services.AddSingleton<AppShell>();
+
         return builder.Build();
     }
 }

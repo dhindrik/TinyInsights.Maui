@@ -18,8 +18,10 @@ public static class InsightsExtension
 #if WINDOWS
 
             var provider = new ApplicationInsightsProvider(MauiWinUIApplication.Current, applicationInsightsConnectionString);
-#else
+#elif ANDROID || IOS || MACCATALYST
             var provider = new ApplicationInsightsProvider(applicationInsightsConnectionString);
+#else
+            var provider = new ApplicationInsightsProvider();
 #endif
             configureProvider?.Invoke(provider);
 
@@ -42,8 +44,10 @@ public static class InsightsExtension
         {
 #if WINDOWS
             var provider = new ApplicationInsightsProvider(MauiWinUIApplication.Current, applicationInsightsConnectionString);
-#else
+#elif ANDROID || IOS || MACCATALYST
             var provider = new ApplicationInsightsProvider(applicationInsightsConnectionString);
+#else
+            var provider = new ApplicationInsightsProvider();
 #endif
 
             configureProvider?.Invoke(provider);

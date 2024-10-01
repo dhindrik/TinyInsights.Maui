@@ -7,16 +7,28 @@ public partial class MainPage : ContentPage
 {
     private readonly IInsights insights;
     private readonly InsightsMessageHandler insightsMessageHandler;
+    private readonly ILogger logger;
 
-    public MainPage(IInsights insights, InsightsMessageHandler insightsMessageHandler)
+    public MainPage(IInsights insights, InsightsMessageHandler insightsMessageHandler, ILogger logger)
     {
         this.insights = insights;
         this.insightsMessageHandler = insightsMessageHandler;
-
+        this.logger = logger;
         BindingContext = this;
         insights.OverrideAnonymousUserId("TestUser");
 
         InitializeComponent();
+    }
+
+    private bool useILogger;
+    public bool UseILogger
+    {
+        get => useILogger;
+        set
+        {
+            useILogger = value;
+            OnPropertyChanged();
+        }
     }
 
     private async void PageViewButton_OnClicked(object? sender, EventArgs e)
@@ -27,12 +39,24 @@ public partial class MainPage : ContentPage
             {"key2", "value2"}
         };
 
+        if (UseILogger)
+        {
+            logger.LogTrace("MainView");
+            return;
+        }
+
         await insights.TrackPageViewAsync("MainView", data);
     }
 
 
     private async void EventButton_OnClicked(object? sender, EventArgs e)
     {
+        if (UseILogger)
+        {
+            logger.LogInformation("EventButton");
+            return;
+        }
+
         await insights.TrackEventAsync("EventButton");
     }
 
@@ -44,6 +68,12 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
+            if (UseILogger)
+            {
+                logger.LogError(ex, "ExceptionButton");
+                return;
+            }
+
             await insights.TrackErrorAsync(ex);
         }
     }

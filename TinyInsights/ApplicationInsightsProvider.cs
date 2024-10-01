@@ -10,16 +10,16 @@ namespace TinyInsights;
 
 public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 {
-    private readonly string _connectionString;
-    private static ApplicationInsightsProvider provider;
+    private readonly string connectionString;
+    private static ApplicationInsightsProvider? provider;
     private const string userIdKey = nameof(userIdKey);
 
     private const string crashLogFilename = "crashes.mauiinsights";
 
     private readonly string logPath = FileSystem.CacheDirectory;
 
-    private TelemetryClient? _client;
-    private TelemetryClient? Client => _client ?? CreateTelemetryClient();
+    private TelemetryClient? client;
+    private TelemetryClient? Client => client ?? CreateTelemetryClient();
 
     public bool IsTrackErrorsEnabled { get; set; } = true;
     public bool IsTrackCrashesEnabled { get; set; } = true;
@@ -32,7 +32,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public ApplicationInsightsProvider(string connectionString)
     {
-        _connectionString = connectionString;
+        this.connectionString = connectionString;
         provider = this;
 
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -58,7 +58,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 #elif WINDOWS
     public ApplicationInsightsProvider(MauiWinUIApplication app, string connectionString)
     {
-        _connectionString = connectionString;
+        this.connectionString = connectionString;
         provider = this;
 
         app.UnhandledException += App_UnhandledException;
@@ -72,8 +72,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 #elif NET8_0_OR_GREATER
-    public ApplicationInsightsProvider(string connectionString)
+    public ApplicationInsightsProvider()
     {
+        connectionString = string.Empty;
         // Do nothing. The net8.0 target exists for enabling unit testing, not for actual use.
     }
 #endif
@@ -107,51 +108,51 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     private static void OnAppearing(object? sender, Page e)
     {
         var pageType = e.GetType();
-        provider.TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } });
+        provider?.TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } });
     }
 
     readonly Dictionary<string, string> _globalProperties = [];
 
     private TelemetryClient? CreateTelemetryClient()
     {
-        if (_client is not null)
+        if (client is not null)
         {
-            return _client;
+            return client;
         }
 
         try
         {
             var configuration = new TelemetryConfiguration()
             {
-                ConnectionString = _connectionString
+                ConnectionString = connectionString
             };
 
-            _client = new TelemetryClient(configuration);
+            client = new TelemetryClient(configuration);
 
-            _client.Context.Device.OperatingSystem = DeviceInfo.Platform.ToString();
-            _client.Context.Device.Model = DeviceInfo.Model;
-            _client.Context.Device.Type = DeviceInfo.Idiom.ToString();
+            client.Context.Device.OperatingSystem = DeviceInfo.Platform.ToString();
+            client.Context.Device.Model = DeviceInfo.Model;
+            client.Context.Device.Type = DeviceInfo.Idiom.ToString();
 
             // Role name will show device name if we don't set it to empty and we want it to be so anonymous as possible.
-            _client.Context.Cloud.RoleName = string.Empty;
-            _client.Context.Cloud.RoleInstance = string.Empty;
-            _client.Context.User.Id = GetUserId();
+            client.Context.Cloud.RoleName = string.Empty;
+            client.Context.Cloud.RoleInstance = string.Empty;
+            client.Context.User.Id = GetUserId();
 
             // Add any global properties, the user has already added
             foreach (var property in _globalProperties)
             {
-                _client.Context.GlobalProperties[property.Key] = property.Value;
+                client.Context.GlobalProperties[property.Key] = property.Value;
             }
 
-            _client.Context.GlobalProperties.TryAdd("Language", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
-            _client.Context.GlobalProperties.TryAdd("Manufacturer", DeviceInfo.Manufacturer);
-            _client.Context.GlobalProperties.TryAdd("AppVersion", AppInfo.VersionString);
-            _client.Context.GlobalProperties.TryAdd("AppBuildNumber", AppInfo.BuildString);
-            _client.Context.GlobalProperties.TryAdd("OperatingSystemVersion", DeviceInfo.VersionString);
+            client.Context.GlobalProperties.TryAdd("Language", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+            client.Context.GlobalProperties.TryAdd("Manufacturer", DeviceInfo.Manufacturer);
+            client.Context.GlobalProperties.TryAdd("AppVersion", AppInfo.VersionString);
+            client.Context.GlobalProperties.TryAdd("AppBuildNumber", AppInfo.BuildString);
+            client.Context.GlobalProperties.TryAdd("OperatingSystemVersion", DeviceInfo.VersionString);
 
             Task.Run(SendCrashes);
 
-            return _client;
+            return client;
         }
         catch (Exception)
         {
@@ -329,13 +330,13 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
-    public Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null)
+    public async Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null)
     {
         try
         {
             if (Client is null)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             Debug.WriteLine($"TinyInsights: Tracking error {ex.Message}");
@@ -348,67 +349,61 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
 
             Client.TrackException(ex, properties);
-            Client.Flush();
+            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking error");
         }
-
-        return Task.CompletedTask;
     }
 
-    public Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null)
+    public async Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null)
     {
         try
         {
             if (Client is null)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             Debug.WriteLine($"TinyInsights: Tracking event {eventName}");
 
             Client.TrackEvent(eventName, properties);
-            Client.Flush();
+            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking event");
         }
-
-        return Task.CompletedTask;
     }
 
-    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null)
+    public async Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null)
     {
         try
         {
             if (Client is null)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             Debug.WriteLine($"TinyInsights: tracking page view {viewName}");
 
             Client.TrackPageView(viewName);
-            Client.Flush();
+            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking page view");
         }
-
-        return Task.CompletedTask;
     }
 
-    public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, HttpMethod? httpMethod, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null)
+    public async Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, HttpMethod? httpMethod, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null)
     {
         try
         {
             if (Client is null)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             Debug.WriteLine($"TinyInsights: Tracking dependency {dependencyName}");
@@ -452,13 +447,13 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
 
             Client.TrackDependency(dependency);
+            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception)
         {
             Debug.WriteLine("TinyInsights: Error tracking dependency");
         }
 
-        return Task.CompletedTask;
     }
 
     public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null)

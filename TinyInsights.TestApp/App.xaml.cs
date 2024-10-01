@@ -1,11 +1,19 @@
-﻿namespace TinyInsights.TestApp;
+﻿
+namespace TinyInsights.TestApp;
 
 public partial class App : Application
 {
-    public App()
+    private readonly AppShell shell;
+
+    public App(AppShell shell)
     {
         InitializeComponent();
 
-        MainPage = new AppShell();
+        this.shell = shell;
+    }
+
+    protected override Window CreateWindow(IActivationState? activationState)
+    {
+        return new Window(shell);
     }
 }

@@ -3,6 +3,7 @@ namespace TinyInsights;
 public interface IInsights
 {
     void AddProvider(IInsightsProvider provider);
+    IReadOnlyList<IInsightsProvider> GetProviders();
 
     void UpsertGlobalProperty(string key, string value);
 
