@@ -12,6 +12,7 @@ public interface IInsights
     Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null);
 
     Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null);
+    Task TrackErrorAsync(Exception ex, ErrorSeverity severity, Dictionary<string, string>? properties = null);
 
     Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null);
 

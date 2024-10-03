@@ -24,7 +24,19 @@ public class Insights : IInsights
 
     public Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null)
     {
+        return TrackErrorAsync(ex, ErrorSeverity.Default, properties);
+    }
+
+    public Task TrackErrorAsync(Exception ex, ErrorSeverity severity, Dictionary<string, string>? properties = null)
+    {
         var tasks = new List<Task>();
+
+        if (properties == null)
+        {
+            properties = new Dictionary<string, string>();
+        }
+
+        properties.TryAdd(nameof(ErrorSeverity), severity.ToString());
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackErrorsEnabled))
         {
