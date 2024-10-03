@@ -11,6 +11,16 @@ public class InsightsMessageHandler : DelegatingHandler
         InnerHandler = new HttpClientHandler();
     }
 
+    public InsightsMessageHandler(IInsights insights, DelegatingHandler? innerHandler)
+    {
+        this.insights = insights;
+
+        if (innerHandler is not null)
+        {
+            InnerHandler = innerHandler;
+        }
+    }
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var startTime = DateTime.Now;
@@ -27,7 +37,7 @@ public class InsightsMessageHandler : DelegatingHandler
             {
                 response.EnsureSuccessStatusCode();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 exception = e;
             }
@@ -45,7 +55,7 @@ public class InsightsMessageHandler : DelegatingHandler
 
             return response;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             var endTime = DateTime.Now;
             await insights.TrackDependencyAsync(
