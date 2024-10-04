@@ -198,6 +198,24 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     }
 
+    public void RemoveGlobalProperty(string key)
+    {
+        if (Client is null)
+        {
+            return;
+        }
+
+        if (_globalProperties.ContainsKey(key))
+        {
+            _globalProperties.Remove(key);
+        }
+
+        if (Client.Context.GlobalProperties.ContainsKey(key))
+        {
+            Client.Context.GlobalProperties.Remove(key);
+        }
+    }
+
     public void OverrideAnonymousUserId(string userId)
     {
         Preferences.Set(userIdKey, userId);
@@ -262,9 +280,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             ResetCrashes();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Debug.WriteLine("TinyInsights: Error sending crashes");
+            Trace.WriteLine($"TinyInsights: Error sending crashes. Message: {ex.Message}");
         }
     }
 
@@ -285,9 +303,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<List<Crash>>(json);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Debug.WriteLine("TinyInsights: Error reading crashes");
+            Trace.WriteLine($"TinyInsights: Error reading crashes. Message: {ex.Message}");
         }
 
         return null;
@@ -302,9 +320,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             var path = Path.Combine(logPath, crashLogFilename);
             File.Delete(path);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Debug.WriteLine("TinyInsights: Error clearing crashes");
+            Trace.WriteLine($"TinyInsights: Error clearing crashes. Message: {ex.Message}");
         }
     }
 
@@ -324,9 +342,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             File.WriteAllText(path, json);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            Debug.WriteLine("TinyInsights: Error handling crashes");
+            Trace.WriteLine($"TinyInsights: Error handling crashes. Message: {exception.Message}");
         }
     }
 
@@ -351,9 +369,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Client.TrackException(ex, properties);
             await Client.FlushAsync(CancellationToken.None);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            Debug.WriteLine("TinyInsights: Error tracking error");
+            Trace.WriteLine($"TinyInsights: Error tracking error. Message: {exception.Message}");
         }
     }
 
@@ -371,9 +389,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Client.TrackEvent(eventName, properties);
             await Client.FlushAsync(CancellationToken.None);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Debug.WriteLine("TinyInsights: Error tracking event");
+            Trace.WriteLine($"TinyInsights: Error tracking event. Message: {ex.Message}");
         }
     }
 
@@ -391,9 +409,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Client.TrackPageView(viewName);
             await Client.FlushAsync(CancellationToken.None);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Debug.WriteLine("TinyInsights: Error tracking page view");
+            Trace.WriteLine($"TinyInsights: Error tracking page view. Message: {ex.Message}");
         }
     }
 
@@ -449,11 +467,10 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Client.TrackDependency(dependency);
             await Client.FlushAsync(CancellationToken.None);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Debug.WriteLine("TinyInsights: Error tracking dependency");
+            Trace.WriteLine($"TinyInsights: Error tracking dependency. Message: {ex.Message}");
         }
-
     }
 
     public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null)

@@ -6,9 +6,17 @@ public class Insights : IInsights
 
     public void UpsertGlobalProperty(string key, string value)
     {
-        foreach (var provider in insightsProviders.Where(x => x.IsTrackErrorsEnabled))
+        foreach (var provider in insightsProviders)
         {
             provider.UpsertGlobalProperty(key, value);
+        }
+    }
+
+    public void RemoveGlobalProperty(string key)
+    {
+        foreach (var provider in insightsProviders)
+        {
+            provider.RemoveGlobalProperty(key);
         }
     }
 

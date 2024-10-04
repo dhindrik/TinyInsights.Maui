@@ -12,6 +12,7 @@ public interface IInsightsProvider
     void Initialize();
 
     void UpsertGlobalProperty(string key, string value);
+    void RemoveGlobalProperty(string key);
 
     Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null);
 
