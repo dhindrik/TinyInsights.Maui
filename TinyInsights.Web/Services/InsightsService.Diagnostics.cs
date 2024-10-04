@@ -407,32 +407,6 @@ public partial class InsightsService : IInsightsService
 
         return data;
     }
-
-    private string GetFilter(GlobalFilter filter)
-    {
-        var filterBuilder = new StringBuilder();
-        filterBuilder.Append(" ");
-
-        if (filter.OperatingSystemFilterValue is not null)
-        {
-            filterBuilder.Append($"client_OS == '{filter.OperatingSystemFilterValue}' and ");
-        }
-
-        if (filter.AppVersions.Where(x => x != GlobalFilter.AppVersionsDefaultValue).Any())
-        {
-            filterBuilder.Append("customDimensions.AppBuildNumber in (");
-
-            foreach (var number in filter.AppBuildNumbers)
-            {
-                filterBuilder.Append($"'{number}',");
-            }
-
-            filterBuilder.Remove(filterBuilder.Length - 1, 1);
-            filterBuilder.Append(") and ");
-        }
-
-        return filterBuilder.ToString();
-    }
 }
 
 public class QueryResult

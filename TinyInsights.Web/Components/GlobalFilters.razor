@@ -1,11 +1,20 @@
 @inherits TinyInsightsComponentBase
 @inject IInsightsService Service
+@inject TooltipService tooltipService
 
-<RadzenDropDown @bind-Value="@GlobalFilter.OperatingSystem" Data="operatingSystemFilter" TextProperty="Text"
-    ValueProperty="Value" />
-<RadzenDropDown @bind-Value="@GlobalFilter.AppVersions" Data="appVersions" Multiple="true" Chips="true" />
-<RadzenDropDown @bind-Value="@GlobalFilter.NumberOfDays" Data="dayFilter" TextProperty="Text" ValueProperty="Value" />
+<div>
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="20" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+        <RadzenStack Gap="10" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+            <RadzenTextBox @bind-Value="@GlobalFilter.TextFilter" Placeholder="Text filter" MouseEnter="ShowTooltip" />
+            <RadzenButton Text="Apply text filter" Click="@GlobalFilter.ApplyTextFilter" />
+        </RadzenStack>  
 
+        <RadzenDropDown @bind-Value="@GlobalFilter.OperatingSystem" Data="operatingSystemFilter" TextProperty="Text"
+                        ValueProperty="Value" />                        
+        <RadzenDropDown @bind-Value="@GlobalFilter.AppVersions" Data="appVersions" Multiple="true" Chips="true" />
+        <RadzenDropDown @bind-Value="@GlobalFilter.NumberOfDays" Data="dayFilter" TextProperty="Text" ValueProperty="Value" />
+    </RadzenStack>
+</div>
 @code {
     [CascadingParameter]
     public GlobalFilter GlobalFilter { get; set; }
@@ -33,7 +42,7 @@ GlobalFilter.AppVersionsDefaultValue
 };
     protected override async Task OnParametersSetAsync()
     {
-        if(appVersions.Count == 1)
+        if (appVersions.Count == 1)
         {
             var versions = await Service.GetUniqueAppVersions();
 
@@ -44,6 +53,8 @@ GlobalFilter.AppVersionsDefaultValue
             GlobalFilter.AllAppVersions = versions;
         }
     }
+
+    private void ShowTooltip(ElementReference elementReference) => tooltipService.Open(elementReference, "Add a simple KQL filter like <i>name == cloud_RoleName == 'Mobile.App'</i>. Do not include where, it will break the query. <b>Also remember, this is a global filter and some columns are specific to a certain view.</b>", new TooltipOptions(){ Style = "background: #757575; color: white;"});
 
     private record DayFilterItem(string Text, int Value);
 

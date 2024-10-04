@@ -41,6 +41,13 @@ a{
     margin: auto 0;
 }
 
+.rz-textbox {
+    height: 50px;
+    margin: 0;
+    padding: 0 10px;
+    width: 600px;
+}
+
 .wrapbox {
     display: flex;
     flex-direction: row;

@@ -26,7 +26,7 @@ public class GlobalFilter : INotifyPropertyChanged
         AppVersionsDefaultValue
     };
 
-    public List<string> AllAppVersions {get;set;} = new();
+    public List<string> AllAppVersions { get; set; } = new();
 
     public List<string> AppVersions
     {
@@ -34,7 +34,15 @@ public class GlobalFilter : INotifyPropertyChanged
         set => SetField(ref appVersions, value);
     }
 
-    public List<string> AppBuildNumbers{
+    public string? TextFilter { get; set; }
+
+    public void ApplyTextFilter()
+    {
+        OnPropertyChanged(nameof(TextFilter));
+    }
+
+    public List<string> AppBuildNumbers
+    {
         get
         {
             return AppVersions.Select(v => v.Split('(').Last().Trim(')')).ToList();
@@ -45,17 +53,17 @@ public class GlobalFilter : INotifyPropertyChanged
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
-        if(propertyName == nameof(AppVersions))
+        if (propertyName == nameof(AppVersions))
         {
-            if(AppVersions.Count == 0)
+            if (AppVersions.Count == 0)
             {
                 AppVersions.Add(AppVersionsDefaultValue);
             }
-            else if(AppVersions.Count > 1 && AppVersions.Contains(AppVersionsDefaultValue))
+            else if (AppVersions.Count > 1 && AppVersions.Contains(AppVersionsDefaultValue))
             {
                 AppVersions.Remove(AppVersionsDefaultValue);
             }
-            else if(AppVersions.Count == AllAppVersions.Count)
+            else if (AppVersions.Count == AllAppVersions.Count)
             {
                 AppVersions.Clear();
                 AppVersions.Add(AppVersionsDefaultValue);
