@@ -15,7 +15,7 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             })
             .UseTinyInsights("InstrumentationKey=8b51208f-7926-4b7b-9867-16989206b950;IngestionEndpoint=https://swedencentral-0.in.applicationinsights.azure.com/;ApplicationId=0c04d3a0-9ee2-41a5-996e-526552dc730f",
-                (provider) =>
+                (provider, serviceProvider) =>
                 {
                     provider.IsTrackErrorsEnabled = true;
                     provider.IsTrackCrashesEnabled = true;

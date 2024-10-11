@@ -10,7 +10,7 @@ namespace TinyInsights;
 
 public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 {
-    private string? ConnectionString { get; set; }
+    public string? ConnectionString { get; set; }
     private static ApplicationInsightsProvider? provider;
     private const string userIdKey = nameof(userIdKey);
 
