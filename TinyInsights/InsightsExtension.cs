@@ -11,7 +11,7 @@ public static class InsightsExtension
         return appBuilder;
     }
 
-    public static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string? applicationInsightsConnectionString = null, Action<IInsightsProvider, IServiceCollection>? configureProvider = null)
+    public static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string? applicationInsightsConnectionString = null, Action<IInsightsProvider, IServiceProvider>? configureProvider = null)
     {
         return UseTinyInsights(appBuilder, applicationInsightsConnectionString, null, configureProvider);
     }
@@ -21,9 +21,9 @@ public static class InsightsExtension
         return UseTinyInsights(appBuilder, applicationInsightsConnectionString, configureProvider, null);
     }
 
-    private static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string? applicationInsightsConnectionString = null, Action<IInsightsProvider>? configureProvider = null, Action<IInsightsProvider, IServiceCollection>? configureProviderWithServiceCollection = null)
+    private static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string? applicationInsightsConnectionString = null, Action<IInsightsProvider>? configureProvider = null, Action<IInsightsProvider, IServiceProvider>? configureProviderWithServiceCollection = null)
     {
-        appBuilder.Services.AddSingleton<IInsights>((_) =>
+        appBuilder.Services.AddSingleton<IInsights>((serviceProvider) =>
         {
 #if WINDOWS
 
@@ -36,7 +36,7 @@ public static class InsightsExtension
 
             if (configureProviderWithServiceCollection is not null)
             {
-                configureProviderWithServiceCollection.Invoke(provider, appBuilder.Services);
+                configureProviderWithServiceCollection.Invoke(provider, serviceProvider);
             }
             else if (configureProvider is not null)
             {
