@@ -11,7 +11,7 @@ public static class InsightsExtension
         return appBuilder;
     }
 
-    public static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string applicationInsightsConnectionString, Action<IInsightsProvider>? configureProvider = null)
+    public static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string? applicationInsightsConnectionString = null, Action<IInsightsProvider>? configureProvider = null)
     {
         appBuilder.Services.AddSingleton<IInsights>((_) =>
         {
@@ -38,7 +38,7 @@ public static class InsightsExtension
         return appBuilder;
     }
 
-    public static MauiAppBuilder UseTinyInsightsAsILogger(this MauiAppBuilder appBuilder, string applicationInsightsConnectionString, Action<IInsightsProvider>? configureProvider = null)
+    public static MauiAppBuilder UseTinyInsightsAsILogger(this MauiAppBuilder appBuilder, string? applicationInsightsConnectionString = null, Action<IInsightsProvider>? configureProvider = null)
     {
         appBuilder.Services.AddSingleton<ILogger>((_) =>
         {

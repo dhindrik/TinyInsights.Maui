@@ -10,7 +10,7 @@ namespace TinyInsights;
 
 public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 {
-    private readonly string connectionString;
+    private string? ConnectionString { get; set; }
     private static ApplicationInsightsProvider? provider;
     private const string userIdKey = nameof(userIdKey);
 
@@ -30,9 +30,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
 #if IOS || MACCATALYST || ANDROID
 
-    public ApplicationInsightsProvider(string connectionString)
+    public ApplicationInsightsProvider(string? connectionString = null)
     {
-        this.connectionString = connectionString;
+        ConnectionString = connectionString;
         provider = this;
 
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -56,9 +56,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     }
 
 #elif WINDOWS
-    public ApplicationInsightsProvider(MauiWinUIApplication app, string connectionString)
+    public ApplicationInsightsProvider(MauiWinUIApplication app, string? connectionString = null)
     {
-        this.connectionString = connectionString;
+        ConnectionString = connectionString;
         provider = this;
 
         app.UnhandledException += App_UnhandledException;
@@ -74,7 +74,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 #elif NET8_0_OR_GREATER
     public ApplicationInsightsProvider()
     {
-        connectionString = string.Empty;
         // Do nothing. The net8.0 target exists for enabling unit testing, not for actual use.
     }
 #endif
@@ -122,9 +121,14 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         try
         {
+            if (string.IsNullOrWhiteSpace(ConnectionString))
+            {
+                throw new ArgumentNullException("ConnectionString", "ConnectionString is required to initialize TinyInsights");
+            }
+
             var configuration = new TelemetryConfiguration()
             {
-                ConnectionString = connectionString
+                ConnectionString = ConnectionString
             };
 
             client = new TelemetryClient(configuration);
