@@ -131,7 +131,7 @@ public class Insights : IInsights
 
     public void OverrideAnonymousUserId(string userId)
     {
-        foreach (var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
+        foreach (var provider in insightsProviders)
         {
             provider.OverrideAnonymousUserId(userId);
         }
@@ -139,9 +139,17 @@ public class Insights : IInsights
 
     public void GenerateNewAnonymousUserId()
     {
-        foreach (var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
+        foreach (var provider in insightsProviders)
         {
             provider.GenerateNewAnonymousUserId();
+        }
+    }
+
+    public void CreateNewSession()
+    {
+        foreach (var provider in insightsProviders)
+        {
+            provider.CreateNewSession();
         }
     }
 }

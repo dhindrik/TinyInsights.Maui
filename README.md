@@ -50,6 +50,20 @@ public MainViewModel(IInsights insights)
   this.insights = insights;
 }
 ```
+
+#### Track sessions
+When the app starts, a new session will be created. To create a new session, you should call the method below in the ***OnResume*** method in the ***App.xaml.cs*** file. This will create a new session every time the user is returning to the app.
+
+```csharp
+protected override void OnResume()
+{
+    base.OnResume();
+
+    var insights = serviceProvider.GetRequiredService<IInsights>();
+    insights.CreateNewSession();
+}
+```
+
 #### Track page views
 ```csharp
 await insights.TrackPageViewAsync("MainView");

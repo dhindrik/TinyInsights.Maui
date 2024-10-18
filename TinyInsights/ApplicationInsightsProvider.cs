@@ -153,6 +153,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             client.Context.GlobalProperties.TryAdd("AppVersion", AppInfo.VersionString);
             client.Context.GlobalProperties.TryAdd("AppBuildNumber", AppInfo.BuildString);
             client.Context.GlobalProperties.TryAdd("OperatingSystemVersion", DeviceInfo.VersionString);
+            client.Context.Session.Id = Guid.NewGuid().ToString();
 
 
             return client;
@@ -241,6 +242,16 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         Preferences.Set(userIdKey, userId);
 
         return userId;
+    }
+
+    public void CreateNewSession()
+    {
+        if (Client is null)
+        {
+            return;
+        }
+
+        Client.Context.Session.Id = Guid.NewGuid().ToString();
     }
 
     private async Task SendCrashes()

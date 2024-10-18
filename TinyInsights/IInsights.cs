@@ -25,4 +25,5 @@ public interface IInsights
     void OverrideAnonymousUserId(string userId);
 
     void GenerateNewAnonymousUserId();
+    void CreateNewSession();
 }
