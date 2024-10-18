@@ -20,6 +20,9 @@
     <RadzenCard>
 
         <h2>@detailsHeader</h2>
+        <RadzenStack Orientation="Orientation.Vertical" Gap="20">
+
+        <LabelValuePair Key="ProblemId" Value="@Id" />
 
         @if (isLoading)
         {
@@ -27,6 +30,8 @@
         }
         else
         {
+                <LabelValuePair Key="Type" Value="@data.Items.First().Data["type"]" />
+
             <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
                 <LabelValuePair Key="Count" Value="@data.Count.ToString()" />
                 <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()" />
@@ -34,10 +39,11 @@
                 <LabelValuePair Key="Affected operating systems" Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
             </RadzenStack>
         }
+        </RadzenStack>
 
     </RadzenCard>
     <RadzenCard>
-        <h2>Message</h2>
+        <h2>Info</h2>
         @if (isLoading)
         {
             <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />

@@ -7,11 +7,24 @@
     --rz-series-3: #646487;
     --rz-series-4: #877064;
 }
-body{
+body {
     padding: 0;
     margin: 0;
-    font-family: Arial
+    font-family: Arial;
+    user-select: auto !important;
+    -webkit-user-select: auto !important;
+    -moz-user-select: auto !important;
+    -ms-user-select:text !important;
+    pointer-events:all !important;
 }
+.rz-unselectable-text {
+    user-select: auto !important;
+    -webkit-user-select: auto !important;
+    -moz-user-select: auto !important;
+    -ms-user-select: text !important;
+    pointer-events: all !important;
+}
+
 a{
     color:#6D8764;
 }
