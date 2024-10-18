@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace TinyInsights;
 
 public class Crash
@@ -10,33 +12,50 @@ public class Crash
 
     public Crash(Exception exception)
     {
+        var type = exception.GetType();
+
         Message = exception.Message;
         StackTrace = exception.StackTrace;
-        ExceptionType = exception.GetType().ToString();
+        ExceptionType = type.ToString();
+        ExceptionAssembly = type.Assembly.FullName!;
         Source = exception.Source;
     }
 
-    public string Message { get; init; }
+    public string? Message { get; init; }
     public string? StackTrace { get; init; }
     public string ExceptionType { get; init; }
+    public string ExceptionAssembly { get; init; }
     public string? Source { get; init; }
 
     public Exception? GetException()
     {
-        var type = Type.GetType(ExceptionType);
 
-        if(type is null)
+        try
+        {
+            Assembly assembly = Assembly.Load(ExceptionAssembly);
+            Type type = assembly.GetType(ExceptionType)!;
+
+            Exception? ex;
+
+            try
+            {
+                ex = Activator.CreateInstance(type, args: Message) as Exception;
+            }
+            catch (MissingMethodException)
+            {
+                ex = Activator.CreateInstance(type) as Exception;
+            }
+
+            if (ex is not null)
+            {
+                ex.Source = Source;
+            }
+
+            return ex;
+        }
+        catch (Exception)
         {
             return null;
         }
-
-        var ex = Activator.CreateInstance(type, args: Message) as Exception;
-
-        if(ex is not null)
-        {
-            ex.Source = Source;
-        }
-
-        return ex;
     }
 }

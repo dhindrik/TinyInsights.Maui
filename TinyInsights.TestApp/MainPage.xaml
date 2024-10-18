@@ -29,9 +29,15 @@
                 Clicked="TrackHttpButton_OnClicked"
                 Text="Track http request" />
             <Button
-                x:Name="CrashButtom"
-                Clicked="CrashButtom_OnClicked"
+                x:Name="CrashButton"
+                Clicked="CrashButton_OnClicked"
                 Text="Crash app" />
+
+            <Button
+                x:Name="CustomCrashButton"
+                Clicked="CustomCrashButton_Clicked"
+                Text="Crash app with custom exception" />
+
             <Button Clicked="NewPageButton_Clicked" Text="Test page automatic page tracking" />
 
             <Button Clicked="Button_Clicked" Text="clear gc" />

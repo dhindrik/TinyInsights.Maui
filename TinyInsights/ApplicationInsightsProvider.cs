@@ -154,7 +154,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             client.Context.GlobalProperties.TryAdd("AppBuildNumber", AppInfo.BuildString);
             client.Context.GlobalProperties.TryAdd("OperatingSystemVersion", DeviceInfo.VersionString);
 
-            Task.Run(SendCrashes);
 
             return client;
         }

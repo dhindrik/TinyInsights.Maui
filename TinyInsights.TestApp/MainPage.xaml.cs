@@ -88,7 +88,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private void CrashButtom_OnClicked(object? sender, EventArgs e)
+    private void CrashButton_OnClicked(object? sender, EventArgs e)
     {
         throw new Exception("Crash Boom Bang!");
     }
@@ -101,5 +101,10 @@ public partial class MainPage : ContentPage
     private void Button_Clicked(object sender, EventArgs e)
     {
         Debug.WriteLine($"Memory: {GC.GetTotalMemory(true)}");
+    }
+
+    private void CustomCrashButton_Clicked(object sender, EventArgs e)
+    {
+        throw new CustomException();
     }
 }
