@@ -13,7 +13,12 @@ public static class InsightsExtension
 
     public static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string applicationInsightsConnectionString)
     {
-        return UseTinyInsights(appBuilder, applicationInsightsConnectionString, null);
+        return UseTinyInsights(appBuilder, applicationInsightsConnectionString, null, null);
+    }
+
+    public static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string? applicationInsightsConnectionString = null, Action<IInsightsProvider, IServiceProvider>? configureProvider = null)
+    {
+        return UseTinyInsights(appBuilder, applicationInsightsConnectionString, null, configureProvider);
     }
 
     public static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string? applicationInsightsConnectionString = null, Action<IInsightsProvider>? configureProvider = null)
