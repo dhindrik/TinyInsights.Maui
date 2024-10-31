@@ -27,6 +27,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public bool IsAutoTrackPageViewsEnabled { get; set; } = true;
     public bool IsTrackEventsEnabled { get; set; } = true;
     public bool IsTrackDependencyEnabled { get; set; } = true;
+    public bool EnableConsoleLogging { get; set; }
 
 #if IOS || MACCATALYST || ANDROID
 
@@ -160,7 +161,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception)
         {
-            Debug.WriteLine("TinyInsights: Error creating TelemetryClient");
+            if (EnableConsoleLogging)
+                Console.WriteLine("TinyInsights: Error creating TelemetryClient");
         }
 
         return null;
@@ -270,7 +272,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 return;
             }
 
-            Debug.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
+            if (EnableConsoleLogging)
+                Console.WriteLine(($"TinyInsights: Sending {crashes.Count} crashes");
 
             foreach (var crash in crashes)
             {
@@ -296,7 +299,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"TinyInsights: Error sending crashes. Message: {ex.Message}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error sending crashes. Message: {ex.Message}");
         }
     }
 
@@ -329,14 +333,16 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
-            Debug.WriteLine("TinyInsights: Reset crashes");
+            if (EnableConsoleLogging)
+                Console.WriteLine("TinyInsights: Reset crashes");
 
             var path = Path.Combine(logPath, crashLogFilename);
             File.Delete(path);
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"TinyInsights: Error clearing crashes. Message: {ex.Message}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error clearing crashes. Message: {ex.Message}");
         }
     }
 
@@ -344,7 +350,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         try
         {
-            Debug.WriteLine("TinyInsights: Handle crashes");
+            if (EnableConsoleLogging)
+                Console.WriteLine("TinyInsights: Handle crashes");
 
             var crashes = ReadCrashes() ?? [];
 
@@ -358,7 +365,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception exception)
         {
-            Trace.WriteLine($"TinyInsights: Error handling crashes. Message: {exception.Message}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error handling crashes. Message: {exception.Message}");
         }
     }
 
@@ -371,7 +379,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 return;
             }
 
-            Debug.WriteLine($"TinyInsights: Tracking error {ex.Message}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Tracking error {ex.Message}");
 
             properties ??= [];
 
@@ -385,7 +394,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception exception)
         {
-            Trace.WriteLine($"TinyInsights: Error tracking error. Message: {exception.Message}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error tracking error. Message: {exception.Message}");
         }
     }
 
@@ -398,14 +408,16 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 return;
             }
 
-            Debug.WriteLine($"TinyInsights: Tracking event {eventName}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Tracking event {eventName}");
 
             Client.TrackEvent(eventName, properties);
             await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"TinyInsights: Error tracking event. Message: {ex.Message}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error tracking event. Message: {ex.Message}");
         }
     }
 
@@ -418,14 +430,16 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 return;
             }
 
-            Debug.WriteLine($"TinyInsights: tracking page view {viewName}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: tracking page view {viewName}");
 
             Client.TrackPageView(viewName);
             await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"TinyInsights: Error tracking page view. Message: {ex.Message}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error tracking page view. Message: {ex.Message}");
         }
     }
 
@@ -438,7 +452,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 return;
             }
 
-            Debug.WriteLine($"TinyInsights: Tracking dependency {dependencyName}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Tracking dependency {dependencyName}");
 
             var fullUrl = data;
 
@@ -483,7 +498,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"TinyInsights: Error tracking dependency. Message: {ex.Message}");
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error tracking dependency. Message: {ex.Message}");
         }
     }
 
@@ -518,7 +534,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     private static Task TrackDebugAsync<TState>(EventId eventId, TState state, Exception? exception)
     {
-        Debug.WriteLine($"TinyInsights: DebugLogging, Event: {GetEventName(eventId)}, State: {state}, Exception: {exception?.Message}");
+        Console.WriteLine($"TinyInsights: DebugLogging, Event: {GetEventName(eventId)}, State: {state}, Exception: {exception?.Message}");
         return Task.CompletedTask;
     }
 
