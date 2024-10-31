@@ -273,7 +273,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
 
             if (EnableConsoleLogging)
-                Console.WriteLine(($"TinyInsights: Sending {crashes.Count} crashes");
+                Console.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
 
             foreach (var crash in crashes)
             {
