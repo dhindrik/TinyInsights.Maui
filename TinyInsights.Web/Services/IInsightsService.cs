@@ -35,6 +35,8 @@ public interface IInsightsService
     Task<List<CountPerKey>> GetUsersPerIdiom(GlobalFilter filter);
     Task<List<CountPerKey>> GetUsersPerOperatingSystem(GlobalFilter filter);
     Task<List<CountPerKey>> GetUserPerManufacturer(GlobalFilter filter);
+
+    Task<List<CountPerDay>> GetSessionsPerDay(GlobalFilter filter);
     #endregion
 
 }

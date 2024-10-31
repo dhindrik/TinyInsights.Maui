@@ -30,6 +30,28 @@
                 }
             </RadzenStack>
         </RadzenCard>
+
+        <RadzenCard>
+            <RadzenStack>
+                <h2>Unique user sessions per day</h2>
+                @if (isLoadingSessionsPerDay)
+                {
+                    <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                }
+                else
+                {
+                    <RadzenChart>
+                        <RadzenLegend Visible="false" />
+                        <RadzenLineSeries Data="@sessionsPerDay" CategoryProperty="Date" ValueProperty="Count">
+                            <RadzenMarkers MarkerType="MarkerType.Circle" />
+                            <RadzenSeriesDataLabels />
+                        </RadzenLineSeries>
+                        <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                    </RadzenChart>
+                }
+            </RadzenStack>
+        </RadzenCard>
+
         <div class="wrapbox">
             <div class="wrapitem">
             <RadzenCard>
@@ -80,8 +102,9 @@
     [CascadingParameter]
     public GlobalFilter GlobalFilter { get; set; }
 
-    private bool isLoadingUsersPerDayViews = true, isLoadingCountryList = true, isLoadingUsersPerLanguage;
+    private bool isLoadingUsersPerDayViews = true, isLoadingCountryList = true, isLoadingUsersPerLanguage, isLoadingSessionsPerDay;
     private List<CountPerDay> usersPerDay = new();
+    private List<CountPerDay> sessionsPerDay = new();
     private List<CountPerKey> usersPerCountry = new();
     private List<CountPerKey> usersPerLanguage = new();
     protected override async Task OnParametersSetAsync()
@@ -95,7 +118,7 @@
     {
         try
         {
-            await Task.WhenAll(LoadUsersPerDay(), LoadCountries(), LoadLanguageList());
+            await Task.WhenAll(LoadUsersPerDay(), LoadCountries(), LoadLanguageList(), LoadSessionsPerDay());
         }
         catch (Exception ex)
         {
@@ -124,6 +147,31 @@
 
         usersPerDay = days;
         isLoadingUsersPerDayViews = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadSessionsPerDay()
+    {
+        isLoadingSessionsPerDay = true;
+
+        var result = await Service.GetSessionsPerDay(GlobalFilter);
+
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+        var days = new List<CountPerDay>();
+
+        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+        {
+            var currentDate = date.AddDays(i);
+            var day = result.SingleOrDefault(x => x.Date == currentDate);
+
+            var count = day?.Count ?? 0;
+
+            days.Add(new CountPerDay(currentDate, count));
+        }
+
+        sessionsPerDay = days;
+        isLoadingSessionsPerDay = false;
 
         await InvokeAsync(StateHasChanged);
     }

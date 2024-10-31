@@ -45,6 +45,14 @@ public partial class InsightsService
         return GetPerDayResult(query);
     }
 
+    public Task<List<CountPerDay>> GetSessionsPerDay(GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+        var query = $"pageViews | where{queryFilter} isnotnull(session_Id) and timestamp > ago({filter.NumberOfDays}d) | summarize uniqueSessions = dcount(session_Id) by bin(timestamp, 1d)";
+
+        return GetPerDayResult(query);
+    }
+
     public Task<List<CountPerKey>> GetUserPerCountry(GlobalFilter filter)
     {
         var queryFilter = GetFilter(filter);
