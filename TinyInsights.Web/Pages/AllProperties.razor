@@ -1,7 +1,19 @@
 <RadzenDataGrid Data="allProperties">
     <Columns>
         <RadzenDataGridColumn TItem="PropertyModel" Title="Property" Property="@nameof(PropertyModel.Property)" />
-        <RadzenDataGridColumn TItem="PropertyModel" Title="Value" Property="@nameof(PropertyModel.Value)" />
+        <RadzenDataGridColumn TItem="PropertyModel" Title="Value" Property="@nameof(PropertyModel.Value)">
+            <Template>
+                @if(context.Property == "user_Id")
+                {
+                    <a href="/SearchResult/@context.Value"><b>@context.Value</b></a>
+                }
+                else
+                {
+                    <span>@context.Value</span>
+                }   
+               
+            </Template>
+        </RadzenDataGridColumn>
     </Columns>
 </RadzenDataGrid>
 
