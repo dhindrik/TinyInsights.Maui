@@ -95,6 +95,14 @@ public partial class InsightsService
         return GetPerKeyResult(query);
     }
 
+    public Task<List<CountPerKey>> GetUsersPerOperatingSystemVersion(GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+        var query = $"pageViews | extend os_Version = strcat(client_OS, \" \", tostring(customDimensions.OperatingSystemVersion)) | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize  arg_max(timestamp, *) by user_Id | summarize viewCount = dcount(user_Id) by os_Version";
+
+        return GetPerKeyResult(query);
+    }
+
     private async Task<List<CountPerKey>> GetPerKeyResult(string query)
     {
         var queryResult = await GetQueryResult<QueryResult>(query);

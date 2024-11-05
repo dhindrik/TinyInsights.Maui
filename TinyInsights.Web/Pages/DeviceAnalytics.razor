@@ -30,7 +30,7 @@
                 </RadzenStack>
             </RadzenCard>
         </div>
-        <div>
+        <div class="wrapitem">
             <RadzenCard>
                 <RadzenStack>
                     <h2>Device types</h2>
@@ -49,7 +49,7 @@
                 </RadzenStack>
             </RadzenCard>
         </div>
-        <div>
+        <div class="wrapitem">
             <RadzenCard>
                 <RadzenStack>
                     <h2>Manufactures</h2>
@@ -68,17 +68,39 @@
                 </RadzenStack>
             </RadzenCard>
         </div>
+            <div class="wrapitem">
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>Operating system versions</h2>
+                    @if (isLoadingOperatingSystemVersions)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+                    else
+                    {
+                        <RadzenDataGrid Data="operatingSystemVersions">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="CountPerKey" Title="Operating system version" Property="@nameof(CountPerKey.Key)" />
+                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />                                
+                            </Columns>
+                        </RadzenDataGrid>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+            </div>
+
     </div>
 </RadzenStack>
 @code {
     [CascadingParameter]
     public GlobalFilter GlobalFilter { get; set; }
 
-    private bool isLoadingIdiom = true, isLoadingOperatingSystems = true, isLoadingManufactures = true;
+    private bool isLoadingIdiom = true, isLoadingOperatingSystems = true, isLoadingManufactures = true, isLoadingOperatingSystemVersions = true;
 
     private List<PercentPerKey> idiomUsers = new();
     private List<PercentPerKey> operatingSystemUsers = new();
     private List<PercentPerKey> manufactures = new();
+    private List<CountPerKey> operatingSystemVersions = new();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -86,7 +108,7 @@
 
         try
         {
-            await Task.WhenAll(LoadUserIdioms(), LoadUserOperatingSystems(), LoadManufactures());
+            await Task.WhenAll(LoadUserIdioms(), LoadUserOperatingSystems(), LoadManufactures(), LoadOperatingSystemVersions());
         }
         catch(Exception ex)
         {
@@ -123,6 +145,17 @@
         var total = result.Sum(x => x.Count);
         manufactures = result.Select(x => new PercentPerKey(x.Key, Math.Round((x.Count / (double)total * 100), 0))).ToList();
         isLoadingManufactures = false;
+
+        StateHasChanged();
+    }
+
+    private async Task LoadOperatingSystemVersions()
+    {
+        isLoadingOperatingSystemVersions = true;
+
+        operatingSystemVersions = await Service.GetUsersPerOperatingSystemVersion(GlobalFilter);
+
+        isLoadingOperatingSystemVersions = false;
 
         StateHasChanged();
     }
