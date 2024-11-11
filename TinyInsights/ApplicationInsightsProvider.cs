@@ -73,10 +73,12 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 #elif NET8_0_OR_GREATER
+
     public ApplicationInsightsProvider()
     {
         // Do nothing. The net8.0 target exists for enabling unit testing, not for actual use.
     }
+
 #endif
 
     public static bool IsInitialized { get; private set; }
@@ -459,6 +461,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         try
         {
             if(Client is null)
+            {
+                return;
+            }
+
+            if(!IsTrackPageViewsEnabled)
             {
                 return;
             }
