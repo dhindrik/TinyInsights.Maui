@@ -3,7 +3,8 @@ namespace TinyInsights;
 public interface IInsightsProvider
 {
     bool IsTrackErrorsEnabled { get; set; }
-    public bool IsTrackCrashesEnabled { get; set; }
+    bool HandleCrashes { get; set; }
+    bool WriteCrashes { get; set; }
     bool IsTrackPageViewsEnabled { get; set; }
     bool IsAutoTrackPageViewsEnabled { get; set; }
     bool IsTrackEventsEnabled { get; set; }
@@ -12,6 +13,7 @@ public interface IInsightsProvider
     void Initialize();
 
     void UpsertGlobalProperty(string key, string value);
+
     void RemoveGlobalProperty(string key);
 
     Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null);
@@ -27,5 +29,10 @@ public interface IInsightsProvider
     void OverrideAnonymousUserId(string userId);
 
     string GenerateNewAnonymousUserId();
+
     void CreateNewSession();
+
+    bool HasCrashed();
+
+    Task SendCrashes();
 }

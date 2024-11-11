@@ -3,9 +3,11 @@ namespace TinyInsights;
 public interface IInsights
 {
     void AddProvider(IInsightsProvider provider);
+
     IReadOnlyList<IInsightsProvider> GetProviders();
 
     void UpsertGlobalProperty(string key, string value);
+
     void RemoveGlobalProperty(string key);
 
     Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null);
@@ -13,6 +15,7 @@ public interface IInsights
     Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null);
 
     Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null);
+
     Task TrackErrorAsync(Exception ex, ErrorSeverity severity, Dictionary<string, string>? properties = null);
 
     Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null);
@@ -25,5 +28,10 @@ public interface IInsights
     void OverrideAnonymousUserId(string userId);
 
     void GenerateNewAnonymousUserId();
+
     void CreateNewSession();
+
+    bool HasCrashed();
+
+    Task SendCrashes();
 }

@@ -23,6 +23,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public bool IsTrackErrorsEnabled { get; set; } = true;
     public bool IsTrackCrashesEnabled { get; set; } = true;
+    public bool HandleCrashes { get; set; } = true;
+    public bool WriteCrashes { get; set; } = true;
     public bool IsTrackPageViewsEnabled { get; set; } = true;
     public bool IsAutoTrackPageViewsEnabled { get; set; } = true;
     public bool IsTrackEventsEnabled { get; set; } = true;
@@ -41,7 +43,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
-            if(IsTrackCrashesEnabled)
+            if(HandleCrashes)
             {
                 HandleCrash(e.Exception);
             }
@@ -49,7 +51,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            if(IsTrackCrashesEnabled)
+            if(HandleCrashes)
             {
                 HandleCrash((Exception)e.ExceptionObject);
             }
@@ -66,7 +68,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
-            if (IsTrackCrashesEnabled)
+            if (HandleCrashes)
             {
                 HandleCrash(e.Exception);
             }
@@ -102,7 +104,10 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Application.Current.PageAppearing += weakHandler.Handler;
         }
 
-        Task.Run(SendCrashes);
+        if(WriteCrashes)
+        {
+            Task.Run(SendCrashes);
+        }
 
         IsInitialized = true;
     }
@@ -291,7 +296,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         Client.Context.Session.Id = Guid.NewGuid().ToString();
     }
 
-    private async Task SendCrashes()
+    public async Task SendCrashes()
     {
         try
         {
@@ -336,6 +341,29 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             if(EnableConsoleLogging)
                 Console.WriteLine($"TinyInsights: Error sending crashes. Message: {ex.Message}");
+        }
+    }
+
+    public bool HasCrashed()
+    {
+        try
+        {
+            var path = Path.Combine(logPath, crashLogFilename);
+
+            if(!File.Exists(path))
+            {
+                return false;
+            }
+
+            var json = File.ReadAllText(path);
+
+            var crashes = string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<List<Crash>>(json);
+
+            return crashes is null ? false : crashes.Count != 0;
+        }
+        catch(Exception)
+        {
+            return false;
         }
     }
 
