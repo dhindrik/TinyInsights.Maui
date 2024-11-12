@@ -409,7 +409,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         return null;
     }
 
-    private void ResetCrashes()
+    public void ResetCrashes()
     {
         try
         {

@@ -34,4 +34,6 @@ public interface IInsights
     bool HasCrashed();
 
     Task SendCrashes();
+
+    void ResetCrashes();
 }
