@@ -174,4 +174,12 @@ public class Insights : IInsights
             await provider.SendCrashes();
         }
     }
+
+    public void ResetCrashes()
+    {
+        foreach(var provider in insightsProviders)
+        {
+            provider.ResetCrashes();
+        }
+    }
 }
