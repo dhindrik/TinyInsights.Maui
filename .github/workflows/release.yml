@@ -6,27 +6,32 @@ on:
 
 jobs:
   build:
-
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    
-    - name: Install Maui
-      run: dotnet workload install maui
-        
-    - name: Restore dependencies
-      run: dotnet restore TinyInsights/TinyInsights.csproj 
-    
-    - name: Build
-      run: dotnet build TinyInsights/TinyInsights.csproj --no-restore
-    
-    - name: Pack
-      run: dotnet pack TinyInsights/TinyInsights.csproj -p:PackageVersion=${{ github.ref_name }}
+      - uses: actions/checkout@v4
 
-    - name: Push
-      run: dotnet nuget push '**/*.nupkg' --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json
+      - name: Setup .NET 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup .NET 9.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install Maui
+        run: dotnet workload install maui
+
+      - name: Restore dependencies
+        run: dotnet restore TinyInsights/TinyInsights.csproj
+
+      - name: Build
+        run: dotnet build TinyInsights/TinyInsights.csproj --no-restore
+
+      - name: Pack
+        run: dotnet pack TinyInsights/TinyInsights.csproj -p:PackageVersion=${{ github.ref_name }}
+
+      - name: Push
+        run: dotnet nuget push '**/*.nupkg' --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json

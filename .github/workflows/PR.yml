@@ -2,28 +2,32 @@ name: PR
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
-
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    
-    - name: Install Maui
-      run: dotnet workload install maui
-        
-    - name: Restore dependencies
-      run: dotnet restore TinyInsights/TinyInsights.csproj 
-    
-    - name: Build
-      run: dotnet build TinyInsights/TinyInsights.csproj --no-restore
+      - uses: actions/checkout@v4
+      - name: Setup .NET 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Pack
-      run: dotnet pack TinyInsights/TinyInsights.csproj
+      - name: Setup .NET 9.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install Maui
+        run: dotnet workload install maui
+
+      - name: Restore dependencies
+        run: dotnet restore TinyInsights/TinyInsights.csproj
+
+      - name: Build
+        run: dotnet build TinyInsights/TinyInsights.csproj --no-restore
+
+      - name: Pack
+        run: dotnet pack TinyInsights/TinyInsights.csproj
