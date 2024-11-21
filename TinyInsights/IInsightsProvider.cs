@@ -9,6 +9,8 @@ public interface IInsightsProvider
     bool IsTrackEventsEnabled { get; set; }
     bool IsTrackDependencyEnabled { get; set; }
 
+    Func<(string DependencyType, string DependencyName, string Data, DateTimeOffset StartTime, TimeSpan Duration, bool Success, int ResultCode, Exception? Exception), bool>? TrackDependencyFilter { get; set; }
+
     void Initialize();
 
     void UpsertGlobalProperty(string key, string value);

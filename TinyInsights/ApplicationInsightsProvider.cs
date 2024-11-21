@@ -29,6 +29,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public bool IsTrackDependencyEnabled { get; set; } = true;
     public bool EnableConsoleLogging { get; set; }
 
+    public Func<(string DependencyType, string DependencyName, string Data, DateTimeOffset StartTime, TimeSpan Duration, bool Success, int ResultCode, Exception? Exception), bool>? TrackDependencyFilter { get; set; }
+
 #if IOS || MACCATALYST || ANDROID
 
     public ApplicationInsightsProvider(string? connectionString = null)

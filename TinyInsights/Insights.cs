@@ -99,6 +99,11 @@ public class Insights : IInsights
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
         {
+            if (provider.TrackDependencyFilter is not null && !provider.TrackDependencyFilter.Invoke((dependencyType, dependencyName, data, startTime, duration, success, resultCode, exception)))
+            {
+                continue;
+            }
+
             var task = provider.TrackDependencyAsync(dependencyType, dependencyName, data, httpMethod, startTime, duration, success, resultCode, exception);
             tasks.Add(task);
         }

@@ -14,20 +14,26 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             })
-            .UseTinyInsights("InstrumentationKey=8b51208f-7926-4b7b-9867-16989206b950;IngestionEndpoint=https://swedencentral-0.in.applicationinsights.azure.com/;ApplicationId=0c04d3a0-9ee2-41a5-996e-526552dc730f");
+            .UseTinyInsights("InstrumentationKey=8b51208f-7926-4b7b-9867-16989206b950;IngestionEndpoint=https://swedencentral-0.in.applicationinsights.azure.com/;ApplicationId=0c04d3a0-9ee2-41a5-996e-526552dc730f", (provider) =>
+            {
+                provider.TrackDependencyFilter = (dependency) =>
+                {
+                    return !dependency.Success;
+                };
+            });
 
         builder.Services.AddSingleton<ILogger>((serviceProvider) =>
-        {
-            var insights = serviceProvider.GetRequiredService<IInsights>();
-            var providers = insights.GetProviders();
+{
+    var insights = serviceProvider.GetRequiredService<IInsights>();
+    var providers = insights.GetProviders();
 
-            if (providers.Any())
-            {
-                return (ILogger)providers.First();
-            }
+    if (providers.Any())
+    {
+        return (ILogger)providers.First();
+    }
 
-            throw new InvalidOperationException("No insights provider found");
-        });
+    throw new InvalidOperationException("No insights provider found");
+});
 
 #if DEBUG
         builder.Logging.AddDebug();
