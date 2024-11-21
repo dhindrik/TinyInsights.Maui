@@ -106,6 +106,19 @@ public MainViewModel(InsightsMessageHandler insightsMessageHandler)
   client = new HttpClient(insightsMessageHandler);
 }
 ```
+If you don't want to track all dependencies, you can specify a filter when setting up TinyInsights.  
+
+```csharp
+.UseTinyInsights("{CONNECTION-STRING}", (provider) =>
+{
+    provider.TrackDependencyFilter = (dependency) =>
+    {
+        return !dependency.Success && dependency.ResultCode != 401;
+    };
+});
+
+```
+
 
 You can also create a DependencyTracker and use it to track dependencies.
 ```csharp
