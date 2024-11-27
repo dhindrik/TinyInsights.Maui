@@ -145,6 +145,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             client.Context.Cloud.RoleInstance = string.Empty;
             client.Context.User.Id = GetUserId();
 
+            client.Context.Component.Version = AppInfo.VersionString;
+
             // Add any global properties, the user has already added
             foreach (var property in _globalProperties)
             {
