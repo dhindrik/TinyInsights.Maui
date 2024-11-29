@@ -6,6 +6,7 @@
     --rz-series-2: #FFB48F;
     --rz-series-3: #646487;
     --rz-series-4: #877064;
+    --rz-text-selection-background-color:#6D8764;
 }
 body {
     padding: 0;
@@ -73,6 +74,7 @@ a{
     max-width: 49%;
     min-width: 300px;
 }
+
 
 #blazor-error-ui {
     background: lightyellow;
