@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
@@ -255,7 +256,7 @@ public partial class InsightsService : IInsightsService
 
         foreach (var row in queryResult.Tables.First().Rows)
         {
-            result.Add(new AvgPerKey(row.First().ToString(), double.Parse(row.Last().ToString())));
+            result.Add(new AvgPerKey(row.First().ToString(), double.Parse(row.Last().ToString(), CultureInfo.InvariantCulture)));
         }
 
         return result;

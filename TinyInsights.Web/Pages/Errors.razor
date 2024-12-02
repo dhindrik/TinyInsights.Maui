@@ -40,7 +40,7 @@
             }
             else
             {
-                <RadzenDataGrid Data="errors"> 
+                <RadzenDataGrid Data="errors" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
                     <Columns>
                         <RadzenDataGridColumn TItem="CountPerKey" Title="Identifier" Property="@nameof(CountPerKey.Key)" />
                         <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
