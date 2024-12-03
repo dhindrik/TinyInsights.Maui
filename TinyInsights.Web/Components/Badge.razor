@@ -1,0 +1,27 @@
+﻿<div>
+    <div class="badge">
+        @if(IsBadgeVisible)
+        {
+            <span class="indicator" style="background-color: @BadgeBackgroundColor; color: @BadgeTextColor;">
+                @BadgeText
+            </span>
+        }
+        @ChildContent
+    </div>
+</div>
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool IsBadgeVisible { get; set; } = true;
+
+    [Parameter]
+    public string? BadgeText { get; set; }
+
+    [Parameter]
+    public string BadgeBackgroundColor { get; set; } = "#DB5339";
+
+    [Parameter]
+    public string BadgeTextColor { get; set; } = "white";
+}

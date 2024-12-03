@@ -4,7 +4,9 @@
 
 <div>
     <RadzenStack Orientation="Orientation.Horizontal" Gap="20" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
-<RadzenButton Icon="filter_alt" Click="@(() => showAllFilters = !showAllFilters)" MouseEnter="ShowFilterTooltip"></RadzenButton>
+        <Badge IsBadgeVisible="hasActiveFilters">
+            <RadzenButton Icon="filter_alt" Click="@(() => showAllFilters = !showAllFilters)" MouseEnter="ShowFilterTooltip" />
+        </Badge>
         @if(showAllFilters)
         {
             <RadzenStack Gap="10" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
@@ -14,7 +16,7 @@
         }
 
         <RadzenDropDown @bind-Value="@GlobalFilter.OperatingSystem" Data="operatingSystemFilter" TextProperty="Text"
-                        ValueProperty="Value" />                        
+        ValueProperty="Value" />                        
         <RadzenDropDown @bind-Value="@GlobalFilter.AppVersions" Data="appVersions" Multiple="true" Chips="true" />
         <RadzenDropDown @bind-Value="@GlobalFilter.NumberOfDays" Data="dayFilter" TextProperty="Text" ValueProperty="Value" />
     </RadzenStack>
@@ -24,6 +26,7 @@
     public GlobalFilter GlobalFilter { get; set; }
 
     private bool showAllFilters;
+    private bool hasActiveFilters;
 
     private List<DayFilterItem> dayFilter = new()
 {
@@ -57,6 +60,8 @@ GlobalFilter.AppVersionsDefaultValue
             appVersions.AddRange(versions);
 
             GlobalFilter.AllAppVersions = versions;
+
+            hasActiveFilters = !string.IsNullOrWhiteSpace(GlobalFilter.TextFilter);
         }
     }
 

@@ -1,0 +1,11 @@
+.badge{
+    position:relative
+}
+.indicator {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    padding: 7px;
+    border-radius: 50%;
+    z-index:200;
+}

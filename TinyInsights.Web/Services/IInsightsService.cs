@@ -18,8 +18,9 @@ public interface IInsightsService
     Task<List<EventItem>> GetEventsByUser(string userId, GlobalFilter filter);
     Task<List<AvgPerKey>> GetDependencyAvgDurations(GlobalFilter filter);
     Task<List<CountPerKey>> GetTopDependencies(GlobalFilter filter);
-    Task<List<CountPerKey>> GetFailedDependencies(GlobalFilter filter);
+    Task<List<CountPerKey>> GetFailedDependencies(GlobalFilter filter, List<string>? resultCodeFilter = null);
     Task<FailedDependencies> GetFailedDependencies(string key, GlobalFilter filter);
+    Task<List<string>> GetFailedDependenciesStatusCodes(GlobalFilter filter);
     Task<List<CountPerDay>> GetFailedDependenciesPerDay(GlobalFilter filter);
     #endregion
 

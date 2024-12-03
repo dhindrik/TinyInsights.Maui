@@ -248,7 +248,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize avg = avg(duration) by data";
+            $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize avg = avg(duration) by data | limit 20";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
@@ -267,7 +267,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data";
+            $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data | limit 20";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
@@ -281,9 +281,27 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<CountPerKey>> GetFailedDependencies(GlobalFilter filter)
+    public async Task<List<CountPerKey>> GetFailedDependencies(GlobalFilter filter, List<string>? resultCodeFilter = null)
     {
         var queryFilter = GetFilter(filter);
+
+        if (resultCodeFilter is { Count: > 0 })
+        {
+            var filterBuilder = new StringBuilder();
+            filterBuilder.Append(queryFilter);
+
+            filterBuilder.Append("resultCode in (");
+
+            foreach (var number in resultCodeFilter)
+            {
+                filterBuilder.Append($"'{number}',");
+            }
+
+            filterBuilder.Remove(filterBuilder.Length - 1, 1);
+            filterBuilder.Append(") and ");
+
+            queryFilter = filterBuilder.ToString();
+        }
 
         var query =
             $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data";
@@ -298,6 +316,18 @@ public partial class InsightsService : IInsightsService
         }
 
         return result;
+    }
+
+    public async Task<List<string>> GetFailedDependenciesStatusCodes(GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+
+        var query = $"dependencies | where{queryFilter} success == false and resultCode != ''| distinct resultCode ";
+
+        var queryResult = await GetQueryResult<QueryResult>(query);
+
+        return queryResult.Tables.First().Rows.Select(r => r.First().ToString()).ToList();
+
     }
 
     public async Task<FailedDependencies> GetFailedDependencies(string key, GlobalFilter filter)

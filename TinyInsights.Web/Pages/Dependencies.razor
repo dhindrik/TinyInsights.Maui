@@ -3,100 +3,123 @@
 @inherits TinyInsightsComponentBase
 
 @inject IInsightsService Service
+@inject TooltipService tooltipService
 
-<RadzenStack Gap="20">
-    <RadzenRow JustifyContent="JustifyContent.End">
-        <GlobalFilters />
-    </RadzenRow>
+<div>
+    <RadzenStack Gap="20">
+        <RadzenRow JustifyContent="JustifyContent.End">
+            <GlobalFilters />
+        </RadzenRow>
 
-    <RadzenCard>
-        <RadzenStack>
-            <h2>Failed dependencies per day</h2>
-            @if (loadingFailedDependenciesPerDays)
-            {
-                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-            }
-            else
-            {
-                <RadzenChart>
-                    <RadzenLegend Visible="false" />
-                    <RadzenLineSeries Data="@failedPerDays" CategoryProperty="Date" ValueProperty="Count">
-                        <RadzenMarkers MarkerType="MarkerType.Circle" />
-                        <RadzenSeriesDataLabels />
-                    </RadzenLineSeries>
-                    <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
-                </RadzenChart>
-            }
-        </RadzenStack>
-    </RadzenCard>
+        <RadzenRow JustifyContent="JustifyContent.Start">
+            <Badge IsBadgeVisible="@(selectedCodes.Any(x => x != AllResultCodes))">
+                <RadzenButton Icon="filter_alt" Click="@(() => showFailedFilter = !showFailedFilter)" MouseEnter="ShowFilterTooltip"></RadzenButton>
+            </Badge>
+        </RadzenRow>
 
-    <RadzenCard>
-        <RadzenStack>
-            <h2>Failed dependencies</h2>
-            @if (loadingFailedDependencies)
-            {
-                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-            }
-            else
-            {
-                <RadzenDataGrid Data="failedDependencies">
-                    <Columns>
-                        <RadzenDataGridColumn TItem="CountPerKey" Title="Dependency" Property="@nameof(CountPerKey.Key)" />
-                        <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)"
+        @if (showFailedFilter)
+        {
+            <RadzenCard>
+                @if (failedDependenciesCodes.Count > 0)
+                {
+                    <h2>Faild dependencies filter</h2>
+                    <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center">
+                        <RadzenDropDown @bind-Value="selectedCodes" @bind-Value:after="SelectedCodesChanged" Data="failedDependenciesCodes" Multiple="true" Chips="true" />
+                        <RadzenCheckBox Name="Exclude400" @bind-Value="exclude400Errors" @bind-Value:after="Exclude400Changed" /><RadzenLabel Text="Exclude 400 errors" Component="Exclude400" />
+                    </RadzenRow>
+                }    
+            </RadzenCard>
+        }
+        <RadzenCard>
+            <RadzenStack>
+                <h2>Failed dependencies per day</h2>
+                @if (loadingFailedDependenciesPerDays)
+                {
+                    <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                }
+                else
+                {
+                    <RadzenChart>
+                        <RadzenLegend Visible="false" />
+                        <RadzenLineSeries Data="@failedPerDays" CategoryProperty="Date" ValueProperty="Count">
+                            <RadzenMarkers MarkerType="MarkerType.Circle" />
+                            <RadzenSeriesDataLabels />
+                        </RadzenLineSeries>
+                        <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                    </RadzenChart>
+                }
+            </RadzenStack>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenStack>
+                <h2>Failed dependencies</h2>
+                @if (loadingFailedDependencies)
+                {
+                    <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                }
+                else
+                {
+
+
+                    <RadzenDataGrid Data="failedDependencies" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="CountPerKey" Title="Dependency" Property="@nameof(CountPerKey.Key)" />
+                            <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)"
                             Width="100px" />
-                        <RadzenDataGridColumn TItem="CountPerKey" Width="100px" TextAlign="TextAlign.End">
-                            <Template>
-                                <a href="@($"/diagnostics/dependencies/failed/{context.Key}")">
-                                    <RadzenIcon Icon="arrow_forward" />
-                                </a>
-                            </Template>
-                        </RadzenDataGridColumn>
-                    </Columns>
-                </RadzenDataGrid>
-            }
-        </RadzenStack>
-    </RadzenCard>
+                            <RadzenDataGridColumn TItem="CountPerKey" Width="100px" TextAlign="TextAlign.End">
+                                <Template>
+                                    <a href="@($"/diagnostics/dependencies/failed/{context.Key}")">
+                                        <RadzenIcon Icon="arrow_forward" />
+                                    </a>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                }
+            </RadzenStack>
+        </RadzenCard>
 
-    <RadzenCard>
-        <RadzenStack>
-            <h2>Top dependencies</h2>
-            @if (loadingTopDependencies)
-            {
-                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-            }
-            else
-            {
-                <RadzenDataGrid Data="topDependencies" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
-                    <Columns>
-                        <RadzenDataGridColumn TItem="CountPerKey" Title="Dependency" Property="@nameof(CountPerKey.Key)" />
-                        <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)"
+        <RadzenCard>
+            <RadzenStack>
+                <h2>Top dependencies</h2>
+                @if (loadingTopDependencies)
+                {
+                    <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                }
+                else
+                {
+                    <RadzenDataGrid Data="topDependencies" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="CountPerKey" Title="Dependency" Property="@nameof(CountPerKey.Key)" />
+                            <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)"
                             Width="100px" />
-                    </Columns>
-                </RadzenDataGrid>
-            }
-        </RadzenStack>
-    </RadzenCard>
-    <RadzenCard>
-        <RadzenStack>
-            <h2>Dependency duration</h2>
-            @if (loadingDependencyAvg)
-            {
-                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-            }
-            else
-            {
-                <RadzenDataGrid Data="dependencyDurations" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
-                    <Columns>
-                        <RadzenDataGridColumn TItem="AvgPerKey" Title="Dependency" Property="@nameof(AvgPerKey.Key)" />
-                        <RadzenDataGridColumn TItem="AvgPerKey" Title="Average duration (ms)"
+                        </Columns>
+                    </RadzenDataGrid>
+                }
+            </RadzenStack>
+        </RadzenCard>
+        <RadzenCard>
+            <RadzenStack>
+                <h2>Dependency duration</h2>
+                @if (loadingDependencyAvg)
+                {
+                    <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                }
+                else
+                {
+                    <RadzenDataGrid Data="dependencyDurations" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="AvgPerKey" Title="Dependency" Property="@nameof(AvgPerKey.Key)" />
+                            <RadzenDataGridColumn TItem="AvgPerKey" Title="Average duration (ms)"
                             Property="@nameof(AvgPerKey.Avg)" FormatString="{0:N0}" Width="200px" />
-                    </Columns>
-                </RadzenDataGrid>
-            }
-        </RadzenStack>
-    </RadzenCard>
-</RadzenStack>
-
+                        </Columns>
+                    </RadzenDataGrid>
+                }
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+</div>
 @code {
 
     [CascadingParameter]
@@ -105,9 +128,16 @@
     private bool loadingTopDependencies = true, loadingDependencyAvg = true, loadingFailedDependencies = true,
     loadingFailedDependenciesPerDays = true;
 
-    private List<CountPerKey> topDependencies = new(), failedDependencies = new();
-    private List<AvgPerKey> dependencyDurations = new();
-    private List<CountPerDay> failedPerDays = new();
+    private List<CountPerKey> topDependencies = [], failedDependencies = [];
+    private List<AvgPerKey> dependencyDurations = [];
+    private List<CountPerDay> failedPerDays = [];
+
+    private List<string> failedDependenciesCodes = [];
+
+    private const string AllResultCodes = "All result codes";
+    private List<string> selectedCodes = [AllResultCodes];
+    private bool exclude400Errors;
+    private bool showFailedFilter;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -157,11 +187,14 @@
         StateHasChanged();
     }
 
+
     private async Task LoadFailedDependencies()
     {
         loadingFailedDependencies = true;
 
-        var dependencies = await Service.GetFailedDependencies(GlobalFilter);
+        failedDependenciesCodes = await Service.GetFailedDependenciesStatusCodes(GlobalFilter);
+
+        var dependencies = await Service.GetFailedDependencies(GlobalFilter, GetCodesForFilter());
         failedDependencies = dependencies.OrderByDescending(x => x.Count).ToList();
 
         loadingFailedDependencies = false;
@@ -194,4 +227,84 @@
 
         StateHasChanged();
     }
+
+    private Task Exclude400Changed()
+    {
+        if(exclude400Errors && failedDependenciesCodes.Any(x => x != AllResultCodes))
+        {
+            if (selectedCodes.Any(x => x != AllResultCodes))
+            {
+                selectedCodes.ForEach(x =>
+                {
+                    if (int.TryParse(x, out int code) && code >= 400 && code < 500)
+                    {
+                        selectedCodes.Remove(x);
+                    }
+                });
+            }
+            else
+            {
+                selectedCodes = failedDependenciesCodes.Where(x =>
+                {
+                    if (int.TryParse(x, out int code) && code >= 400 && code < 500)
+                    {
+                        return false;
+                    }
+
+                    return true;
+                }).ToList();
+            }
+        }
+        else if (!exclude400Errors && selectedCodes.Any())
+        {
+            failedDependenciesCodes.ForEach(x =>
+            {
+                if (int.TryParse(x, out int code) && code >= 400 && code < 500)
+                {
+                    selectedCodes.Add(x);
+                }
+            });
+        }
+        else
+        {
+            selectedCodes.Clear();
+        }
+
+        return SelectedCodesChanged();
+    }
+
+    private async Task SelectedCodesChanged()
+    {
+        try
+        {
+            if(selectedCodes.Count > 1)
+            {
+                selectedCodes.Remove(AllResultCodes);
+            }
+
+            if (selectedCodes.Count == failedDependenciesCodes.Count || selectedCodes.Count == 0)
+            {
+                selectedCodes.Clear();
+                selectedCodes.Add(AllResultCodes);
+            }
+
+            var failedTask = LoadFailedDependencies();
+            var failedPerDaysTask = LoadFailedDependenciesPerDays();
+
+            await Task.WhenAll(failedTask, failedPerDaysTask);
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+    }
+
+    private List<string>? GetCodesForFilter()
+    {
+        var filterCodes = selectedCodes.Where(x => x != AllResultCodes).ToList();
+
+        return filterCodes.Count == 0 ? null : filterCodes;
+    }
+
+    private void ShowFilterTooltip(ElementReference elementReference) => tooltipService.Open(elementReference, showFailedFilter ? "<b>Hide filters</b>" : "<b>Show all filters</b>", new TooltipOptions() { Style = "background: #757575; color: white;" });
 }
