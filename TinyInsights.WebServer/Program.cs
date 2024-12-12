@@ -41,6 +41,7 @@ builder.Services.AddCascadingValue(provider =>
     return source;
 });
 
+builder.Services.AddBlazoredLocalStorage();
 
 var app = builder.Build();
 

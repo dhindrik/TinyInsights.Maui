@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Web.UI" Version="3.3.1" />
+	  <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
   </ItemGroup>
 
 </Project>

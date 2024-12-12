@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -5,6 +6,29 @@ namespace TinyInsights.Web;
 public class GlobalFilter : INotifyPropertyChanged
 {
     public const string AppVersionsDefaultValue = "All app versions";
+
+    private readonly ILocalStorageService localStorageService;
+
+    public GlobalFilter(ILocalStorageService localStorageService)
+    {
+        this.localStorageService = localStorageService;
+
+        _ = Initialize();
+    }
+
+    private async Task Initialize()
+    {
+        if (await localStorageService.ContainKeyAsync(nameof(GlobalFilter)))
+        {
+            var filter = await localStorageService.GetItemAsync<FilterModel>(nameof(GlobalFilter));
+
+            if (filter is not null)
+            {
+                NumberOfDays = filter.NumberOfDays;
+                TextFilter = filter.TextFilter;
+            }
+        }
+    }
 
     private int numberOfDays = 30;
     public int NumberOfDays
@@ -71,6 +95,12 @@ public class GlobalFilter : INotifyPropertyChanged
         }
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        _ = localStorageService.SetItemAsync(nameof(GlobalFilter), new FilterModel()
+        {
+            NumberOfDays = NumberOfDays,
+            TextFilter = TextFilter
+        });
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
@@ -80,4 +110,11 @@ public class GlobalFilter : INotifyPropertyChanged
         OnPropertyChanged(propertyName);
         return true;
     }
+}
+
+public class FilterModel
+{
+    public string? TextFilter { get; set; }
+
+    public int NumberOfDays { get; set; }
 }
