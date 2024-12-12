@@ -98,8 +98,12 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             {
                 throw new NullReferenceException("Unable to configure `IsAutoTrackPageViewsEnabled` as `Application.Current` is null. You can either set `IsAutoTrackPageViewsEnabled` to false to ignore this issue, or check out this link for a possible reason - https://github.com/dhindrik/TinyInsights.Maui/issues/21");
             }
-            WeakEventHandler<Page> weakHandler = new(OnAppearing);
-            Application.Current.PageAppearing += weakHandler.Handler;
+
+            WeakEventHandler<Page> weakOnAppearingHandler = new(OnAppearing);
+            Application.Current.PageAppearing += weakOnAppearingHandler.Handler;
+
+            WeakEventHandler<Page> weakOnDisappearingHandler = new(OnDisappearing);
+            Application.Current.PageDisappearing += weakOnDisappearingHandler.Handler;
         }
 
         Task.Run(SendCrashes);
@@ -107,10 +111,19 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         IsInitialized = true;
     }
 
+    private static DateTime? _lastPageAppearing;
+
     private static void OnAppearing(object? sender, Page e)
     {
+        _lastPageAppearing = DateTime.Now;
+    }
+
+    private static void OnDisappearing(object? sender, Page e)
+    {
+        var duration = DateTime.Now - _lastPageAppearing;
+
         var pageType = e.GetType();
-        provider?.TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } });
+        provider?.TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } }, duration);
     }
 
     readonly Dictionary<string, string> _globalProperties = [];
@@ -425,7 +438,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
-    public async Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null)
+    public async Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, TimeSpan? duration = null)
     {
         try
         {
@@ -437,7 +450,26 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             if (EnableConsoleLogging)
                 Console.WriteLine($"TinyInsights: tracking page view {viewName}");
 
-            Client.TrackPageView(viewName);
+            var pageView = new PageViewTelemetry(viewName)
+            {
+                Timestamp = new DateTimeOffset(_lastPageAppearing ?? DateTime.Now),
+            };
+
+            if (duration is not null)
+            {
+                pageView.Duration = duration.Value;
+            }
+
+            if (properties is not null)
+            {
+                foreach (var property in properties)
+                {
+                    pageView.Properties.Add(property.Key, property.Value);
+                }
+            }
+
+            Client.TrackPageView(pageView);
+
             await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception ex)
