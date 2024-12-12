@@ -57,13 +57,13 @@ public class Insights : IInsights
         return Task.CompletedTask;
     }
 
-    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null)
+    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, TimeSpan? duration = null)
     {
         var tasks = new List<Task>();
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackPageViewsEnabled))
         {
-            var task = provider.TrackPageViewAsync(viewName, properties);
+            var task = provider.TrackPageViewAsync(viewName, properties, duration);
             tasks.Add(task);
         }
 
