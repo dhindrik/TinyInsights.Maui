@@ -23,6 +23,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public bool IsTrackErrorsEnabled { get; set; } = true;
     public bool IsTrackCrashesEnabled { get; set; } = true;
+    public bool WriteCrashes { get; set; } = true;
     public bool IsTrackPageViewsEnabled { get; set; } = true;
     public bool IsAutoTrackPageViewsEnabled { get; set; } = true;
     public bool IsTrackEventsEnabled { get; set; } = true;
@@ -106,7 +107,10 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Application.Current.PageDisappearing += weakOnDisappearingHandler.Handler;
         }
 
-        Task.Run(SendCrashes);
+        if (WriteCrashes)
+        {
+            Task.Run(SendCrashes);
+        }
 
         IsInitialized = true;
     }
@@ -163,7 +167,36 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             // Add any global properties, the user has already added
             foreach (var property in _globalProperties)
             {
-                client.Context.GlobalProperties[property.Key] = property.Value;
+                switch(property.Key)
+                {
+                    case "Cloud.RoleName":
+                        client.Context.Cloud.RoleName = property.Value;
+                        break;
+
+                    case "Cloud.RoleInstance":
+                        client.Context.Cloud.RoleInstance = property.Value;
+                        break;
+
+                    case "Device.OperatingSystem":
+                        client.Context.Device.OperatingSystem = property.Value;
+                        break;
+
+                    case "Device.Model":
+                        client.Context.Device.Model = property.Value;
+                        break;
+
+                    case "Device.Type":
+                        client.Context.Device.Type = property.Value;
+                        break;
+
+                    case "Device.Id":
+                        client.Context.Device.Id = property.Value;
+                        break;
+
+                    default:
+                        client.Context.GlobalProperties[property.Key] = property.Value;
+                        break;
+                }
             }
 
             client.Context.GlobalProperties.TryAdd("Language", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
@@ -172,7 +205,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             client.Context.GlobalProperties.TryAdd("AppBuildNumber", AppInfo.BuildString);
             client.Context.GlobalProperties.TryAdd("OperatingSystemVersion", DeviceInfo.VersionString);
             client.Context.Session.Id = Guid.NewGuid().ToString();
-
 
             return client;
         }
@@ -187,7 +219,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public void UpsertGlobalProperty(string key, string value)
     {
-        if (Client is null)
+        _globalProperties[key] = value;
+
+        if(Client is null)
         {
             return;
         }
@@ -196,29 +230,32 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             case "Cloud.RoleName":
                 Client.Context.Cloud.RoleName = value;
-                return;
+                break;
+
             case "Cloud.RoleInstance":
                 Client.Context.Cloud.RoleInstance = value;
-                return;
+                break;
 
             case "Device.OperatingSystem":
                 Client.Context.Device.OperatingSystem = value;
-                return;
+                break;
+
             case "Device.Model":
                 Client.Context.Device.Model = value;
-                return;
+                break;
+
             case "Device.Type":
                 Client.Context.Device.Type = value;
-                return;
+                break;
+
             case "Device.Id":
                 Client.Context.Device.Id = value;
-                return;
+                break;
+
+            default:
+                Client.Context.GlobalProperties[key] = value;
+                break;
         }
-
-        _globalProperties[key] = value;
-
-        Client.Context.GlobalProperties[key] = value;
-
     }
 
     public void RemoveGlobalProperty(string key)
@@ -273,7 +310,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         Client.Context.Session.Id = Guid.NewGuid().ToString();
     }
 
-    private async Task SendCrashes()
+    public async Task SendCrashes()
     {
         try
         {
@@ -321,6 +358,29 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
+    public bool HasCrashed()
+    {
+        try
+        {
+            var path = Path.Combine(logPath, crashLogFilename);
+
+            if(!File.Exists(path))
+            {
+                return false;
+            }
+
+            var json = File.ReadAllText(path);
+
+            var crashes = string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<List<Crash>>(json);
+
+            return crashes is null ? false : crashes.Count != 0;
+        }
+        catch(Exception)
+        {
+            return false;
+        }
+    }
+
     private List<Crash>? ReadCrashes()
     {
         try
@@ -346,7 +406,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         return null;
     }
 
-    private void ResetCrashes()
+    public void ResetCrashes()
     {
         try
         {
@@ -443,6 +503,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         try
         {
             if (Client is null)
+            {
+                return;
+            }
+
+            if (!IsTrackPageViewsEnabled)
             {
                 return;
             }

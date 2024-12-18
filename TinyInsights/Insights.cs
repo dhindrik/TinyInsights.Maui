@@ -157,4 +157,34 @@ public class Insights : IInsights
             provider.CreateNewSession();
         }
     }
+
+    public bool HasCrashed()
+    {
+        foreach(var provider in insightsProviders)
+        {
+            bool hasCrashed = provider.HasCrashed();
+            if(hasCrashed)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public async Task SendCrashes()
+    {
+        foreach(var provider in insightsProviders)
+        {
+            await provider.SendCrashes();
+        }
+    }
+
+    public void ResetCrashes()
+    {
+        foreach(var provider in insightsProviders)
+        {
+            provider.ResetCrashes();
+        }
+    }
 }
