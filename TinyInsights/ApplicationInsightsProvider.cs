@@ -107,7 +107,10 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Application.Current.PageDisappearing += weakOnDisappearingHandler.Handler;
         }
 
-        Task.Run(SendCrashes);
+        if (WriteCrashes)
+        {
+            Task.Run(SendCrashes);
+        }
 
         IsInitialized = true;
     }
