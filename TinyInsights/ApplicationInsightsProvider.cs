@@ -23,7 +23,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public bool IsTrackErrorsEnabled { get; set; } = true;
     public bool IsTrackCrashesEnabled { get; set; } = true;
-    public bool IsTrackCrashesEnabled { get; set; } = true;
     public bool WriteCrashes { get; set; } = true;
     public bool IsTrackPageViewsEnabled { get; set; } = true;
     public bool IsAutoTrackPageViewsEnabled { get; set; } = true;
