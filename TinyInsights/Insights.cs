@@ -6,7 +6,7 @@ public class Insights : IInsights
 
     public void UpsertGlobalProperty(string key, string value)
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             provider.UpsertGlobalProperty(key, value);
         }
@@ -14,7 +14,7 @@ public class Insights : IInsights
 
     public void RemoveGlobalProperty(string key)
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             provider.RemoveGlobalProperty(key);
         }
@@ -39,14 +39,14 @@ public class Insights : IInsights
     {
         var tasks = new List<Task>();
 
-        if(properties == null)
+        if (properties == null)
         {
             properties = new Dictionary<string, string>();
         }
 
         properties.TryAdd(nameof(ErrorSeverity), severity.ToString());
 
-        foreach(var provider in insightsProviders.Where(x => x.IsTrackErrorsEnabled))
+        foreach (var provider in insightsProviders.Where(x => x.IsTrackErrorsEnabled))
         {
             var task = provider.TrackErrorAsync(ex, properties);
             tasks.Add(task);
@@ -61,7 +61,7 @@ public class Insights : IInsights
     {
         var tasks = new List<Task>();
 
-        foreach(var provider in insightsProviders.Where(x => x.IsTrackPageViewsEnabled))
+        foreach (var provider in insightsProviders.Where(x => x.IsTrackPageViewsEnabled))
         {
             var task = provider.TrackPageViewAsync(viewName, properties, duration);
             tasks.Add(task);
@@ -75,7 +75,7 @@ public class Insights : IInsights
     {
         var tasks = new List<Task>();
 
-        foreach(var provider in insightsProviders.Where(x => x.IsTrackEventsEnabled))
+        foreach (var provider in insightsProviders.Where(x => x.IsTrackEventsEnabled))
         {
             var task = provider.TrackEventAsync(eventName, properties);
             tasks.Add(task);
@@ -97,7 +97,7 @@ public class Insights : IInsights
     {
         var tasks = new List<Task>();
 
-        foreach(var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
+        foreach (var provider in insightsProviders.Where(x => x.IsTrackDependencyEnabled))
         {
             if (provider.TrackDependencyFilter is not null && !provider.TrackDependencyFilter.Invoke((dependencyType, dependencyName, data, startTime, duration, success, resultCode, exception)))
             {
@@ -136,7 +136,7 @@ public class Insights : IInsights
 
     public void OverrideAnonymousUserId(string userId)
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             provider.OverrideAnonymousUserId(userId);
         }
@@ -144,7 +144,7 @@ public class Insights : IInsights
 
     public void GenerateNewAnonymousUserId()
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             provider.GenerateNewAnonymousUserId();
         }
@@ -152,7 +152,7 @@ public class Insights : IInsights
 
     public void CreateNewSession()
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             provider.CreateNewSession();
         }
