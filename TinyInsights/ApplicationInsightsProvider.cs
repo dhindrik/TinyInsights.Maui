@@ -23,7 +23,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public bool IsTrackErrorsEnabled { get; set; } = true;
     public bool IsTrackCrashesEnabled { get; set; } = true;
-    public bool HandleCrashes { get; set; } = true;
+    public bool IsTrackCrashesEnabled { get; set; } = true;
     public bool WriteCrashes { get; set; } = true;
     public bool IsTrackPageViewsEnabled { get; set; } = true;
     public bool IsAutoTrackPageViewsEnabled { get; set; } = true;
@@ -45,7 +45,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
-            if (HandleCrashes)
+            if (IsTrackCrashesEnabled)
             {
                 HandleCrash(e.Exception);
             }
@@ -53,7 +53,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            if (HandleCrashes)
+            if (IsTrackCrashesEnabled)
             {
                 HandleCrash((Exception)e.ExceptionObject);
             }
@@ -70,7 +70,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
-            if (HandleCrashes)
+            if (IsTrackCrashesEnabled)
             {
                 HandleCrash(e.Exception);
             }

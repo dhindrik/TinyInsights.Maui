@@ -3,7 +3,7 @@ namespace TinyInsights;
 public interface IInsightsProvider
 {
     bool IsTrackErrorsEnabled { get; set; }
-    bool HandleCrashes { get; set; }
+    bool IsTrackCrashesEnabled { get; set; }
     bool WriteCrashes { get; set; }
     bool IsTrackPageViewsEnabled { get; set; }
     bool IsAutoTrackPageViewsEnabled { get; set; }
