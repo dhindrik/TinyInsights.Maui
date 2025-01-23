@@ -36,4 +36,6 @@ public interface IInsights
     Task SendCrashes();
 
     void ResetCrashes();
+
+    Task FlushAsync();
 }

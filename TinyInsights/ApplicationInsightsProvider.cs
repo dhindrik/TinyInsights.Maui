@@ -167,7 +167,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             // Add any global properties, the user has already added
             foreach (var property in _globalProperties)
             {
-                switch(property.Key)
+                switch (property.Key)
                 {
                     case "Cloud.RoleName":
                         client.Context.Cloud.RoleName = property.Value;
@@ -221,7 +221,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         _globalProperties[key] = value;
 
-        if(Client is null)
+        if (Client is null)
         {
             return;
         }
@@ -364,7 +364,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             var path = Path.Combine(logPath, crashLogFilename);
 
-            if(!File.Exists(path))
+            if (!File.Exists(path))
             {
                 return false;
             }
@@ -375,7 +375,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             return crashes is null ? false : crashes.Count != 0;
         }
-        catch(Exception)
+        catch (Exception)
         {
             return false;
         }
@@ -467,7 +467,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
 
             Client.TrackException(ex, properties);
-            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception exception)
         {
@@ -489,7 +488,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 Console.WriteLine($"TinyInsights: Tracking event {eventName}");
 
             Client.TrackEvent(eventName, properties);
-            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -534,8 +532,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
 
             Client.TrackPageView(pageView);
-
-            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -595,7 +591,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
 
             Client.TrackDependency(dependency);
-            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -607,6 +602,24 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null)
     {
         return TrackDependencyAsync(dependencyType, dependencyName, data, null, startTime, duration, success, resultCode, exception);
+    }
+
+    public async Task FlushAsync()
+    {
+        try
+        {
+            if (Client is null)
+            {
+                return;
+            }
+
+            await Client.FlushAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error flushing. Message: {ex.Message}");
+        }
     }
 
     #region ILogger
@@ -672,6 +685,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     }
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
+
+
 
     #endregion ILogger
 }

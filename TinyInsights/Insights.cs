@@ -160,10 +160,10 @@ public class Insights : IInsights
 
     public bool HasCrashed()
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             bool hasCrashed = provider.HasCrashed();
-            if(hasCrashed)
+            if (hasCrashed)
             {
                 return true;
             }
@@ -174,7 +174,7 @@ public class Insights : IInsights
 
     public async Task SendCrashes()
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             await provider.SendCrashes();
         }
@@ -182,9 +182,17 @@ public class Insights : IInsights
 
     public void ResetCrashes()
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             provider.ResetCrashes();
+        }
+    }
+
+    public async Task FlushAsync()
+    {
+        foreach (var provider in insightsProviders)
+        {
+            await provider.FlushAsync();
         }
     }
 }
