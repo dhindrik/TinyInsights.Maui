@@ -1,7 +1,7 @@
 <RadzenDataGrid Data="allProperties">
     <Columns>
         <RadzenDataGridColumn TItem="PropertyModel" Title="Property" Property="@nameof(PropertyModel.Property)" />
-        <RadzenDataGridColumn TItem="PropertyModel" Title="Value" Property="@nameof(PropertyModel.Value)">
+        <RadzenDataGridColumn TItem="PropertyModel" Title="Value" Property="@nameof(PropertyModel.Value)" >
             <Template>
                 @if(context.Property == "user_Id")
                 {
@@ -9,7 +9,7 @@
                 }
                 else
                 {
-                    <span>@context.Value</span>
+                    <span class="wrap">@context.Value</span>
                 }   
                
             </Template>
