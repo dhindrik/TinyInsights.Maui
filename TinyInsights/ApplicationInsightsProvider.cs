@@ -349,6 +349,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 await TrackErrorAsync(ex, properties);
             }
 
+            await FlushAsync();
+
             ResetCrashes();
         }
         catch (Exception ex)
