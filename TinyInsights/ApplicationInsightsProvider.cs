@@ -441,6 +441,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             var path = Path.Combine(logPath, crashLogFilename);
 
             File.WriteAllText(path, json);
+
+            if (Client is not null)
+            {
+                Client.Flush();
+            }
         }
         catch (Exception exception)
         {
