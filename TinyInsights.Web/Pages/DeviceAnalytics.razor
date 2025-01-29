@@ -153,7 +153,8 @@
     {
         isLoadingOperatingSystemVersions = true;
 
-        operatingSystemVersions = await Service.GetUsersPerOperatingSystemVersion(GlobalFilter);
+        var result = await Service.GetUsersPerOperatingSystemVersion(GlobalFilter);
+        operatingSystemVersions = result.OrderByDescending(x => x.Count).ToList();
 
         isLoadingOperatingSystemVersions = false;
 
