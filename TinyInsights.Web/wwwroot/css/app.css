@@ -73,6 +73,7 @@ a{
 .wrapitem {
     max-width: 49%;
     min-width: 300px;
+    width: 100%;
 }
 
 

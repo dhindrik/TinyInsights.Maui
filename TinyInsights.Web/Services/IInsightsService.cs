@@ -17,11 +17,13 @@ public interface IInsightsService
     Task<List<EventItem>> GetEventsByUser(string userId, DateTime timestamp);
     Task<List<EventItem>> GetEventsByUser(string userId, GlobalFilter filter);
     Task<List<AvgPerKey>> GetDependencyAvgDurations(GlobalFilter filter);
-    Task<List<CountPerKey>> GetTopDependencies(GlobalFilter filter);
-    Task<List<CountPerKey>> GetFailedDependencies(GlobalFilter filter, List<string>? resultCodeFilter = null);
-    Task<FailedDependencies> GetFailedDependencies(string key, GlobalFilter filter);
+    Task<List<DependencyCount>> GetTopDependencies(GlobalFilter filter);
+    Task<List<DependencyCount>> GetFailedDependencies(GlobalFilter filter, List<string>? resultCodeFilter = null);
+    Task<FailedDependencies> GetFailedDependencies(string key, string method, GlobalFilter filter);
     Task<List<string>> GetFailedDependenciesStatusCodes(GlobalFilter filter);
     Task<List<CountPerDay>> GetFailedDependenciesPerDay(GlobalFilter filter);
+    Task<List<CountPerDay>> GetCrashDetailsPerDay(string problemId, GlobalFilter filter);
+    Task<List<CountPerDay>> GetErrorDetailsPerDay(string problemId, GlobalFilter filter);
     #endregion
 
     #region Analytics

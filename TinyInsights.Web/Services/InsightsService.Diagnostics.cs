@@ -129,7 +129,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) and problemId == '{id}'";
+            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) and problemId == '{id}' | top 100 by timestamp desc";
 
         return GetErrorDetails(query);
     }
@@ -139,7 +139,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) and strcat(problemId, \" - \", outerMessage) == '{id}'";
+            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) and strcat(problemId, \" - \", outerMessage) == '{id}' | top 100 by timestamp desc";
 
         return GetErrorDetails(query);
     }
@@ -191,18 +191,22 @@ public partial class InsightsService : IInsightsService
             $"exceptions | where user_Id == '{userId}' and customDimensions.IsCrash == 'true' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
         var crashQuery =
             $"exceptions | where user_Id == '{userId}' and customDimensions.IsCrash != 'true' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
+        var dependencyQuery =
+            $"customEvents| where user_Id == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
 
         var pageViewsTask = GetQueryResult<QueryResult>(pageViewsQuery);
         var eventsTask = GetQueryResult<QueryResult>(eventQuery);
         var errorsTask = GetQueryResult<QueryResult>(errorsQuery);
         var crashTask = GetQueryResult<QueryResult>(crashQuery);
+        var dependencyTask = GetQueryResult<QueryResult>(dependencyQuery);
 
-        await Task.WhenAll(pageViewsTask, eventsTask, errorsTask, crashTask);
+        await Task.WhenAll(pageViewsTask, eventsTask, errorsTask, crashTask, dependencyTask);
 
         var pageViewsResult = pageViewsTask.Result;
         var eventsResult = eventsTask.Result;
         var errorsResult = errorsTask.Result;
         var crashResult = crashTask.Result;
+        var dependencyResult = dependencyTask.Result;
 
         var result = new List<EventItem>();
 
@@ -238,6 +242,13 @@ public partial class InsightsService : IInsightsService
             result.Add(eventItem);
         }
 
+        foreach (var row in dependencyResult.Tables.First().Rows)
+        {
+            var data = GetData(dependencyResult, row);
+            var eventItem = new EventItem(data, EventType.Dependency);
+            result.Add(eventItem);
+        }
+
         return result.OrderByDescending(x => x.Timestamp).ToList();
     }
 
@@ -262,26 +273,26 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<CountPerKey>> GetTopDependencies(GlobalFilter filter)
+    public async Task<List<DependencyCount>> GetTopDependencies(GlobalFilter filter)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data | limit 20";
+            $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data, tostring(customDimensions.HttpMethod) | limit 20";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
-        var result = new List<CountPerKey>();
+        var result = new List<DependencyCount>();
 
         foreach (var row in queryResult.Tables.First().Rows)
         {
-            result.Add(new CountPerKey(row.First().ToString(), int.Parse(row.Last().ToString())));
+            result.Add(new DependencyCount(row[0].ToString(), row[1].ToString(), int.Parse(row[2].ToString())));
         }
 
         return result;
     }
 
-    public async Task<List<CountPerKey>> GetFailedDependencies(GlobalFilter filter, List<string>? resultCodeFilter = null)
+    public async Task<List<DependencyCount>> GetFailedDependencies(GlobalFilter filter, List<string>? resultCodeFilter = null)
     {
         var queryFilter = GetFilter(filter);
 
@@ -304,15 +315,15 @@ public partial class InsightsService : IInsightsService
         }
 
         var query =
-            $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data";
+            $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data, tostring(customDimensions.HttpMethod)";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
-        var result = new List<CountPerKey>();
+        var result = new List<DependencyCount>();
 
         foreach (var row in queryResult.Tables.First().Rows)
         {
-            result.Add(new CountPerKey(row.First().ToString(), int.Parse(row.Last().ToString())));
+            result.Add(new DependencyCount(row[0].ToString(), row[1].ToString(), int.Parse(row[2].ToString())));
         }
 
         return result;
@@ -330,12 +341,12 @@ public partial class InsightsService : IInsightsService
 
     }
 
-    public async Task<FailedDependencies> GetFailedDependencies(string key, GlobalFilter filter)
+    public async Task<FailedDependencies> GetFailedDependencies(string key, string method, GlobalFilter filter)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) and data == '{key}'";
+            $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) and data == '{key}' and customDimensions.HttpMethod == '{method}'";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
@@ -425,6 +436,11 @@ public partial class InsightsService : IInsightsService
                 {
                     data.Add(nameof(CustomDimensions.FullUrl), custom.FullUrl);
                 }
+
+                if (custom.HttpMethod is not null)
+                {
+                    data.Add(nameof(CustomDimensions.HttpMethod), custom.HttpMethod);
+                }
             }
             else
             {
@@ -437,6 +453,42 @@ public partial class InsightsService : IInsightsService
         }
 
         return data;
+    }
+    public async Task<List<CountPerDay>> GetErrorDetailsPerDay(string problemId, GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+
+        var query =
+            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and problemId == '{problemId}' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+
+        var queryResult = await GetQueryResult<QueryResult>(query);
+        var result = new List<CountPerDay>();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            result.Add(new CountPerDay(DateOnly.FromDateTime(DateTime.Parse(row.First().ToString())),
+                int.Parse(row.Last().ToString())));
+        }
+
+        return result.OrderBy(x => x.Date).ToList();
+    }
+    public async Task<List<CountPerDay>> GetCrashDetailsPerDay(string problemId, GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+
+        var query =
+            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and problemId == '{problemId}' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+
+        var queryResult = await GetQueryResult<QueryResult>(query);
+        var result = new List<CountPerDay>();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            result.Add(new CountPerDay(DateOnly.FromDateTime(DateTime.Parse(row.First().ToString())),
+                int.Parse(row.Last().ToString())));
+        }
+
+        return result.OrderBy(x => x.Date).ToList();
     }
 }
 
@@ -466,4 +518,5 @@ public class CustomDimensions
     public string? StackTrace { get; set; }
     public string? Manufacturer { get; set; }
     public string? FullUrl { get; set; }
+    public string? HttpMethod { get; set; }
 }

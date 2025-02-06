@@ -68,7 +68,11 @@
                 </RadzenStack>
             </RadzenCard>
         </div>
-            <div class="wrapitem">
+            
+
+    </div>
+    <div class="wrapbox">
+        <div class="wrapitem">
             <RadzenCard>
                 <RadzenStack>
                     <h2>Operating system versions</h2>
@@ -78,18 +82,18 @@
                     }
                     else
                     {
-                        <RadzenDataGrid Data="operatingSystemVersions">
+                        <RadzenDataGrid Data="operatingSystemVersions" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
                             <Columns>
                                 <RadzenDataGridColumn TItem="CountPerKey" Title="Operating system version" Property="@nameof(CountPerKey.Key)" />
-                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />                                
+                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
                             </Columns>
                         </RadzenDataGrid>
                     }
                 </RadzenStack>
             </RadzenCard>
-            </div>
-
+        </div>
     </div>
+
 </RadzenStack>
 @code {
     [CascadingParameter]
@@ -121,7 +125,7 @@
         isLoadingIdiom = true;
         var result = await Service.GetUsersPerIdiom(GlobalFilter);
         var total = result.Sum(x => x.Count);
-        idiomUsers = result.Select(x => new PercentPerKey(x.Key, Math.Round((x.Count / (double)total * 100),0))).ToList();
+        idiomUsers = result.Select(x => new PercentPerKey(x.Key, x.Count)).ToList();
         isLoadingIdiom = false;
 
         StateHasChanged();
@@ -132,7 +136,7 @@
         isLoadingOperatingSystems = true;
         var result = await Service.GetUsersPerOperatingSystem(GlobalFilter);
         var total = result.Sum(x => x.Count);
-        operatingSystemUsers = result.Select(x => new PercentPerKey(x.Key, Math.Round((x.Count / (double)total * 100), 0))).ToList();
+        operatingSystemUsers = result.Select(x => new PercentPerKey(x.Key, x.Count)).ToList();
         isLoadingOperatingSystems = false;
 
         StateHasChanged();
@@ -143,10 +147,10 @@
         isLoadingManufactures = true;
         var result = await Service.GetUserPerManufacturer(GlobalFilter);
         var total = result.Sum(x => x.Count);
-        manufactures = result.Select(x => new PercentPerKey(x.Key, Math.Round((x.Count / (double)total * 100), 0))).ToList();
+        manufactures = result.Select(x => new PercentPerKey(x.Key, x.Count)).ToList();
         isLoadingManufactures = false;
 
-        StateHasChanged();
+        StateHasChanged();  
     }
 
     private async Task LoadOperatingSystemVersions()

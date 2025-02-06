@@ -22,26 +22,46 @@
         <h2>@detailsHeader</h2>
         <RadzenStack Orientation="Orientation.Vertical" Gap="20">
 
-        <LabelValuePair Key="ProblemId" Value="@Id" />
+            <LabelValuePair Key="ProblemId" Value="@Id" />
 
+            @if (isLoading)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            }
+            else
+            {
+                <LabelValuePair Key="Type" Value="@data.Items.First().Data["type"]" />
+
+                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
+                    <LabelValuePair Key="Count" Value="@data.Count.ToString()" />
+                    <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()" />
+                    <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))" />
+                    <LabelValuePair Key="Affected operating systems" Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
+                </RadzenStack>
+            }
+        </RadzenStack>
+
+    </RadzenCard>
+
+    <RadzenCard>
+        <h2>@perDayHeader</h2>
         @if (isLoading)
         {
             <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
         }
-        else
+        else if(errorsPerDays is not null)
         {
-                <LabelValuePair Key="Type" Value="@data.Items.First().Data["type"]" />
-
-            <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
-                <LabelValuePair Key="Count" Value="@data.Count.ToString()" />
-                <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()" />
-                <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))" />
-                <LabelValuePair Key="Affected operating systems" Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
-            </RadzenStack>
+            <RadzenChart>
+                <RadzenLegend Visible="false" />
+                <RadzenLineSeries Data="@errorsPerDays" CategoryProperty="Date" ValueProperty="Count">
+                    <RadzenMarkers MarkerType="MarkerType.Circle" />
+                    <RadzenSeriesDataLabels />
+                </RadzenLineSeries>
+                <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+            </RadzenChart>
         }
-        </RadzenStack>
-
     </RadzenCard>
+
     <RadzenCard>
         <h2>Info</h2>
         @if (isLoading)
@@ -86,13 +106,17 @@
     </RadzenCard>
     <RadzenCard>
         <h2>@listHeader</h2>
+        @if (data.Items.Count == 100)
+        {
+            <p>Note! Only the latest 100 items are shown.</p><br />
+        }
         @if (isLoading)
         {
             <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
         }
         else
         {
-            <RadzenDataGrid Data="data.Items">
+            <RadzenDataGrid Data="data.Items" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
                 <Columns>
                     <RadzenDataGridColumn TItem="ErrorItem" Title="Timestamp" Property="@nameof(ErrorItem.Timestamp)" />
                     <RadzenDataGridColumn TItem="ErrorItem" Title="Device" Property="@nameof(ErrorItem.ClientModel)" />
@@ -125,9 +149,10 @@
 
     private bool isLoading = true;
     private bool isCrash;
-    private string backUrl = string.Empty, detailsHeader = string.Empty, listHeader = string.Empty;
+    private string backUrl = string.Empty, detailsHeader = string.Empty, listHeader = string.Empty, perDayHeader = string.Empty;
 
     private Services.Models.ErrorDetails data = new();
+    private List<CountPerDay>? errorsPerDays;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -138,6 +163,7 @@
             isCrash = true;
             backUrl = "/diagnostics/crashes";
             detailsHeader = "Crash details";
+            perDayHeader = "Crashes per day";
             listHeader = "Crashes";
         }
         else
@@ -145,6 +171,7 @@
             isCrash = false;
             backUrl = "/diagnostics/errors";
             detailsHeader = "Error details";
+            perDayHeader = "Errors per day";
             listHeader = "Errors";
         }
 
@@ -163,11 +190,13 @@
             if (isCrash)
             {
                 data = await Service.GetCrashDetails(escapedId, GlobalFilter);
+                errorsPerDays = await Service.GetCrashDetailsPerDay(escapedId, GlobalFilter);
             }
             else
             {
                 data = await Service.GetErrorDetails(escapedId, GlobalFilter);
-            }
+                errorsPerDays = await Service.GetErrorDetailsPerDay(escapedId, GlobalFilter);
+            }           
         }
         catch (Exception ex)
         {
