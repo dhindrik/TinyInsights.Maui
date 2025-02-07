@@ -192,7 +192,7 @@ public partial class InsightsService : IInsightsService
         var crashQuery =
             $"exceptions | where user_Id == '{userId}' and customDimensions.IsCrash != 'true' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
         var dependencyQuery =
-            $"customEvents| where user_Id == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
+            $"dependencies | where user_Id == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
 
         var pageViewsTask = GetQueryResult<QueryResult>(pageViewsQuery);
         var eventsTask = GetQueryResult<QueryResult>(eventQuery);
