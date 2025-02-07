@@ -61,7 +61,7 @@
         {
             <RadzenDataGrid Data="data.Items" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
                 <Columns>
-                    <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Timestamp" Width="150px"
+                    <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Timestamp" Width="200px"
                     Property="@nameof(FailedDependencyItem.Timestamp)" />
                     <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Method" Width="200px"
                     Property="@nameof(FailedDependencyItem.Method)" />
@@ -106,9 +106,10 @@
         try
         {
             isLoading = true;
-
+            
             data = await Service.GetFailedDependencies(Key, Method, GlobalFilter);
-            failedDependenciesPerDays = data.Items.GroupBy(x => x.Timestamp.Date).Select(x => new Services.Models.CountPerDay(DateOnly.FromDateTime(x.Key), x.Count())).ToList();
+            data.Items = data.Items.OrderByDescending(x => x.Timestamp).ToList();
+            failedDependenciesPerDays = data.Items.GroupBy(x => x.Timestamp.Date).Select(x => new Services.Models.CountPerDay(DateOnly.FromDateTime(x.Key), x.Count())).OrderBy(x => x.Date).ToList();
 
             isLoading = false;
         }

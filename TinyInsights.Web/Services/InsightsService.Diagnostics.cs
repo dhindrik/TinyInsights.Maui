@@ -416,7 +416,6 @@ public partial class InsightsService : IInsightsService
 
         for (var i = 0; i < row.Count; i++)
         {
-
             var current = row[i];
             var column = queryResult.Tables.First().Columns[i];
 
