@@ -50,9 +50,19 @@ public partial class InsightsService : IInsightsService
         return (true, null);
     }
 
-    public async Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter)
+    public async Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter, List<string>? errorSeverities = null)
     {
         var queryFilter = GetFilter(filter);
+
+        if (errorSeverities is { Count: > 0 })
+        {
+            var filterBuilder = new StringBuilder();
+            filterBuilder.Append(queryFilter);
+            filterBuilder.Append("customDimensions.ErrorSeverity in (");
+            filterBuilder.AppendJoin(',', errorSeverities.Select(x => $"'{x}'"));
+            filterBuilder.Append(") and ");
+            queryFilter = filterBuilder.ToString();
+        }
 
         var query =
             $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
@@ -86,20 +96,30 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<CountPerKey>> GetErrorsGrouped(GlobalFilter filter)
+    public async Task<List<ErrorCount>> GetErrorsGrouped(GlobalFilter filter, List<string>? errorSeverities = null)
     {
         var queryFilter = GetFilter(filter);
 
+        if (errorSeverities is { Count: > 0 })
+        {
+            var filterBuilder = new StringBuilder();
+            filterBuilder.Append(queryFilter);
+            filterBuilder.Append("customDimensions.ErrorSeverity in (");
+            filterBuilder.AppendJoin(',', errorSeverities.Select(x => $"'{x}'"));
+            filterBuilder.Append(") and ");
+            queryFilter = filterBuilder.ToString();
+        }
+
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by problemId";
+            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by problemId, tostring(customDimensions.ErrorSeverity)";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
-        var result = new List<CountPerKey>();
+        var result = new List<ErrorCount>();
 
         foreach (var row in queryResult.Tables.First().Rows)
         {
-            result.Add(new CountPerKey(row.First().ToString(), int.Parse(row.Last().ToString())));
+            result.Add(new ErrorCount(row[0].ToString(), row[1].ToString(), int.Parse(row[2].ToString())));
         }
 
         return result;
@@ -124,9 +144,14 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public Task<ErrorDetails> GetErrorDetails(string id, GlobalFilter filter)
+    public Task<ErrorDetails> GetErrorDetails(string id, GlobalFilter filter, string? severity = null)
     {
         var queryFilter = GetFilter(filter);
+
+        if (severity is not null)
+        {
+            queryFilter += $"customDimensions.ErrorSeverity == '{severity}' and ";
+        }
 
         var query =
             $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) and problemId == '{id}' | top 100 by timestamp desc";
@@ -453,9 +478,14 @@ public partial class InsightsService : IInsightsService
 
         return data;
     }
-    public async Task<List<CountPerDay>> GetErrorDetailsPerDay(string problemId, GlobalFilter filter)
+    public async Task<List<CountPerDay>> GetErrorDetailsPerDay(string problemId, GlobalFilter filter, string? severity = null)
     {
         var queryFilter = GetFilter(filter);
+
+        if (severity is not null)
+        {
+            queryFilter += $"customDimensions.ErrorSeverity == '{severity}' and ";
+        }
 
         var query =
             $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and problemId == '{problemId}' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";

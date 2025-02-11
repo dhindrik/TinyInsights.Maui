@@ -5,10 +5,35 @@
 @inherits TinyInsightsComponentBase
 
 @inject IInsightsService Service
+@inject TooltipService tooltipService
+
 <RadzenStack Gap="20">
     <RadzenRow JustifyContent="JustifyContent.End">
         <GlobalFilters />
     </RadzenRow>
+
+    @if(!isCrash)
+    {
+        <RadzenRow JustifyContent="JustifyContent.Start">
+            <Badge IsBadgeVisible="@(selectedSeverities.Any(x => x != All))">
+                <RadzenButton Icon="filter_alt" Click="@(() => showSeverityFilter = !showSeverityFilter)" MouseEnter="ShowFilterTooltip"></RadzenButton>
+            </Badge>
+        </RadzenRow>
+    }
+
+    @if (showSeverityFilter)
+    {
+        <RadzenCard>
+            @if (severities.Count > 0)
+            {
+                <h2>Error filter</h2>
+                <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center">
+                    <RadzenDropDown @bind-Value="selectedSeverities" @bind-Value:after="SelectedSeveritiesChanged" Data="severities" Multiple="true" Chips="true" />
+                </RadzenRow>
+            }
+        </RadzenCard>
+    }
+
     <RadzenCard>
         <RadzenStack>
             <h2>@perDayHeader</h2>
@@ -38,16 +63,33 @@
             {
                 <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
             }
-            else
+            else if(crashes is not null)
             {
-                <RadzenDataGrid Data="errors" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
+                <RadzenDataGrid Data="crashes" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
                     <Columns>
                         <RadzenDataGridColumn TItem="CountPerKey" Title="Identifier" Property="@nameof(CountPerKey.Key)" />
                         <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
                         <RadzenDataGridColumn TItem="CountPerKey" Width="100px" TextAlign="TextAlign.End">
                             <Template>
                                 <a href="@($"/diagnostics/{Type}/details/{context.Key}")">
-                                <RadzenIcon Icon="arrow_forward"/>
+                                    <RadzenIcon Icon="arrow_forward"/>
+                                </a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            }
+            else if (errors is not null)
+            {
+                <RadzenDataGrid Data="errors" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="ErrorCount" Title="Identifier" Property="@nameof(ErrorCount.Key)" />
+                        <RadzenDataGridColumn TItem="ErrorCount" Title="Severity" Property="@nameof(ErrorCount.ErrorSeverity)" Width="200px" />
+                        <RadzenDataGridColumn TItem="ErrorCount" Title="Count" Property="@nameof(ErrorCount.Count)" Width="100px" />
+                        <RadzenDataGridColumn TItem="ErrorCount" Width="100px" TextAlign="TextAlign.End">
+                            <Template>
+                                <a href="@($"/diagnostics/{Type}/details/{context.ErrorSeverity}/{context.Key}")">
+                                    <RadzenIcon Icon="arrow_forward" />
                                 </a>
                             </Template>
                         </RadzenDataGridColumn>
@@ -58,16 +100,22 @@
     </RadzenCard>
 </RadzenStack>
 @code {
-    
+
     [Parameter]
     public string Type { get; set; }
-    
+
     [CascadingParameter]
     public required GlobalFilter GlobalFilter  {get;set;}
-    
+
     private List<CountPerDay> errorsPerDays = new();
-    private List<CountPerKey> errors = new();
+    private List<CountPerKey>? crashes;
+    private List<ErrorCount>? errors;
     private bool isLoadingGraph, isLoadingList = true;
+
+    private const string All = "All";
+    private List<string> selectedSeverities = [];
+    private readonly List<string> severities = [All,"Default", "Error", "Warning"];
+    private bool showSeverityFilter;
 
     private bool isCrash;
     private string perDayHeader, listHeader = string.Empty;
@@ -75,7 +123,7 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-        
+
         if (Type == "crashes")
         {
             isCrash = true;
@@ -88,7 +136,7 @@
             perDayHeader = "Errors per day";
             listHeader = "Errors";
         }
-        
+
         await LoadData();
     }
 
@@ -112,26 +160,28 @@
         isLoadingGraph = true;
 
         List<CountPerDay> result;
-        
+
         if (isCrash)
         {
             result = await Service.GetCrashesPerDay(GlobalFilter);
         }
         else
         {
-            result = await Service.GetErrorsPerDay(GlobalFilter);
+            var filter = selectedSeverities.Where(x => x != All).ToList();
+
+            result = await Service.GetErrorsPerDay(GlobalFilter, filter);
         }
-        
+
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
-        
-        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+
+        for (int i = 1; i <= GlobalFilter.NumberOfDays; i++)
         {
             var currentDate = date.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
 
             var count = day?.Count ?? 0;
- 
+
             days.Add(new CountPerDay(currentDate, count));
         }
 
@@ -146,24 +196,50 @@
     {
         isLoadingList = true;
 
-        List<CountPerKey> result;
-
         if (isCrash)
         {
-            result = await Service.GetCrashesGrouped(GlobalFilter);
+            var crashResult = await Service.GetCrashesGrouped(GlobalFilter);
+            crashes = crashResult.OrderByDescending(x => x.Count).ToList();
         }
         else 
         {
-            result = await Service.GetErrorsGrouped(GlobalFilter);
+            var filter = selectedSeverities.Where(x => x != All).ToList();
+
+            var errorResult = await Service.GetErrorsGrouped(GlobalFilter, filter);
+            errors = errorResult.OrderByDescending(x => x.Count).ToList();
         }
 
-        errors = result.OrderByDescending(x => x.Count).ToList();
-        
+
+
         isLoadingList = false;
-        
+
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SelectedSeveritiesChanged()
+    {
+        try
+        {
+            if (selectedSeverities.Count > 1)
+            {
+                selectedSeverities.Remove(All);
+            }
+
+            if (selectedSeverities.Count == severities.Count || selectedSeverities.Count == 0)
+            {
+                selectedSeverities.Clear();
+                selectedSeverities.Add(All);
+            }
+
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
     }
 
     private record DayFilterItem(string Text, int Value);
 
+    private void ShowFilterTooltip(ElementReference elementReference) => tooltipService.Open(elementReference, showSeverityFilter ? "<b>Hide filters</b>" : "<b>Show all filters</b>", new TooltipOptions() { Style = "background: #757575; color: white;" });
 }

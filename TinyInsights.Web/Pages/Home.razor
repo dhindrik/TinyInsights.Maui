@@ -7,7 +7,7 @@
 
 @inject IInsightsService Service
 @inject DialogService DialogService
-
+<div>
 <RadzenCard>
     <EditForm Model="_model" OnValidSubmit="Open">
         <RadzenStack>
@@ -32,7 +32,7 @@
         <li>Copy the Application id and create a new API token</li>    
     </ul>
 </RadzenCard>
-
+</div>
 @code{
     [CascadingParameter] public EventCallback<bool> IsLoggedInChanged { get; set; }
     private readonly AuthModel _model = new();

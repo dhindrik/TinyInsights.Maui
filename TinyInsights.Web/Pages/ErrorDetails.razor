@@ -1,5 +1,7 @@
 @page "/diagnostics/crashes/details/{*Id}"
 @page "/diagnostics/errors/details/{*Id}"
+@page "/diagnostics/errors/details/{Severity}/{*Id}"
+
 @using System.Web
 @using System.Text.RegularExpressions
 
@@ -37,6 +39,10 @@
                     <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()" />
                     <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))" />
                     <LabelValuePair Key="Affected operating systems" Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
+                    @if (Severity is not null)
+                    {
+                        <LabelValuePair Key="Severity" Value="@Severity" />
+                    }
                 </RadzenStack>
             }
         </RadzenStack>
@@ -144,6 +150,9 @@
     [Parameter]
     public required string Id { get; set; }
 
+    [Parameter]
+    public string? Severity { get; set; }
+
     [CascadingParameter]
     public required GlobalFilter GlobalFilter { get; set; }
 
@@ -194,8 +203,8 @@
             }
             else
             {
-                data = await Service.GetErrorDetails(escapedId, GlobalFilter);
-                errorsPerDays = await Service.GetErrorDetailsPerDay(escapedId, GlobalFilter);
+                data = await Service.GetErrorDetails(escapedId, GlobalFilter, Severity);
+                errorsPerDays = await Service.GetErrorDetailsPerDay(escapedId, GlobalFilter, Severity);
             }           
         }
         catch (Exception ex)
