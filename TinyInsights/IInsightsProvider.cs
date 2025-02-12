@@ -22,6 +22,8 @@ public interface IInsightsProvider
 
     Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, TimeSpan? duration = null);
 
+    Task TrackPageVisitTime(Type pageType, double pageVisitTime);
+
     Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null);
 
     Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, HttpMethod? httpMethod, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null);
