@@ -139,7 +139,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
 
         var duration = DateTime.Now - lastPageAdded.Value.appearTime;
-        provider?.TrackPageVisitTime(pageType, duration.TotalMilliseconds);
+        provider?.TrackPageVisitTime(pageType.FullName ?? pageType.Name, pageType.Name, duration.TotalMilliseconds);
     }
 
     readonly Dictionary<string, string> _globalProperties = [];
@@ -510,7 +510,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
-    public async Task TrackPageVisitTime(Type pageType, double pageVisitTime)
+    public async Task TrackPageVisitTime(string pageFullName, string pageDisplayName, double pageVisitTime)
     {
         if (Client is null)
         {
@@ -519,8 +519,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         var properties = new Dictionary<string, string>
         {
-            { "PageUrl", pageType.FullName ?? pageType.Name },
-            { "DisplayName", pageType.Name },
+            { "PageUrl", pageFullName },
+            { "DisplayName", pageDisplayName },
         };
 
         var metrics = new Dictionary<string, double>
