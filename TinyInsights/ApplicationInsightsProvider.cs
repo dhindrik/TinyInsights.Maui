@@ -519,16 +519,13 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         var properties = new Dictionary<string, string>
         {
-            { "PageUrl", pageFullName },
+            { "Page", pageFullName },
             { "DisplayName", pageDisplayName },
         };
 
         var metrics = new Dictionary<string, double>
         {
-            { "average", pageVisitTime },
-            { "max", pageVisitTime },
-            { "min", pageVisitTime },
-            { "sampleCount", 1 }
+            { "Duration", pageVisitTime }
         };
 
         Client.TrackEvent("PageVisitTime", properties, metrics);

@@ -57,13 +57,27 @@ public class Insights : IInsights
         return Task.CompletedTask;
     }
 
-    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, TimeSpan? duration = null)
+    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null)
     {
         var tasks = new List<Task>();
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackPageViewsEnabled))
         {
-            var task = provider.TrackPageViewAsync(viewName, properties, duration);
+            var task = provider.TrackPageViewAsync(viewName, properties);
+            tasks.Add(task);
+        }
+
+        _ = Task.WhenAll(tasks);
+        return Task.CompletedTask;
+    }
+
+    public Task TrackPageVisitTime(string pageFullName, string pageDisplayName, double pageVisitTime)
+    {
+        var tasks = new List<Task>();
+
+        foreach (var provider in insightsProviders.Where(x => x.IsTrackPageViewsEnabled))
+        {
+            var task = provider.TrackPageVisitTime(pageFullName, pageDisplayName, pageVisitTime);
             tasks.Add(task);
         }
 
@@ -160,10 +174,10 @@ public class Insights : IInsights
 
     public bool HasCrashed()
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             bool hasCrashed = provider.HasCrashed();
-            if(hasCrashed)
+            if (hasCrashed)
             {
                 return true;
             }
@@ -174,7 +188,7 @@ public class Insights : IInsights
 
     public async Task SendCrashes()
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             await provider.SendCrashes();
         }
@@ -182,7 +196,7 @@ public class Insights : IInsights
 
     public void ResetCrashes()
     {
-        foreach(var provider in insightsProviders)
+        foreach (var provider in insightsProviders)
         {
             provider.ResetCrashes();
         }
