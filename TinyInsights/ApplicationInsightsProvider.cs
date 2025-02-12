@@ -131,14 +131,17 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         var pageType = e.GetType();
 
-        (Type pageType, DateTime appearTime)? lastPageAdded = _pageVisitTimeTracking.LastOrDefault(x => x.pageType == pageType);
+        var lastIndex = _pageVisitTimeTracking.FindLastIndex(x => x.pageType == pageType);
 
-        if (lastPageAdded is null)
+        if (lastIndex == -1)
         {
             return;
         }
 
-        var duration = DateTime.Now - lastPageAdded.Value.appearTime;
+        var lastPageAdded = _pageVisitTimeTracking[lastIndex];
+        _pageVisitTimeTracking.RemoveAt(lastIndex);
+
+        var duration = DateTime.Now - lastPageAdded.appearTime;
         provider?.TrackPageVisitTime(pageType.FullName ?? pageType.Name, pageType.Name, duration.TotalMilliseconds);
     }
 
