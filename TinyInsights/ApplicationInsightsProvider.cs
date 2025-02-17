@@ -76,10 +76,12 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 #elif NET8_0_OR_GREATER
+
     public ApplicationInsightsProvider()
     {
         // Do nothing. The net8.0 target exists for enabling unit testing, not for actual use.
     }
+
 #endif
 
     public static bool IsInitialized { get; private set; }
@@ -115,19 +117,32 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         IsInitialized = true;
     }
 
-    private static DateTime? _lastPageAppearing;
+    static List<(Type pageType, DateTime appearTime)> _pageVisitTimeTracking = [];
 
     private static void OnAppearing(object? sender, Page e)
     {
-        _lastPageAppearing = DateTime.Now;
+        var pageType = e.GetType();
+        provider?.TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } });
+
+        _pageVisitTimeTracking.Add((pageType, DateTime.Now));
     }
 
     private static void OnDisappearing(object? sender, Page e)
     {
-        var duration = DateTime.Now - _lastPageAppearing;
-
         var pageType = e.GetType();
-        provider?.TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } }, duration);
+
+        var lastIndex = _pageVisitTimeTracking.FindLastIndex(x => x.pageType == pageType);
+
+        if (lastIndex == -1)
+        {
+            return;
+        }
+
+        var lastPageAdded = _pageVisitTimeTracking[lastIndex];
+        _pageVisitTimeTracking.RemoveAt(lastIndex);
+
+        var duration = DateTime.Now - lastPageAdded.appearTime;
+        provider?.TrackPageVisitTime(pageType.FullName ?? pageType.Name, pageType.Name, duration.TotalMilliseconds);
     }
 
     readonly Dictionary<string, string> _globalProperties = [];
@@ -167,7 +182,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             // Add any global properties, the user has already added
             foreach (var property in _globalProperties)
             {
-                switch(property.Key)
+                switch (property.Key)
                 {
                     case "Cloud.RoleName":
                         client.Context.Cloud.RoleName = property.Value;
@@ -221,7 +236,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         _globalProperties[key] = value;
 
-        if(Client is null)
+        if (Client is null)
         {
             return;
         }
@@ -364,7 +379,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             var path = Path.Combine(logPath, crashLogFilename);
 
-            if(!File.Exists(path))
+            if (!File.Exists(path))
             {
                 return false;
             }
@@ -375,7 +390,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             return crashes is null ? false : crashes.Count != 0;
         }
-        catch(Exception)
+        catch (Exception)
         {
             return false;
         }
@@ -498,7 +513,24 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
-    public async Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, TimeSpan? duration = null)
+    public async Task TrackPageVisitTime(string pageFullName, string pageDisplayName, double pageVisitTime)
+    {
+        if (Client is null)
+        {
+            return;
+        }
+
+        var properties = new Dictionary<string, string>
+        {
+            { "Page", pageFullName },
+            { "DisplayName", pageDisplayName },
+        };
+
+        Client.TrackMetric("PageVisitTime", pageVisitTime, properties);
+        await Client.FlushAsync(CancellationToken.None);
+    }
+
+    public async Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null)
     {
         try
         {
@@ -517,13 +549,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
             var pageView = new PageViewTelemetry(viewName)
             {
-                Timestamp = new DateTimeOffset(_lastPageAppearing ?? DateTime.Now),
+                Timestamp = new DateTimeOffset(DateTime.Now),
             };
-
-            if (duration is not null)
-            {
-                pageView.Duration = duration.Value;
-            }
 
             if (properties is not null)
             {
