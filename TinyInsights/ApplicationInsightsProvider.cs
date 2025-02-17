@@ -526,12 +526,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             { "DisplayName", pageDisplayName },
         };
 
-        var metrics = new Dictionary<string, double>
-        {
-            { "Duration", pageVisitTime }
-        };
-
-        Client.TrackEvent("PageVisitTime", properties, metrics);
+        Client.TrackMetric("PageVisitTime", pageVisitTime, properties);
         await Client.FlushAsync(CancellationToken.None);
     }
 
