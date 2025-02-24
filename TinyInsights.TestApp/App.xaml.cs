@@ -27,4 +27,12 @@ public partial class App : Application
     {
         return new Window(shell);
     }
+
+    protected override void OnSleep()
+    {
+        base.OnSleep();
+
+        var insights = serviceProvider.GetRequiredService<IInsights>();
+        insights.FlushAsync().Wait();
+    }
 }

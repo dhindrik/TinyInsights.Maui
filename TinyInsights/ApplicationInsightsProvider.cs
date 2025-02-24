@@ -364,6 +364,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 await TrackErrorAsync(ex, properties);
             }
 
+            await FlushAsync();
+
             ResetCrashes();
         }
         catch (Exception ex)
@@ -454,6 +456,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             var path = Path.Combine(logPath, crashLogFilename);
 
             File.WriteAllText(path, json);
+
+            if (Client is not null)
+            {
+                Client.Flush();
+            }
         }
         catch (Exception exception)
         {
@@ -482,7 +489,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
 
             Client.TrackException(ex, properties);
-            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception exception)
         {
@@ -504,7 +510,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 Console.WriteLine($"TinyInsights: Tracking event {eventName}");
 
             Client.TrackEvent(eventName, properties);
-            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -561,8 +566,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
 
             Client.TrackPageView(pageView);
-
-            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -622,7 +625,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
 
             Client.TrackDependency(dependency);
-            await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -634,6 +636,24 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null)
     {
         return TrackDependencyAsync(dependencyType, dependencyName, data, null, startTime, duration, success, resultCode, exception);
+    }
+
+    public async Task FlushAsync()
+    {
+        try
+        {
+            if (Client is null)
+            {
+                return;
+            }
+
+            await Client.FlushAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error flushing. Message: {ex.Message}");
+        }
     }
 
     #region ILogger
@@ -699,6 +719,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     }
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
+
+
 
     #endregion ILogger
 }
