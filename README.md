@@ -27,7 +27,7 @@ builder
 
 If you want, you can configure what type of events you want to track.
 ```csharp
-builder.UseMauiInsights("{YOUR_CONNECTION_STRING}",
+builder.UseTinyInsights("{YOUR_CONNECTION_STRING}",
         (provider) =>
         {
             provider.IsTrackDependencyEnabled = true;
