@@ -48,6 +48,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             {
                 HandleCrash(e.Exception);
             }
+
+            if (Client is not null)
+            {
+                Client.Flush();
+            }
         }
 
         void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -55,6 +60,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             if (IsTrackCrashesEnabled)
             {
                 HandleCrash((Exception)e.ExceptionObject);
+            }
+
+            if (Client is not null)
+            {
+                Client.Flush();
             }
         }
     }
@@ -72,6 +82,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             if (IsTrackCrashesEnabled)
             {
                 HandleCrash(e.Exception);
+            }
+
+            if (Client is not null)
+            {
+                Client.Flush();
             }
         }
     }
@@ -441,11 +456,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             var path = Path.Combine(logPath, crashLogFilename);
 
             File.WriteAllText(path, json);
-
-            if (Client is not null)
-            {
-                Client.Flush();
-            }
         }
         catch (Exception exception)
         {
