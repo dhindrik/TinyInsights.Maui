@@ -201,4 +201,12 @@ public class Insights : IInsights
             provider.ResetCrashes();
         }
     }
+
+    public async Task FlushAsync()
+    {
+        foreach (var provider in insightsProviders)
+        {
+            await provider.FlushAsync();
+        }
+    }
 }
