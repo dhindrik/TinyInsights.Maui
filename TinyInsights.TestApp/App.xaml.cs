@@ -28,11 +28,11 @@ public partial class App : Application
         return new Window(shell);
     }
 
-    protected override void OnSleep()
+    protected async override void OnSleep()
     {
         base.OnSleep();
 
         var insights = serviceProvider.GetRequiredService<IInsights>();
-        insights.FlushAsync().Wait();
+        await insights.FlushAsync();
     }
 }

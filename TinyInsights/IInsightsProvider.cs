@@ -1,3 +1,5 @@
+using TinyInsights.CrashHandlers;
+
 namespace TinyInsights;
 
 public interface IInsightsProvider
@@ -34,10 +36,7 @@ public interface IInsightsProvider
 
     void CreateNewSession();
 
-    bool HasCrashed();
-
-    Task SendCrashes();
-
-    void ResetCrashes();
     Task FlushAsync();
+
+	void SetCrashHandler(ICrashHandler customCrashHandler);
 }

@@ -38,6 +38,16 @@ builder.UseMauiInsights("{YOUR_CONNECTION_STRING}",
         });
 ```
 
+The package comes with a default implementation of a crash handler that stores crash data in a json file before application is terminated.
+On the next application run the data will be deserialized from the json file and submitted to Azure Insights.
+You can also replace it by your own implementation of `ICrashHandler` interface:
+```csharp
+.UseTinyInsights("{YOUR_CONNECTION_STRING}", (provider) =>
+	{            
+		provider.SetCrashHandler(MyOwnCrashHandler);
+	});
+```
+
 ### Track events
 Crashes will be tracked automatically if it is enabled, other events you need to track manually. 
 
