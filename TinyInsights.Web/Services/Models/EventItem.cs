@@ -15,6 +15,11 @@ public class EventItem : LogItem
 
     private string? GetName()
     {
+        if (EventType == EventType.Dependency)
+        {
+            return GetData("data");
+        }
+
         var name = GetData("name");
 
         if (name is null && EventType == EventType.Error)
@@ -25,6 +30,7 @@ public class EventItem : LogItem
         {
             name = $"{GetData("problemId")} - {GetData("outerMessage")}";
         }
+
 
         return name;
     }

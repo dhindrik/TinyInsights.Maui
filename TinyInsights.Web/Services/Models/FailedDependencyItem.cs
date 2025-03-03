@@ -8,5 +8,6 @@ public class FailedDependencyItem : ErrorItem
     }
 
     public int ResultCode => int.Parse(GetData("resultCode") ?? "0");
+    public string? Method => GetData("HttpMethod");
     public string? FullUrl => GetData("FullUrl");
 }

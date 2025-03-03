@@ -1,4 +1,4 @@
-﻿@page "/diagnostics/dependencies/failed/{*Key}"
+﻿@page "/diagnostics/dependencies/failed/{Method}/{*Key}"
 
 @inherits TinyInsightsComponentBase
 
@@ -6,7 +6,10 @@
 @inject DialogService DialogService
 
 <RadzenStack Gap="20">
-    <RadzenRow JustifyContent="JustifyContent.End">
+    <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+        <a href="/diagnostics/dependencies" title="Back">
+            <RadzenIcon Icon="arrow_back" />
+        </a>
         <GlobalFilters />
     </RadzenRow>
 
@@ -25,12 +28,29 @@
                 <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()" />
                 <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))" />
                 <LabelValuePair Key="Affected operating systems"
-                    Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
+                Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
             </RadzenStack>
         }
 
     </RadzenCard>
-
+    <RadzenCard>
+        <h2>Failed dependencies per day</h2>
+        @if (isLoading)
+        {
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if(failedDependenciesPerDays is not null)
+        {
+            <RadzenChart>
+                <RadzenLegend Visible="false" />
+                <RadzenLineSeries Data="@failedDependenciesPerDays" CategoryProperty="Date" ValueProperty="Count">
+                    <RadzenMarkers MarkerType="MarkerType.Circle" />
+                    <RadzenSeriesDataLabels />
+                </RadzenLineSeries>
+                <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+            </RadzenChart>
+        }
+    </RadzenCard>
     <RadzenCard>
         <h2>Failed dependencies</h2>
         @if (isLoading)
@@ -39,17 +59,19 @@
         }
         else
         {
-            <RadzenDataGrid Data="data.Items">
+            <RadzenDataGrid Data="data.Items" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
                 <Columns>
-                    <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Timestamp" Width="150px"
-                        Property="@nameof(FailedDependencyItem.Timestamp)" />
+                    <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Timestamp" Width="200px"
+                    Property="@nameof(FailedDependencyItem.Timestamp)" />
+                    <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Method" Width="200px"
+                    Property="@nameof(FailedDependencyItem.Method)" />
                     <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Result code" Width="100px"
-                        Property="@nameof(FailedDependencyItem.ResultCode)" />
+                    Property="@nameof(FailedDependencyItem.ResultCode)" />
 
                     <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Url"
-                        Property="@nameof(FailedDependencyItem.FullUrl)" />
+                    Property="@nameof(FailedDependencyItem.FullUrl)" />
                     <RadzenDataGridColumn TItem="FailedDependencyItem" Title="Device OS" Width="100px"
-                        Property="@nameof(FailedDependencyItem.ClientOs)" />
+                    Property="@nameof(FailedDependencyItem.ClientOs)" />
                     <RadzenDataGridColumn TItem="FailedDependencyItem" Width="100px">
                         <Template>
                             <RadzenButton Icon="description" Click="@(async (args) => await ShowAllProperties(context))" />
@@ -64,8 +86,12 @@
 @code {
     [Parameter]
     public required string Key { get; set; }
+    [Parameter]
+    public required string Method { get; set; }
 
     private Services.Models.FailedDependencies data = new();
+    private List<Services.Models.CountPerDay>? failedDependenciesPerDays;
+
     private bool isLoading = true;
 
     [CascadingParameter]
@@ -80,8 +106,10 @@
         try
         {
             isLoading = true;
-
-            data = await Service.GetFailedDependencies(Key, GlobalFilter);
+            
+            data = await Service.GetFailedDependencies(Key, Method, GlobalFilter);
+            data.Items = data.Items.OrderByDescending(x => x.Timestamp).ToList();
+            failedDependenciesPerDays = data.Items.GroupBy(x => x.Timestamp.Date).Select(x => new Services.Models.CountPerDay(DateOnly.FromDateTime(x.Key), x.Count())).OrderBy(x => x.Date).ToList();
 
             isLoading = false;
         }

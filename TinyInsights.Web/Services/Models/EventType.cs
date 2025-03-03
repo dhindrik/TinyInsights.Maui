@@ -5,5 +5,6 @@ public enum EventType
     CustomEvent,
     PageView,
     Error,
-    Crash
+    Crash,
+    Dependency,
 }

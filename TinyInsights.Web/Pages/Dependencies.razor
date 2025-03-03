@@ -64,12 +64,13 @@
 
                     <RadzenDataGrid Data="failedDependencies" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
                         <Columns>
-                            <RadzenDataGridColumn TItem="CountPerKey" Title="Dependency" Property="@nameof(CountPerKey.Key)" />
-                            <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)"
+                            <RadzenDataGridColumn TItem="DependencyCount" Title="Dependency" Property="@nameof(DependencyCount.Key)" />
+                            <RadzenDataGridColumn TItem="DependencyCount" Title="Method" Property="@nameof(DependencyCount.Method)" Width="200px" />
+                            <RadzenDataGridColumn TItem="DependencyCount" Title="Count" Property="@nameof(DependencyCount.Count)"
                             Width="100px" />
-                            <RadzenDataGridColumn TItem="CountPerKey" Width="100px" TextAlign="TextAlign.End">
+                            <RadzenDataGridColumn TItem="DependencyCount" Width="100px" TextAlign="TextAlign.End">
                                 <Template>
-                                    <a href="@($"/diagnostics/dependencies/failed/{context.Key}")">
+                                    <a href="@($"/diagnostics/dependencies/failed/{context.Method}/{context.Key}")">
                                         <RadzenIcon Icon="arrow_forward" />
                                     </a>
                                 </Template>
@@ -91,8 +92,9 @@
                 {
                     <RadzenDataGrid Data="topDependencies" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
                         <Columns>
-                            <RadzenDataGridColumn TItem="CountPerKey" Title="Dependency" Property="@nameof(CountPerKey.Key)" />
-                            <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)"
+                            <RadzenDataGridColumn TItem="DependencyCount" Title="Dependency" Property="@nameof(DependencyCount.Key)" />
+                            <RadzenDataGridColumn TItem="DependencyCount" Title="Method" Property="@nameof(DependencyCount.Method)" Width="200px" />
+                            <RadzenDataGridColumn TItem="DependencyCount" Title="Count" Property="@nameof(DependencyCount.Count)"
                             Width="100px" />
                         </Columns>
                     </RadzenDataGrid>
@@ -128,7 +130,7 @@
     private bool loadingTopDependencies = true, loadingDependencyAvg = true, loadingFailedDependencies = true,
     loadingFailedDependenciesPerDays = true;
 
-    private List<CountPerKey> topDependencies = [], failedDependencies = [];
+    private List<DependencyCount> topDependencies = [], failedDependencies = [];
     private List<AvgPerKey> dependencyDurations = [];
     private List<CountPerDay> failedPerDays = [];
 

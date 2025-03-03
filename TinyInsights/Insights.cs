@@ -59,13 +59,27 @@ public class Insights : IInsights
         return Task.CompletedTask;
     }
 
-    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, TimeSpan? duration = null)
+    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null)
     {
         var tasks = new List<Task>();
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackPageViewsEnabled))
         {
-            var task = provider.TrackPageViewAsync(viewName, properties, duration);
+            var task = provider.TrackPageViewAsync(viewName, properties);
+            tasks.Add(task);
+        }
+
+        _ = Task.WhenAll(tasks);
+        return Task.CompletedTask;
+    }
+
+    public Task TrackPageVisitTime(string pageFullName, string pageDisplayName, double pageVisitTime)
+    {
+        var tasks = new List<Task>();
+
+        foreach (var provider in insightsProviders.Where(x => x.IsTrackPageViewsEnabled))
+        {
+            var task = provider.TrackPageVisitTime(pageFullName, pageDisplayName, pageVisitTime);
             tasks.Add(task);
         }
 

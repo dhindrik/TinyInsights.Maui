@@ -13,7 +13,7 @@ else
 {
     <RadzenDataGrid Data="events" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
         <Columns>
-            <RadzenDataGridColumn TItem="EventItem" Width="100px" Title="Event type">
+            <RadzenDataGridColumn TItem="EventItem" Width="100px" Title="Event type" Property="@nameof(EventItem.EventType)">
                 <Template>
                     <RadzenIcon Icon="@GetIcon(context.EventType)" title="@GetName(context.EventType)" />
                 </Template>
@@ -78,6 +78,7 @@ else
         EventType.PageView => "visibility",
         EventType.Crash => "dangerous",
         EventType.Error => "error",
+        EventType.Dependency => "file_download",
         _ => string.Empty
     };
 
@@ -87,6 +88,7 @@ else
         EventType.PageView => "Page view",
         EventType.Crash => "Crash",
         EventType.Error => "Error",
+        EventType.Dependency => "Dependency",
         _ => string.Empty
     };
 

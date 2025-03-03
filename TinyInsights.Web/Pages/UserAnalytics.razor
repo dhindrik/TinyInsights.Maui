@@ -135,7 +135,7 @@
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
 
-        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+        for (int i = 1; i <= GlobalFilter.NumberOfDays; i++)
         {
             var currentDate = date.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
@@ -160,7 +160,7 @@
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
 
-        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+        for (int i = 1; i <= GlobalFilter.NumberOfDays; i++)
         {
             var currentDate = date.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
