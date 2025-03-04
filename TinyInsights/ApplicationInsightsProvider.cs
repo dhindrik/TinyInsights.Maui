@@ -29,7 +29,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public bool IsTrackDependencyEnabled { get; set; } = true;
     public bool EnableConsoleLogging { get; set; }
 
-	private ICrashHandler GetDefaultCrashHandlerType() => new CrashToJsonFileStorageHandler();
+    private ICrashHandler GetDefaultCrashHandlerType() => new CrashToJsonFileStorageHandler();
 
     public Func<(string DependencyType, string DependencyName, string Data, DateTimeOffset StartTime, TimeSpan Duration, bool Success, int ResultCode, Exception? Exception), bool>? TrackDependencyFilter { get; set; }
 
@@ -40,9 +40,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         ConnectionString = connectionString;
         provider = this;
 
-		this.crashHandler = crashHandler ?? GetDefaultCrashHandlerType();
+        this.crashHandler = crashHandler ?? GetDefaultCrashHandlerType();
 
-		AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
         async void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
@@ -62,12 +62,12 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             if (IsTrackCrashesEnabled)
             {
-				this.crashHandler.PushCrashToStorage((Exception)e.ExceptionObject);
+                this.crashHandler.PushCrashToStorage((Exception)e.ExceptionObject);
             }
 
             if (Client is not null)
             {
-				await Client.FlushAsync(CancellationToken.None);
+                await Client.FlushAsync(CancellationToken.None);
             }
         }
     }
@@ -77,8 +77,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         ConnectionString = connectionString;
         provider = this;
-		
-		this.crashHandler = crashHandler ?? GetDefaultCrashHandlerType();
+        
+        this.crashHandler = crashHandler ?? GetDefaultCrashHandlerType();
 
         app.UnhandledException += App_UnhandledException;
 
@@ -138,10 +138,10 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     }
 
     static List<(Type pageType, DateTime appearTime)> _pageVisitTimeTracking = [];
-	public void SetCrashHandler(ICrashHandler customCrashHandler)
-	{
-		crashHandler = customCrashHandler;
-	}
+    public void SetCrashHandler(ICrashHandler customCrashHandler)
+    {
+        crashHandler = customCrashHandler;
+    }
 
 
     private static void OnAppearing(object? sender, Page e)
@@ -161,7 +161,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         if (lastIndex == -1)
         {
             return;
-		}
+        }
 
         var lastPageAdded = _pageVisitTimeTracking[lastIndex];
         _pageVisitTimeTracking.RemoveAt(lastIndex);
@@ -398,15 +398,15 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
-	public bool HasCrashed()
-	{
-		return crashHandler.HasCrashed();
-	}
+    public bool HasCrashed()
+    {
+        return crashHandler.HasCrashed();
+    }
 
-	public void ResetCrashes()
-	{
-		crashHandler.EraseCrashes();
-	}
+    public void ResetCrashes()
+    {
+        crashHandler.EraseCrashes();
+    }
 
     public async Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null)
     {
