@@ -4,6 +4,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text.Json;
 using TinyInsights.CrashHandlers;
 
 namespace TinyInsights;
@@ -160,7 +161,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         if (lastIndex == -1)
         {
             return;
-    }
+		}
 
         var lastPageAdded = _pageVisitTimeTracking[lastIndex];
         _pageVisitTimeTracking.RemoveAt(lastIndex);
@@ -397,6 +398,15 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
+	public bool HasCrashed()
+	{
+		return crashHandler.HasCrashed();
+	}
+
+	public void ResetCrashes()
+	{
+		crashHandler.EraseCrashes();
+	}
 
     public async Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null)
     {

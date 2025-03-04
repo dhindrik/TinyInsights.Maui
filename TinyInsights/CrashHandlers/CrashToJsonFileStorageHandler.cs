@@ -55,7 +55,7 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
 		return crashes;
 	}
 
-	private void EraseCrashes()
+	public void EraseCrashes()
 	{
 		try
 		{

@@ -42,7 +42,13 @@ public interface IInsightsProvider
 
     void CreateNewSession();
 
-    Task FlushAsync();
+	bool HasCrashed();
+
+	Task SendCrashes();
+
+	void ResetCrashes();
+
+	Task FlushAsync();
 
 	void SetCrashHandler(ICrashHandler customCrashHandler);
 }

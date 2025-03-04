@@ -21,4 +21,9 @@ public interface ICrashHandler
 	/// This method is supposed to be called when the app crashes in order to store the crash information in the underlying storage.
 	/// </summary>	
 	void PushCrashToStorage(Exception ex);
+
+	/// <summary>
+	/// Erases crashes from the underlying storage. 
+	/// </summary>
+	void EraseCrashes();
 }

@@ -174,7 +174,27 @@ public class Insights : IInsights
         }
     }
 
-    public async Task FlushAsync()
+	public bool HasCrashed()
+	{
+		return insightsProviders.Any(provider => provider.HasCrashed());
+	}
+
+	public async Task SendCrashes()
+	{
+		foreach (var provider in insightsProviders)
+		{
+			await provider.SendCrashes();
+		}
+	}
+
+	public void ResetCrashes()
+	{
+		foreach (var provider in insightsProviders)
+		{
+			provider.ResetCrashes();
+		}
+	}
+	public async Task FlushAsync()
     {
         foreach (var provider in insightsProviders)
         {

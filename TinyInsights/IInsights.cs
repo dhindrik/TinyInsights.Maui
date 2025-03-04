@@ -33,5 +33,11 @@ public interface IInsights
 
     void CreateNewSession();
 
-    Task FlushAsync();
+	bool HasCrashed();
+
+	Task SendCrashes();
+
+	void ResetCrashes();
+
+	Task FlushAsync();
 }
