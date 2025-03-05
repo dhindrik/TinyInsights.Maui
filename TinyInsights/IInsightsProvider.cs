@@ -1,3 +1,5 @@
+using TinyInsights.CrashHandlers;
+
 namespace TinyInsights;
 
 public interface IInsightsProvider
@@ -46,4 +48,6 @@ public interface IInsightsProvider
 
     void ResetCrashes();
     Task FlushAsync();
+
+    void SetCrashHandler(ICrashHandler customCrashHandler);
 }

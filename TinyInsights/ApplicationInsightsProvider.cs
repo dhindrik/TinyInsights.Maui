@@ -4,7 +4,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
-using System.Text.Json;
+using TinyInsights.CrashHandlers;
 
 namespace TinyInsights;
 
@@ -14,9 +14,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     private static ApplicationInsightsProvider? provider;
     private const string userIdKey = nameof(userIdKey);
 
-    private const string crashLogFilename = "crashes.mauiinsights";
-
-    private readonly string logPath = FileSystem.CacheDirectory;
+    private ICrashHandler crashHandler;
 
     private TelemetryClient? client;
     private TelemetryClient? Client => client ?? CreateTelemetryClient();
@@ -30,50 +28,56 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public bool IsTrackDependencyEnabled { get; set; } = true;
     public bool EnableConsoleLogging { get; set; }
 
+    private static ICrashHandler CreateDefaultCrashHandlerType() => new CrashToJsonFileStorageHandler();
+
     public Func<(string DependencyType, string DependencyName, string Data, DateTimeOffset StartTime, TimeSpan Duration, bool Success, int ResultCode, Exception? Exception), bool>? TrackDependencyFilter { get; set; }
 
 #if IOS || MACCATALYST || ANDROID
 
-    public ApplicationInsightsProvider(string? connectionString = null)
+    public ApplicationInsightsProvider(string? connectionString = null, ICrashHandler? crashHandler = null)
     {
         ConnectionString = connectionString;
         provider = this;
 
+        this.crashHandler = crashHandler ?? CreateDefaultCrashHandlerType();
+
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-        void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+        async void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
             if (IsTrackCrashesEnabled)
             {
-                HandleCrash(e.Exception);
+                this.crashHandler.PushCrashToStorage(e.Exception);
             }
 
             if (Client is not null)
             {
-                Client.Flush();
+                await Client.FlushAsync(CancellationToken.None);
             }
         }
 
-        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        async void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             if (IsTrackCrashesEnabled)
             {
-                HandleCrash((Exception)e.ExceptionObject);
+                this.crashHandler.PushCrashToStorage((Exception)e.ExceptionObject);
             }
 
             if (Client is not null)
             {
-                Client.Flush();
+                await Client.FlushAsync(CancellationToken.None);
             }
         }
     }
 
 #elif WINDOWS
-    public ApplicationInsightsProvider(MauiWinUIApplication app, string? connectionString = null)
+    public ApplicationInsightsProvider(MauiWinUIApplication app, string? connectionString = null, ICrashHandler? crashHandler = null)
     {
         ConnectionString = connectionString;
         provider = this;
+        
+        this.crashHandler = crashHandler ?? CreateDefaultCrashHandlerType();
 
         app.UnhandledException += App_UnhandledException;
 
@@ -81,7 +85,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             if (IsTrackCrashesEnabled)
             {
-                HandleCrash(e.Exception);
+                this.crashHandler.PushCrashToStorage(e.Exception);
             }
 
             if (Client is not null)
@@ -124,7 +128,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             Application.Current.PageDisappearing += weakOnDisappearingHandler.Handler;
         }
 
-        if (WriteCrashes)
+        if (IsTrackCrashesEnabled && WriteCrashes)
         {
             Task.Run(SendCrashes);
         }
@@ -133,6 +137,11 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     }
 
     static List<(Type pageType, DateTime appearTime)> _pageVisitTimeTracking = [];
+    public void SetCrashHandler(ICrashHandler customCrashHandler)
+    {
+        crashHandler = customCrashHandler;
+    }
+
 
     private static void OnAppearing(object? sender, Page e)
     {
@@ -349,7 +358,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 return;
             }
 
-            var crashes = ReadCrashes();
+            var crashes = crashHandler.PopCrashesFromStorage();
 
             if (crashes is null || crashes.Count == 0)
             {
@@ -380,8 +389,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             }
 
             await FlushAsync();
-
-            ResetCrashes();
         }
         catch (Exception ex)
         {
@@ -392,91 +399,12 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public bool HasCrashed()
     {
-        try
-        {
-            var path = Path.Combine(logPath, crashLogFilename);
-
-            if (!File.Exists(path))
-            {
-                return false;
-            }
-
-            var json = File.ReadAllText(path);
-
-            var crashes = string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<List<Crash>>(json);
-
-            return crashes is null ? false : crashes.Count != 0;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
-
-    private List<Crash>? ReadCrashes()
-    {
-        try
-        {
-            Debug.WriteLine("TinyInsights: Read crashes");
-
-            var path = Path.Combine(logPath, crashLogFilename);
-
-            if (!File.Exists(path))
-            {
-                return null;
-            }
-
-            var json = File.ReadAllText(path);
-
-            return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<List<Crash>>(json);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"TinyInsights: Error reading crashes. Message: {ex.Message}");
-        }
-
-        return null;
+        return crashHandler.HasCrashed();
     }
 
     public void ResetCrashes()
     {
-        try
-        {
-            if (EnableConsoleLogging)
-                Console.WriteLine("TinyInsights: Reset crashes");
-
-            var path = Path.Combine(logPath, crashLogFilename);
-            File.Delete(path);
-        }
-        catch (Exception ex)
-        {
-            if (EnableConsoleLogging)
-                Console.WriteLine($"TinyInsights: Error clearing crashes. Message: {ex.Message}");
-        }
-    }
-
-    private void HandleCrash(Exception ex)
-    {
-        try
-        {
-            if (EnableConsoleLogging)
-                Console.WriteLine("TinyInsights: Handle crashes");
-
-            var crashes = ReadCrashes() ?? [];
-
-            crashes.Add(new Crash(ex));
-
-            var json = JsonSerializer.Serialize(crashes);
-
-            var path = Path.Combine(logPath, crashLogFilename);
-
-            File.WriteAllText(path, json);
-        }
-        catch (Exception exception)
-        {
-            if (EnableConsoleLogging)
-                Console.WriteLine($"TinyInsights: Error handling crashes. Message: {exception.Message}");
-        }
+        crashHandler.EraseCrashes();
     }
 
     public async Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null)

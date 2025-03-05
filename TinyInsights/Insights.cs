@@ -174,16 +174,7 @@ public class Insights : IInsights
 
     public bool HasCrashed()
     {
-        foreach (var provider in insightsProviders)
-        {
-            bool hasCrashed = provider.HasCrashed();
-            if (hasCrashed)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return insightsProviders.Any(provider => provider.HasCrashed());
     }
 
     public async Task SendCrashes()
