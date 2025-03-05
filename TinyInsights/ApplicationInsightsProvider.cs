@@ -4,7 +4,6 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
-using System.Text.Json;
 using TinyInsights.CrashHandlers;
 
 namespace TinyInsights;
@@ -29,7 +28,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public bool IsTrackDependencyEnabled { get; set; } = true;
     public bool EnableConsoleLogging { get; set; }
 
-    private ICrashHandler GetDefaultCrashHandlerType() => new CrashToJsonFileStorageHandler();
+    private static ICrashHandler CreateDefaultCrashHandlerType() => new CrashToJsonFileStorageHandler();
 
     public Func<(string DependencyType, string DependencyName, string Data, DateTimeOffset StartTime, TimeSpan Duration, bool Success, int ResultCode, Exception? Exception), bool>? TrackDependencyFilter { get; set; }
 
@@ -40,7 +39,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         ConnectionString = connectionString;
         provider = this;
 
-        this.crashHandler = crashHandler ?? GetDefaultCrashHandlerType();
+        this.crashHandler = crashHandler ?? CreateDefaultCrashHandlerType();
 
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
@@ -78,7 +77,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         ConnectionString = connectionString;
         provider = this;
         
-        this.crashHandler = crashHandler ?? GetDefaultCrashHandlerType();
+        this.crashHandler = crashHandler ?? CreateDefaultCrashHandlerType();
 
         app.UnhandledException += App_UnhandledException;
 
