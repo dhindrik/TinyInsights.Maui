@@ -4,7 +4,7 @@ This was inefficient and could lead to performance issues in some cases.
 
 If you still want that behavior, you need to call Flush manually after logging an event.
 To avoid data to get lost, you should call Flush before the app goes to sleep.
-You can do that by apdding the code below to your App.xaml.cs file.
+You can do that by adding the code below to your App.xaml.cs file.
 
 protected async override void OnSleep()
 {
