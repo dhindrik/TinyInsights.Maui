@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace TinyInsights.CrashHandlers;
 
 public class CrashToJsonFileStorageHandler : ICrashHandler
-{    
+{
     private const string CrashLogFilename = "crashes.mauiinsights";
 
     private string CrashStorageFilePath => Path.Combine(FileSystem.CacheDirectory, CrashLogFilename);
@@ -49,7 +49,7 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
         {
             return null;
         }
-        
+
         EraseCrashes();
 
         return crashes;
@@ -74,7 +74,7 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
         try
         {
             Trace.WriteLine("TinyInsights: Read crashes");
-            
+
             if (!File.Exists(CrashStorageFilePath))
             {
                 return null;

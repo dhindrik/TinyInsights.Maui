@@ -76,7 +76,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         ConnectionString = connectionString;
         provider = this;
-        
+
         this.crashHandler = crashHandler ?? CreateDefaultCrashHandlerType();
 
         app.UnhandledException += App_UnhandledException;
