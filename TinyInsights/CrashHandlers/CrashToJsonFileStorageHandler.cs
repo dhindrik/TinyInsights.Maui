@@ -9,7 +9,7 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
 
     private string CrashStorageFilePath => Path.Combine(FileSystem.CacheDirectory, CrashLogFilename);
 
-    public bool HasCrashed()
+    public virtual bool HasCrashed()
     {
         try
         {
@@ -22,7 +22,7 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
         }
     }
 
-    public void PushCrashToStorage(Exception ex)
+    public virtual void PushCrashToStorage(Exception ex)
     {
         try
         {
@@ -42,7 +42,7 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
         }
     }
 
-    public List<Crash>? PopCrashesFromStorage()
+    public virtual List<Crash>? PopCrashesFromStorage()
     {
         List<Crash>? crashes = ReadCrashes();
         if (crashes is null)
@@ -55,7 +55,7 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
         return crashes;
     }
 
-    public void EraseCrashes()
+    public virtual void EraseCrashes()
     {
         try
         {
@@ -69,7 +69,7 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
         }
     }
 
-    private List<Crash>? ReadCrashes()
+    protected virtual List<Crash>? ReadCrashes()
     {
         try
         {
