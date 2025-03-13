@@ -12,24 +12,24 @@ public class ErrorItem : LogItem
     public string? ClientType => GetData("client_Type");
     public string? ClientModel => GetData("client_Model");
     public string? ClientOs => GetData("client_OS");
-    public string? ClientOsVersion 
-    { 
+    public string? ClientOsVersion
+    {
         get
         {
-            var os = GetData("OperatingSystemVersion"); 
-            
-            if(os!= null)
+            var os = GetData("OperatingSystemVersion");
+
+            if (os != null)
             {
                 return os;
             }
-            
+
             // For android it can be forexample Android 14.
             var browser = GetData("client_Browser");
-            
-            if(browser != null)
+
+            if (browser != null)
             {
                 var split = browser.Split(" ");
-                if(split.Length > 1 && double.TryParse(split[1], out var version))
+                if (split.Length > 1 && double.TryParse(split[1], out var version))
                 {
                     return version.ToString();
                 }

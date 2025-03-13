@@ -4,11 +4,11 @@ namespace TinyInsights.TestApp;
 
 public partial class NewPage : ContentPage
 {
-	public NewPage()
-	{
-		InitializeComponent();
+    public NewPage()
+    {
+        InitializeComponent();
 
-        Appearing += (_,_) =>
+        Appearing += (_, _) =>
         {
             Debug.WriteLine("NewPage Appearing event");
         };
@@ -23,6 +23,6 @@ public partial class NewPage : ContentPage
 
     private async void Button_Clicked(object sender, EventArgs e)
     {
-		await Navigation.PushAsync(new NewPage1());
+        await Navigation.PushAsync(new NewPage1());
     }
 }

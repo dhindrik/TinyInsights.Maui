@@ -2,8 +2,8 @@ namespace TinyInsights.TestApp;
 
 public partial class NewPage1 : ContentPage
 {
-	public NewPage1()
-	{
-		InitializeComponent();
-	}
+    public NewPage1()
+    {
+        InitializeComponent();
+    }
 }
