@@ -42,4 +42,7 @@
 	<ItemGroup>
 		<None Include="readme.txt" pack="true" PackagePath="." />
 	</ItemGroup>
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+	  <Exec Command="dotnet format --verify-no-changes" />
+	</Target>
 </Project>

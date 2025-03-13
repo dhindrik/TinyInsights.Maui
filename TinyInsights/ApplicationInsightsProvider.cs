@@ -12,7 +12,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 {
     public string? ConnectionString { get; set; }
     private static ApplicationInsightsProvider? provider;
-    private const string userIdKey = nameof(userIdKey);
+    private const string UserIdKey = nameof(UserIdKey);
 
     private ICrashHandler crashHandler;
 
@@ -136,7 +136,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         IsInitialized = true;
     }
 
-    static List<(Type pageType, DateTime appearTime)> _pageVisitTimeTracking = [];
+    static List<(Type pageType, DateTime appearTime)> pageVisitTimeTracking = [];
     public void SetCrashHandler(ICrashHandler customCrashHandler)
     {
         crashHandler = customCrashHandler;
@@ -148,28 +148,28 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         var pageType = e.GetType();
         provider?.TrackPageViewAsync(pageType.FullName ?? pageType.Name, new Dictionary<string, string> { { "DisplayName", pageType.Name } });
 
-        _pageVisitTimeTracking.Add((pageType, DateTime.Now));
+        pageVisitTimeTracking.Add((pageType, DateTime.Now));
     }
 
     private static void OnDisappearing(object? sender, Page e)
     {
         var pageType = e.GetType();
 
-        var lastIndex = _pageVisitTimeTracking.FindLastIndex(x => x.pageType == pageType);
+        var lastIndex = pageVisitTimeTracking.FindLastIndex(x => x.pageType == pageType);
 
         if (lastIndex == -1)
         {
             return;
         }
 
-        var lastPageAdded = _pageVisitTimeTracking[lastIndex];
-        _pageVisitTimeTracking.RemoveAt(lastIndex);
+        var lastPageAdded = pageVisitTimeTracking[lastIndex];
+        pageVisitTimeTracking.RemoveAt(lastIndex);
 
         var duration = DateTime.Now - lastPageAdded.appearTime;
         provider?.TrackPageVisitTime(pageType.FullName ?? pageType.Name, pageType.Name, duration.TotalMilliseconds);
     }
 
-    readonly Dictionary<string, string> _globalProperties = [];
+    readonly Dictionary<string, string> globalProperties = [];
 
     private TelemetryClient? CreateTelemetryClient()
     {
@@ -204,7 +204,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             client.Context.Component.Version = AppInfo.VersionString;
 
             // Add any global properties, the user has already added
-            foreach (var property in _globalProperties)
+            foreach (var property in globalProperties)
             {
                 switch (property.Key)
                 {
@@ -258,7 +258,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public void UpsertGlobalProperty(string key, string value)
     {
-        _globalProperties[key] = value;
+        globalProperties[key] = value;
 
         if (Client is null)
         {
@@ -304,9 +304,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             return;
         }
 
-        if (_globalProperties.ContainsKey(key))
+        if (globalProperties.ContainsKey(key))
         {
-            _globalProperties.Remove(key);
+            globalProperties.Remove(key);
         }
 
         if (Client.Context.GlobalProperties.ContainsKey(key))
@@ -317,7 +317,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public void OverrideAnonymousUserId(string userId)
     {
-        Preferences.Set(userIdKey, userId);
+        Preferences.Set(UserIdKey, userId);
         if (Client is not null)
         {
             Client.Context.User.Id = userId;
@@ -326,7 +326,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     private string GetUserId()
     {
-        var userId = Preferences.Get(userIdKey, null);
+        var userId = Preferences.Get(UserIdKey, null);
 
         return userId ?? GenerateNewAnonymousUserId();
     }
@@ -334,7 +334,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public string GenerateNewAnonymousUserId()
     {
         var userId = Guid.NewGuid().ToString();
-        Preferences.Set(userIdKey, userId);
+        Preferences.Set(UserIdKey, userId);
 
         return userId;
     }
