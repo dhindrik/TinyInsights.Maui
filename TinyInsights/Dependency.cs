@@ -40,7 +40,7 @@ public class Dependency : IDisposable
     {
         await semaphore.WaitAsync();
 
-        if(!isFinished)
+        if (!isFinished)
         {
             Duration = DateTimeOffset.Now - StartTime;
 

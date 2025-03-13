@@ -5,15 +5,15 @@ namespace TinyInsights.CrashHandlers;
 
 public class CrashToJsonFileStorageHandler : ICrashHandler
 {    
-    private const string crashLogFilename = "crashes.mauiinsights";
+    private const string CrashLogFilename = "crashes.mauiinsights";
 
-    private string crashStorageFilePath => Path.Combine(FileSystem.CacheDirectory, crashLogFilename);
+    private string CrashStorageFilePath => Path.Combine(FileSystem.CacheDirectory, CrashLogFilename);
 
     public bool HasCrashed()
     {
         try
         {
-            return File.Exists(crashStorageFilePath);
+            return File.Exists(CrashStorageFilePath);
         }
         catch (Exception ex)
         {
@@ -34,7 +34,7 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
 
             var json = JsonSerializer.Serialize(crashes);
 
-            File.WriteAllText(crashStorageFilePath, json);
+            File.WriteAllText(CrashStorageFilePath, json);
         }
         catch (Exception exception)
         {
@@ -61,7 +61,7 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
         {
             Trace.WriteLine($"TinyInsights: {nameof(EraseCrashes)}");
 
-            File.Delete(crashStorageFilePath);
+            File.Delete(CrashStorageFilePath);
         }
         catch (Exception ex)
         {
@@ -75,12 +75,12 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
         {
             Trace.WriteLine("TinyInsights: Read crashes");
             
-            if (!File.Exists(crashStorageFilePath))
+            if (!File.Exists(CrashStorageFilePath))
             {
                 return null;
             }
 
-            var json = File.ReadAllText(crashStorageFilePath);
+            var json = File.ReadAllText(CrashStorageFilePath);
 
             return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<List<Crash>>(json);
         }
