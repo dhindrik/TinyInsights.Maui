@@ -53,10 +53,5 @@ dotnet_naming_style.begins_with_i.required_suffix =
 dotnet_naming_style.begins_with_i.word_separator = 
 dotnet_naming_style.begins_with_i.capitalization = pascal_case
 
-dotnet_naming_style._fieldname.required_prefix =
-dotnet_naming_style._fieldname.required_suffix = 
-dotnet_naming_style._fieldname.word_separator = 
-dotnet_naming_style._fieldname.capitalization = camel_case
-
 # Make whitespace violations warnings
 dotnet_diagnostic.IDE0055.severity = warning
