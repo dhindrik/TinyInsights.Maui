@@ -27,6 +27,8 @@ public class InsightsMessageHandler : DelegatingHandler
 
         try
         {
+            request.Headers.Add("Request-Id", Guid.NewGuid().ToString());
+
             var response = await base.SendAsync(request, cancellationToken);
 
             var endTime = DateTime.Now;
