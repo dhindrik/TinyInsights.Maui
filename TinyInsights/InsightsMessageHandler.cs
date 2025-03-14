@@ -29,12 +29,6 @@ public class InsightsMessageHandler : DelegatingHandler
         {
             request.Headers.Add("Request-Id", Guid.NewGuid().ToString());
 
-            // Generate traceparent header
-            var traceId = Guid.NewGuid().ToString("N").Substring(0, 32);
-            var spanId = Guid.NewGuid().ToString("N").Substring(0, 16);
-            var traceparent = $"00-{traceId}-{spanId}-01";
-            request.Headers.Add("traceparent", traceparent);
-
             var response = await base.SendAsync(request, cancellationToken);
 
             var endTime = DateTime.Now;
