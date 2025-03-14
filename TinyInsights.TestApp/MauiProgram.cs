@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
+using Microsoft.Extensions.Logging;
 
 namespace TinyInsights.TestApp;
 
@@ -16,6 +17,10 @@ public static class MauiProgram
             })
             .UseTinyInsights("InstrumentationKey=8b51208f-7926-4b7b-9867-16989206b950;IngestionEndpoint=https://swedencentral-0.in.applicationinsights.azure.com/;ApplicationId=0c04d3a0-9ee2-41a5-996e-526552dc730f", (provider) =>
             {
+                if (provider is ApplicationInsightsProvider appProvider)
+                {
+                    appProvider.TelemetryChannel = new ServerTelemetryChannel();
+                }
                 provider.TrackDependencyFilter = (dependency) =>
                 {
                     return !dependency.Success;
