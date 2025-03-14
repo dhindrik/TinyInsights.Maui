@@ -1,6 +1,8 @@
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
@@ -15,9 +17,34 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     private const string UserIdKey = nameof(UserIdKey);
 
     private ICrashHandler crashHandler;
-
+    private TelemetryConfiguration? configuration;
     private TelemetryClient? client;
     private TelemetryClient? Client => client ?? CreateTelemetryClient();
+    private ITelemetryChannel? telemetryChannel;
+
+    /// <summary>
+    /// The telemetry channel to use for sending telemetry data. If null the default channel will be used.
+    /// </summary>
+    public ITelemetryChannel? TelemetryChannel
+    {
+        get => telemetryChannel;
+        set
+        {
+            telemetryChannel = value;
+
+            if (IsInitialized && configuration is not null && value is ServerTelemetryChannel serverTelemetryChannel)
+            {
+                configuration.TelemetryChannel = value;
+                InitializeServerChannel(serverTelemetryChannel);
+                return;
+            }
+
+            if (IsInitialized && configuration is not null)
+            {
+                configuration.TelemetryChannel = value;
+            }
+        }
+    }
 
     public bool IsTrackErrorsEnabled { get; set; } = true;
     public bool IsTrackCrashesEnabled { get; set; } = true;
@@ -185,12 +212,22 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 throw new ArgumentNullException("ConnectionString", "ConnectionString is required to initialize TinyInsights");
             }
 
-            var configuration = new TelemetryConfiguration()
+            configuration = new TelemetryConfiguration()
             {
                 ConnectionString = ConnectionString
             };
 
             client = new TelemetryClient(configuration);
+
+            if (TelemetryChannel is not null)
+            {
+                configuration.TelemetryChannel = TelemetryChannel;
+
+                if (TelemetryChannel is ServerTelemetryChannel serverTelemetryChannel)
+                {
+                    InitializeServerChannel(serverTelemetryChannel);
+                }
+            }
 
             client.Context.Device.OperatingSystem = DeviceInfo.Platform.ToString();
             client.Context.Device.Model = DeviceInfo.Model;
@@ -254,6 +291,14 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
 
         return null;
+    }
+
+    private void InitializeServerChannel(ServerTelemetryChannel channel)
+    {
+        channel.StorageFolder = FileSystem.CacheDirectory;
+        Environment.SetEnvironmentVariable("TMPDIR", FileSystem.CacheDirectory);
+
+        channel.Initialize(configuration);
     }
 
     public void UpsertGlobalProperty(string key, string value)
