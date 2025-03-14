@@ -1,5 +1,6 @@
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
@@ -27,6 +28,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public bool IsTrackEventsEnabled { get; set; } = true;
     public bool IsTrackDependencyEnabled { get; set; } = true;
     public bool EnableConsoleLogging { get; set; }
+    public bool UseDependencyTrackingModule { get; set; } = false;
 
     private static ICrashHandler CreateDefaultCrashHandlerType() => new CrashToJsonFileStorageHandler();
 
@@ -189,6 +191,13 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             {
                 ConnectionString = ConnectionString
             };
+
+
+            if (UseDependencyTrackingModule)
+            {
+                var dependencyModule = new DependencyTrackingTelemetryModule();
+                dependencyModule.Initialize(configuration);
+            }
 
             client = new TelemetryClient(configuration);
 

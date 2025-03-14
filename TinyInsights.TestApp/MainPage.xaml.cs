@@ -6,13 +6,11 @@ namespace TinyInsights.TestApp;
 public partial class MainPage : ContentPage
 {
     private readonly IInsights insights;
-    private readonly InsightsMessageHandler insightsMessageHandler;
     private readonly ILogger logger;
 
-    public MainPage(IInsights insights, InsightsMessageHandler insightsMessageHandler, ILogger logger)
+    public MainPage(IInsights insights, ILogger logger)
     {
         this.insights = insights;
-        this.insightsMessageHandler = insightsMessageHandler;
         this.logger = logger;
         BindingContext = this;
         insights.OverrideAnonymousUserId("TestUser");
@@ -80,7 +78,7 @@ public partial class MainPage : ContentPage
 
     private async void TrackHttpButton_OnClicked(object? sender, EventArgs e)
     {
-        var client = new HttpClient(insightsMessageHandler);
+        var client = new HttpClient();
 
         for (int i = 0; i < 10; i++)
         {
