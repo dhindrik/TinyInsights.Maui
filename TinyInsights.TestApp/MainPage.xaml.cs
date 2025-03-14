@@ -107,4 +107,14 @@ public partial class MainPage : ContentPage
     {
         throw new CustomException();
     }
+
+    private void CrashWithUnobservedExceptionButton_OnClicked(object sender, EventArgs e)
+    {
+        Task.Run(() =>
+        {
+            throw new Exception("Unobserved exception text");
+        });
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+    }
 }

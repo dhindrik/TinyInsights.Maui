@@ -38,6 +38,11 @@
                 Clicked="CustomCrashButton_Clicked"
                 Text="Crash app with custom exception" />
 
+            <Button
+                x:Name="CrashWithUnobservedExceptionButton"
+                Clicked="CrashWithUnobservedExceptionButton_OnClicked"
+                Text="Throw task unobserved exception" />
+            
             <Button Clicked="NewPageButton_Clicked" Text="Test page automatic page tracking" />
 
             <Button Clicked="Button_Clicked" Text="clear gc" />
