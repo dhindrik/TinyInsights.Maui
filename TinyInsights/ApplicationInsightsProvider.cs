@@ -169,7 +169,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         crashHandler = customCrashHandler;
     }
-   
+
     public void Connect(string connectionString)
     {
         ArgumentNullException.ThrowIfNull(connectionString);
