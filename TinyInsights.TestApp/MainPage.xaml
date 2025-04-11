@@ -46,6 +46,9 @@
             <Button Clicked="NewPageButton_Clicked" Text="Test page automatic page tracking" />
 
             <Button Clicked="Button_Clicked" Text="clear gc" />
+
+            <Button Clicked="ConnectRetryButton_Clicked" Text="Simulate deferred connect" />
+
         </VerticalStackLayout>
     </ScrollView>
 

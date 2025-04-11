@@ -117,4 +117,11 @@ public partial class MainPage : ContentPage
         GC.Collect();
         GC.WaitForPendingFinalizers();
     }
+
+    private async void ConnectRetryButton_Clicked(object sender, EventArgs e)
+    {
+        bool wereAllInitialized = insights.AreAllProvidersInitialized;
+        bool becameAllInitialized = insights.Connect("InstrumentationKey=8b51208f-7926-4b7b-9867-16989206b950;IngestionEndpoint=https://swedencentral-0.in.applicationinsights.azure.com/;ApplicationId=0c04d3a0-9ee2-41a5-996e-526552dc730f");
+        await DisplayAlert("Result", $"Were all initialized (before the call): {wereAllInitialized}, became all initialized: {becameAllInitialized}", "Ok");
+    }
 }
