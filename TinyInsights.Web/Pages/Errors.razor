@@ -67,9 +67,12 @@
             {
                 <RadzenDataGrid Data="crashes" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
                     <Columns>
-                        <RadzenDataGridColumn TItem="CountPerKey" Title="Identifier" Property="@nameof(CountPerKey.Key)" />
-                        <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
-                        <RadzenDataGridColumn TItem="CountPerKey" Width="100px" TextAlign="TextAlign.End">
+                        <RadzenDataGridColumn TItem="CrashItem" Title="Identifier" Property="@nameof(CrashItem.Key)" />
+                        <RadzenDataGridColumn TItem="CrashItem" Title="Count" Property="@nameof(CrashItem.Count)" Width="100px" TextAlign="TextAlign.Center" />
+                        <RadzenDataGridColumn TItem="CrashItem" Title="Affected users" Property="@nameof(CrashItem.UsersAffected)" Width="200px" TextAlign="TextAlign.Center" />
+                        <RadzenDataGridColumn TItem="CrashItem" Title="Last affected version" Property="@nameof(CrashItem.LatestAppVersion)" Width="200px" />
+                        <RadzenDataGridColumn TItem="CrashItem" Title="Last report" Property="@nameof(CrashItem.LastReport)" Width="200px" />
+                        <RadzenDataGridColumn TItem="CrashItem" Width="100px" TextAlign="TextAlign.End">
                             <Template>
                                 <a href="@($"/diagnostics/{Type}/details/{context.Key}")">
                                     <RadzenIcon Icon="arrow_forward"/>
@@ -85,7 +88,7 @@
                     <Columns>
                         <RadzenDataGridColumn TItem="ErrorCount" Title="Identifier" Property="@nameof(ErrorCount.Key)" />
                         <RadzenDataGridColumn TItem="ErrorCount" Title="Severity" Property="@nameof(ErrorCount.ErrorSeverity)" Width="200px" />
-                        <RadzenDataGridColumn TItem="ErrorCount" Title="Count" Property="@nameof(ErrorCount.Count)" Width="100px" />
+                        <RadzenDataGridColumn TItem="ErrorCount" Title="Count" Property="@nameof(ErrorCount.Count)" Width="100px" TextAlign="TextAlign.Center" />
                         <RadzenDataGridColumn TItem="ErrorCount" Width="100px" TextAlign="TextAlign.End">
                             <Template>
                                 <a href="@($"/diagnostics/{Type}/details/{context.ErrorSeverity}/{context.Key}")">
@@ -108,7 +111,7 @@
     public required GlobalFilter GlobalFilter  {get;set;}
 
     private List<CountPerDay> errorsPerDays = new();
-    private List<CountPerKey>? crashes;
+    private List<CrashItem>? crashes;
     private List<ErrorCount>? errors;
     private bool isLoadingGraph, isLoadingList = true;
 
@@ -123,6 +126,9 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
+
+        crashes = null;
+        errors = null;
 
         if (Type == "crashes")
         {

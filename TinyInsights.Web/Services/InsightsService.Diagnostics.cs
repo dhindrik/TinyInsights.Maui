@@ -125,20 +125,27 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<CountPerKey>> GetCrashesGrouped(GlobalFilter filter)
+    public async Task<List<CrashItem>> GetCrashesGrouped(GlobalFilter filter)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by strcat(problemId, \" - \", outerMessage)";
+            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) | extend AppVersion = parse_version(tostring(customDimensions.AppVersion)) | summarize count_sum = sum(itemCount), users_affected = dcount(user_Id), latest_app_version = arg_max(AppVersion, customDimensions.AppVersion), last_reported = max(timestamp) by strcat(problemId, ' - ', outerMessage)";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 
-        var result = new List<CountPerKey>();
+        var result = new List<CrashItem>();
 
         foreach (var row in queryResult.Tables.First().Rows)
         {
-            result.Add(new CountPerKey(row.First().ToString(), int.Parse(row.Last().ToString())));
+            result.Add(new CrashItem()
+            {
+                Key = row[0].ToString(),
+                Count = int.Parse(row[1].ToString()),
+                UsersAffected = int.Parse(row[2].ToString()),
+                LatestAppVersion = row[4].ToString(),
+                LastReport = DateTime.Parse(row[5].ToString())
+            });
         }
 
         return result;

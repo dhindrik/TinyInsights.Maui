@@ -10,7 +10,7 @@ public interface IInsightsService
     #region Diagnostics
     Task<List<CountPerDay>> GetCrashesPerDay(GlobalFilter filter);
     Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter, List<string>? errorSeverities = null);
-    Task<List<CountPerKey>> GetCrashesGrouped(GlobalFilter filter);
+    Task<List<CrashItem>> GetCrashesGrouped(GlobalFilter filter);
     Task<List<ErrorCount>> GetErrorsGrouped(GlobalFilter filter, List<string>? errorSeverities = null);
     Task<ErrorDetails> GetCrashDetails(string id, GlobalFilter filter);
     Task<ErrorDetails> GetErrorDetails(string id, GlobalFilter filter, string? severity = null);
