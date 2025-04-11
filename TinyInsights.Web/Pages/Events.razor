@@ -11,6 +11,10 @@
 }
 else
 {
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <RadzenDatePicker @bind-Value="@from" @bind-Value:after="DateTimeFilterChanged" ShowTime="true" Placeholder="From" HoursStep="1" MinutesStep="5" SecondsStep="10" Min="min" Max="to" />
+        <RadzenDatePicker @bind-Value="@to" @bind-Value:after="DateTimeFilterChanged" ShowTime="true" Placeholder="To" HoursStep="1" MinutesStep="5" SecondsStep="10" Min="from" Max="max" />
+    </RadzenStack>
     <RadzenDataGrid Data="events" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
         <Columns>
             <RadzenDataGridColumn TItem="EventItem" Width="100px" Title="Event type" Property="@nameof(EventItem.EventType)">
@@ -41,6 +45,12 @@ else
 
     private bool isLoading = true;
     private List<EventItem> events = new();
+    private List<EventItem> allEvents = new();
+
+    private DateTime from;
+    private DateTime to;
+    private DateTime max;
+    private DateTime min;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -54,8 +64,15 @@ else
             }
             else
             {
-                events = await Service.GetEventsByUser(UserId, GlobalFilter);
+                events = await Service.GetEventsByUser(UserId, GlobalFilter);               
             }
+
+            allEvents = events;
+
+            from = events.Min(x => x.Timestamp);
+            to = events.Max(x => x.Timestamp);
+            min = from;
+            max = to;
         }
         catch (Exception ex)
         {
@@ -63,6 +80,12 @@ else
         }
 
         isLoading = false;
+    }
+
+    private void DateTimeFilterChanged()
+    {
+        events = events.Where(x => x.Timestamp >= from && x.Timestamp <= to).ToList();
+    
     }
 
     private async Task ShowAllProperties(EventItem item)
