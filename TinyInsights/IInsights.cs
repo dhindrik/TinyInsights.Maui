@@ -40,4 +40,17 @@ public interface IInsights
     void ResetCrashes();
 
     Task FlushAsync();
+
+    /// <summary>
+    /// Indicates whether all providers have been successfully initialized.
+    /// </summary>
+    bool AreAllProvidersInitialized { get; }
+
+    /// <summary>
+    /// Connects to Application Insights using the provided connection string.
+    /// Applied only to providers not yet initialized.
+    /// </summary>
+    /// <param name="applicationInsightsConnectionString">Connection string to initialize providers with</param>
+    /// <returns>True if all providers are initialized once operation is executed</returns>
+    bool Connect(string applicationInsightsConnectionString);
 }

@@ -54,6 +54,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     public bool IsTrackEventsEnabled { get; set; } = true;
     public bool IsTrackDependencyEnabled { get; set; } = true;
     public bool EnableConsoleLogging { get; set; }
+    public bool IsTelemetryClientInitialized => client is not null;
 
     private static ICrashHandler CreateDefaultCrashHandlerType() => new CrashToJsonFileStorageHandler();
 
@@ -168,7 +169,17 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
     {
         crashHandler = customCrashHandler;
     }
+   
+    public void Connect(string connectionString)
+    {
+        ArgumentNullException.ThrowIfNull(connectionString);
 
+        if (!IsTelemetryClientInitialized)
+        {
+            ConnectionString = connectionString;
+            CreateTelemetryClient();
+        }
+    }
 
     private static void OnAppearing(object? sender, Page e)
     {
@@ -209,7 +220,8 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             if (string.IsNullOrWhiteSpace(ConnectionString))
             {
-                throw new ArgumentNullException("ConnectionString", "ConnectionString is required to initialize TinyInsights");
+                Console.WriteLine("ConnectionString is required to initialize TinyInsights");
+                return null;
             }
 
             configuration = new TelemetryConfiguration()

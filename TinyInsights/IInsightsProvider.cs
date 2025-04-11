@@ -50,4 +50,12 @@ public interface IInsightsProvider
     Task FlushAsync();
 
     void SetCrashHandler(ICrashHandler customCrashHandler);
+
+    bool IsTelemetryClientInitialized { get; }
+
+    /// <summary>
+    /// Connects the provider's telemetry client to Application Insights service using the provided connection string.
+    /// If telemetry client is already initialized, this method will do nothing.
+    /// </summary> 
+    void Connect(string connectionString);
 }

@@ -25,6 +25,18 @@ public class Insights : IInsights
         insightsProviders.Add(provider);
     }
 
+    public bool Connect(string applicationInsightsConnectionString)
+    {
+        foreach (IInsightsProvider provider in insightsProviders.Where(p => !p.IsTelemetryClientInitialized))
+        {
+            provider.Connect(applicationInsightsConnectionString);
+        }
+
+        return AreAllProvidersInitialized;
+    }
+
+    public bool AreAllProvidersInitialized => insightsProviders.All(p => p.IsTelemetryClientInitialized);
+
     public IReadOnlyList<IInsightsProvider> GetProviders()
     {
         return insightsProviders;
