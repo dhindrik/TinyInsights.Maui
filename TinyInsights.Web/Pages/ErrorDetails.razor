@@ -9,142 +9,161 @@
 
 @inject IInsightsService Service
 @inject DialogService DialogService
+@inject TooltipService tooltipService
+
+<div>
+    <RadzenStack>
+        <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <a href="@backUrl" title="Back">
+                <RadzenIcon Icon="arrow_back" />
+            </a>
+            <GlobalFilters />
+
+        </RadzenRow>
+        <RadzenCard>
+
+            <h2>@detailsHeader</h2>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="20">
+
+                <LabelValuePair Key="ProblemId" Value="@Id" />
+
+                @if (isLoading)
+                {
+                    <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                }
+                else
+                {
+                    <LabelValuePair Key="Type" Value="@data.Items.First().Data["type"]" />
+
+                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
+                        <LabelValuePair Key="Count" Value="@data.Count.ToString()" />
+                        <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()" />
+                        <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))" />
+                        <LabelValuePair Key="Affected operating systems" Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
+                        @if (Severity is not null)
+                        {
+                            <LabelValuePair Key="Severity" Value="@Severity" />
+                        }
+                    </RadzenStack>
+                }
+            </RadzenStack>
+
+        </RadzenCard>
+
+        <RadzenCard>
+            <h2>@perDayHeader</h2>
+            @if (isLoading)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            }
+            else if(errorsPerDays is not null)
+            {
+                <RadzenChart>
+                    <RadzenLegend Visible="false" />
+                    <RadzenLineSeries Data="@errorsPerDays" CategoryProperty="Date" ValueProperty="Count">
+                        <RadzenMarkers MarkerType="MarkerType.Circle" />
+                        <RadzenSeriesDataLabels />
+                    </RadzenLineSeries>
+                    <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                </RadzenChart>
+            }
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenRow AlignItems="AlignItems.Center"><h2 class="error-info">Error info<RadzenIcon Icon="info" MouseEnter="ShowErrorInfoTooltip" /></h2></RadzenRow>
+
+            @if (isLoading)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            }
+            else if(selectedItem is not null)
+            {
+
+                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
+                    <LabelValuePair Key="App version" Value="@selectedItem.AppVersion" />
+                    <LabelValuePair Key="User Id" Value="@selectedItem.UserId" />
+                    <LabelValuePair Key="Device" Value="@selectedItem.ClientModel" />
+                    <LabelValuePair Key="Device OS" Value="@selectedItem.ClientOs" />
+                    <LabelValuePair Key="Device OS version" Value="@selectedItem.ClientOs" />
+                    <LabelValuePair Key="Device type" Value="@selectedItem.ClientType" />
+                    <LabelValuePair Key="Country" Value="@selectedItem.ClientCountry" />
+                </RadzenStack>
 
 
-<RadzenStack>
-    <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
-        <a href="@backUrl" title="Back">
-            <RadzenIcon Icon="arrow_back" />
-        </a>
-        <GlobalFilters />
+                <h3>Message</h3>
+                <p class="stacktrace">
+                    @if (selectedItem.Message is not null)
+                    {
+                        @data.Items.First().Message
+                    }
+                    else
+                    {
+                        <span>No message available</span>
+                    }
+                </p>
+                <h3>Stacktrace</h3>
+                <p class="stacktrace">
+                    @if (selectedItem.StackTrace is not null)
+                    {
+                        <code>
+                            @((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@data.Items.First().StackTrace ?? string.Empty), "\r?\n|\r", "<br />"));
+                        </code>
+                    }
+                    else
+                    {
+                        <span>No stacktrace available</span>
+                    }
+                </p>
 
-    </RadzenRow>
-    <RadzenCard>
-
-        <h2>@detailsHeader</h2>
-        <RadzenStack Orientation="Orientation.Vertical" Gap="20">
-
-            <LabelValuePair Key="ProblemId" Value="@Id" />
-
+                <RadzenRow @onclick="@(() => isPropertiesExpanded = !isPropertiesExpanded)" AlignItems="AlignItems.Center"><h3 class="all-properties">All properties <RadzenIcon Icon="@(isPropertiesExpanded ? "collapse_all" : "expand_all")" /></h3></RadzenRow>
+                
+                @if (isPropertiesExpanded)
+                {
+                    <AllProperties Properties="selectedItem.Data" />
+                }
+            }
+        </RadzenCard>
+        <RadzenCard>
+            <h2>@listHeader</h2>
+            @if (data.Items.Count == 100)
+            {
+                <p>Note! Only the latest 100 items are shown.</p><br />
+            }
             @if (isLoading)
             {
                 <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
             }
             else
             {
-                <LabelValuePair Key="Type" Value="@data.Items.First().Data["type"]" />
-
-                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
-                    <LabelValuePair Key="Count" Value="@data.Count.ToString()" />
-                    <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()" />
-                    <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))" />
-                    <LabelValuePair Key="Affected operating systems" Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
-                    @if (Severity is not null)
-                    {
-                        <LabelValuePair Key="Severity" Value="@Severity" />
-                    }
-                </RadzenStack>
+                <RadzenDataGrid TItem="ErrorItem" Data="data.Items" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true"
+                SelectionMode="DataGridSelectionMode.Single" @bind-Value="@selectedItems" @bind-Value:after="SelectionChanged">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="ErrorItem" Width="50px">
+                            <Template>
+                                <RadzenCheckBox Value="context.IsSelected" />
+                            </Template>                        
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ErrorItem" Title="Timestamp" Property="@nameof(ErrorItem.Timestamp)" />
+                        <RadzenDataGridColumn TItem="ErrorItem" Title="Device" Property="@nameof(ErrorItem.ClientModel)" />
+                        <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS" Property="@nameof(ErrorItem.ClientOs)" />
+                        <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS version" Property="@nameof(ErrorItem.ClientOsVersion)" />
+                        <RadzenDataGridColumn TItem="ErrorItem" Title="Country" Property="@nameof(ErrorItem.ClientCountry)" />
+                        <RadzenDataGridColumn TItem="ErrorItem" Width="100px">
+                            <Template>
+                                <RadzenButton Icon="description" Click="@(async (args) => await ShowAllProperties(context))" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ErrorItem" Width="100px">
+                            <Template>
+                                <RadzenButton Icon="format_list_numbered" Click="@(async (args) => await ShowEvents(context))" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>               
             }
-        </RadzenStack>
-
-    </RadzenCard>
-
-    <RadzenCard>
-        <h2>@perDayHeader</h2>
-        @if (isLoading)
-        {
-            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-        }
-        else if(errorsPerDays is not null)
-        {
-            <RadzenChart>
-                <RadzenLegend Visible="false" />
-                <RadzenLineSeries Data="@errorsPerDays" CategoryProperty="Date" ValueProperty="Count">
-                    <RadzenMarkers MarkerType="MarkerType.Circle" />
-                    <RadzenSeriesDataLabels />
-                </RadzenLineSeries>
-                <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
-            </RadzenChart>
-        }
-    </RadzenCard>
-
-    <RadzenCard>
-        <h2>Info</h2>
-        @if (isLoading)
-        {
-            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-        }
-        else
-        {
-            <p class="stacktrace">
-                @if (data.Items.Count > 0 && data.Items.First().Message is not null)
-                {
-                    @data.Items.First().Message
-                }
-                else
-                {
-                    <span>No message available</span>
-                }
-            </p>
-        }
-    </RadzenCard>
-    <RadzenCard>
-        <h2>Stacktrace</h2>
-        @if (isLoading)
-        {
-            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-        }
-        else
-        {
-            <p class="stacktrace">
-                @if (data.Items.Count > 0 && data.Items.First().StackTrace is not null)
-                {
-                    <code>
-                        @((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@data.Items.First().StackTrace ?? string.Empty), "\r?\n|\r", "<br />"));
-                    </code>
-                }
-                else
-                {
-                    <span>No stacktrace available</span>
-                }
-            </p>
-        }
-    </RadzenCard>
-    <RadzenCard>
-        <h2>@listHeader</h2>
-        @if (data.Items.Count == 100)
-        {
-            <p>Note! Only the latest 100 items are shown.</p><br />
-        }
-        @if (isLoading)
-        {
-            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-        }
-        else
-        {
-            <RadzenDataGrid Data="data.Items" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
-                <Columns>
-                    <RadzenDataGridColumn TItem="ErrorItem" Title="Timestamp" Property="@nameof(ErrorItem.Timestamp)" />
-                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device" Property="@nameof(ErrorItem.ClientModel)" />
-                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS" Property="@nameof(ErrorItem.ClientOs)" />
-                    <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS version" Property="@nameof(ErrorItem.ClientOsVersion)" />
-                    <RadzenDataGridColumn TItem="ErrorItem" Title="Country" Property="@nameof(ErrorItem.ClientCountry)" />
-                    <RadzenDataGridColumn TItem="ErrorItem" Width="100px">
-                        <Template>
-                            <RadzenButton Icon="description" Click="@(async (args) => await ShowAllProperties(context))" />
-                        </Template>
-                    </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="ErrorItem" Width="100px">
-                        <Template>
-                            <RadzenButton Icon="format_list_numbered" Click="@(async (args) => await ShowEvents(context))" />
-                        </Template>
-                    </RadzenDataGridColumn>
-                </Columns>
-            </RadzenDataGrid>
-        }
-    </RadzenCard>
-</RadzenStack>
-
+        </RadzenCard>
+    </RadzenStack>
+</div>
 
 @code {
     [Parameter]
@@ -161,7 +180,11 @@
     private string backUrl = string.Empty, detailsHeader = string.Empty, listHeader = string.Empty, perDayHeader = string.Empty;
 
     private Services.Models.ErrorDetails data = new();
+    private ErrorItem? selectedItem;
+    private IList<ErrorItem> selectedItems = [];
     private List<CountPerDay>? errorsPerDays;
+
+    private bool isPropertiesExpanded;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -205,7 +228,15 @@
             {
                 data = await Service.GetErrorDetails(escapedId, GlobalFilter, Severity);
                 errorsPerDays = await Service.GetErrorDetailsPerDay(escapedId, GlobalFilter, Severity);
-            }           
+            }
+
+            selectedItem = data.Items.FirstOrDefault();
+
+            if(selectedItem is not null)
+            {
+                selectedItem.IsSelected = true;
+                selectedItems.Add(selectedItem);
+            }
         }
         catch (Exception ex)
         {
@@ -213,6 +244,25 @@
         }
 
         isLoading = false;
+    }
+
+    private void SelectionChanged()
+    {
+        if (selectedItem is not null)
+        {
+            selectedItem.IsSelected = false;           
+        }
+
+        selectedItem = selectedItems.FirstOrDefault();
+
+        if (selectedItem is not null)
+        {
+            selectedItem.IsSelected = true;
+        }
+
+        isPropertiesExpanded = false;
+
+        StateHasChanged();
     }
 
     private async Task ShowAllProperties(ErrorItem item)
@@ -228,5 +278,7 @@
             new Dictionary<string, object>() { { "UserId", item.UserId }, { "Timestamp", item.Timestamp } },
             new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true });
     }
+
+    private void ShowErrorInfoTooltip(ElementReference elementReference) => tooltipService.Open(elementReference, "Select an error item in the list below to load info about that specific error.", new TooltipOptions() { Style = "background: #757575; color: white;" });
 }
 

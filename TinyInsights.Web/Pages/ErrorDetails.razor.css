@@ -2,3 +2,23 @@
 {
     font-family: Monaco, Menlo, Courier;
 }
+::deep .rz-data-row {
+    cursor: pointer;
+}
+
+.all-properties
+{
+    cursor:pointer;
+}
+
+    .all-properties > ::deep .rzi {
+        position: relative;
+        top: 5px;
+        left: 5px;
+    }
+
+.error-info > ::deep .rzi {
+    position: relative;
+    top: 5px;
+    left: 5px;
+}

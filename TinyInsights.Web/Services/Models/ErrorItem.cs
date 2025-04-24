@@ -50,4 +50,6 @@ public class ErrorItem : LogItem
     {
         return Data.GetValueOrDefault(key);
     }
+
+    public bool IsSelected { get; set; }
 }

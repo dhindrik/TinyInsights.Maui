@@ -1,3 +1,4 @@
 .wrap {
     white-space:pre-wrap;
 }
+td {vertical-align:top;}
