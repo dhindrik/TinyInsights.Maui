@@ -462,6 +462,7 @@ public partial class InsightsService : IInsightsService
                 data.Add(nameof(CustomDimensions.Language), custom.Language);
                 data.Add(nameof(CustomDimensions.StackTrace), custom.StackTrace);
                 data.Add(nameof(CustomDimensions.Manufacturer), custom.Manufacturer);
+                data.Add(nameof(CustomDimensions.OperatingSystemVersion), custom.OperatingSystemVersion);
 
                 if (custom.FullUrl is not null)
                 {
@@ -555,4 +556,5 @@ public class CustomDimensions
     public string? Manufacturer { get; set; }
     public string? FullUrl { get; set; }
     public string? HttpMethod { get; set; }
+    public string? OperatingSystemVersion { get; set; }
 }

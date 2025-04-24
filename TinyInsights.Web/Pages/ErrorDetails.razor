@@ -88,7 +88,7 @@
                     </LabelValuePair>
                     <LabelValuePair Key="Device" Value="@selectedItem.ClientModel" />
                     <LabelValuePair Key="Device OS" Value="@selectedItem.ClientOs" />
-                    <LabelValuePair Key="Device OS version" Value="@selectedItem.ClientOs" />
+                    <LabelValuePair Key="Device OS version" Value="@selectedItem.ClientOsVersion" />
                     <LabelValuePair Key="Device type" Value="@selectedItem.ClientType" />
                     <LabelValuePair Key="Country" Value="@selectedItem.ClientCountry" />
                 </RadzenStack>
@@ -148,6 +148,7 @@
                             </Template>                        
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn TItem="ErrorItem" Title="Timestamp" Property="@nameof(ErrorItem.Timestamp)" />
+                        <RadzenDataGridColumn TItem="ErrorItem" Title="App version" Property="@nameof(ErrorItem.AppVersion)" />
                         <RadzenDataGridColumn TItem="ErrorItem" Title="Device" Property="@nameof(ErrorItem.ClientModel)" />
                         <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS" Property="@nameof(ErrorItem.ClientOs)" />
                         <RadzenDataGridColumn TItem="ErrorItem" Title="Device OS version" Property="@nameof(ErrorItem.ClientOsVersion)" />
