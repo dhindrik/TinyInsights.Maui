@@ -81,7 +81,11 @@
 
                 <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
                     <LabelValuePair Key="App version" Value="@selectedItem.AppVersion" />
-                    <LabelValuePair Key="User Id" Value="@selectedItem.UserId" />
+                    <LabelValuePair Key="User Id">
+                        <Template>
+                                    <a href="/SearchResult/@selectedItem.UserId"><b>@selectedItem.UserId</b></a>
+                        </Template>
+                    </LabelValuePair>
                     <LabelValuePair Key="Device" Value="@selectedItem.ClientModel" />
                     <LabelValuePair Key="Device OS" Value="@selectedItem.ClientOs" />
                     <LabelValuePair Key="Device OS version" Value="@selectedItem.ClientOs" />

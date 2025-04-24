@@ -1,6 +1,14 @@
 <RadzenStack AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Start" Gap="0">
     <RadzenText TextStyle="TextStyle.Caption" Text="@Key" />
-    <span>@Value</span>
+    @if (Template is not null)
+    {       
+            @Template     
+    }
+    else
+    {
+        <span>@Value</span>
+    }
+    
 </RadzenStack>
 
 
@@ -9,4 +17,6 @@
     public string? Key { get; set; }
     [Parameter]
     public string? Value { get; set; }
+    [Parameter]
+    public RenderFragment? Template { get; set; }
 }
