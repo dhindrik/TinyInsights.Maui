@@ -69,6 +69,14 @@ public partial class InsightsService
         return GetPerKeyResult(query);
     }
 
+    public Task<List<CountPerKey>> GetUsersPerAppVersion(GlobalFilter filter)
+    {
+        var queryFilter = GetFilter(filter);
+        var query = $"pageViews | extend appVersion = tostring(customDimensions.AppVersion) | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize arg_max(timestamp, *) by user_Id | summarize PageViewsCount = dcount(user_Id) by appVersion";
+
+        return GetPerKeyResult(query);
+    }
+
     public Task<List<CountPerKey>> GetUsersPerIdiom(GlobalFilter filter)
     {
 

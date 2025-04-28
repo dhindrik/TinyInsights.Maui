@@ -21,11 +21,25 @@
                     }
                     else
                     {
-                        <RadzenChart>
-                            <RadzenPieSeries Data="@operatingSystemUsers" Title="Users" CategoryProperty="Key" ValueProperty="Percent">
-                                <RadzenSeriesDataLabels Visible="true" />
-                            </RadzenPieSeries>
-                        </RadzenChart>
+                        <RadzenTabs TabPosition="TabPosition.TopRight">
+                            <Tabs>
+                                <RadzenTabsItem Icon="list">
+                                    <RadzenDataGrid Data="operatingSystemUsers">
+                                        <Columns>
+                                            <RadzenDataGridColumn TItem="CountPerKey" Title="Country" Property="@nameof(CountPerKey.Key)" />
+                                            <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                                        </Columns>
+                                    </RadzenDataGrid>
+                                </RadzenTabsItem>
+                                <RadzenTabsItem Icon="pie_chart">
+                                    <RadzenChart>
+                                        <RadzenPieSeries Data="@operatingSystemUsers" Title="Users" CategoryProperty="@nameof(CountPerKey.Key)" ValueProperty="@nameof(CountPerKey.Count)">
+                                            <RadzenSeriesDataLabels Visible="true" />
+                                        </RadzenPieSeries>
+                                    </RadzenChart>
+                                </RadzenTabsItem>
+                            </Tabs>
+                        </RadzenTabs>
                     }
                 </RadzenStack>
             </RadzenCard>
@@ -40,11 +54,25 @@
                     }
                     else
                     {
-                        <RadzenChart>
-                            <RadzenPieSeries Data="@idiomUsers" Title="Users" CategoryProperty="Key" ValueProperty="Percent">
-                                <RadzenSeriesDataLabels Visible="true" />
-                            </RadzenPieSeries>
-                        </RadzenChart>
+                        <RadzenTabs TabPosition="TabPosition.TopRight">
+                            <Tabs>
+                                <RadzenTabsItem Icon="list">
+                                    <RadzenDataGrid Data="idiomUsers">
+                                        <Columns>
+                                            <RadzenDataGridColumn TItem="CountPerKey" Title="Country" Property="@nameof(CountPerKey.Key)" />
+                                            <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                                        </Columns>
+                                    </RadzenDataGrid>
+                                </RadzenTabsItem>
+                                <RadzenTabsItem Icon="pie_chart">
+                                    <RadzenChart>
+                                        <RadzenPieSeries Data="@idiomUsers" Title="Users" CategoryProperty="@nameof(CountPerKey.Key)" ValueProperty="@nameof(CountPerKey.Count)">
+                                            <RadzenSeriesDataLabels Visible="true" />
+                                        </RadzenPieSeries>
+                                    </RadzenChart>
+                                </RadzenTabsItem>
+                            </Tabs>
+                        </RadzenTabs>
                     }
                 </RadzenStack>
             </RadzenCard>
@@ -59,19 +87,29 @@
                     }
                     else
                     {
-                        <RadzenChart>
-                            <RadzenPieSeries Data="@manufactures" Title="Users" CategoryProperty="Key" ValueProperty="Percent">
-                                <RadzenSeriesDataLabels Visible="true" />
-                            </RadzenPieSeries>
-                        </RadzenChart>
+                        <RadzenTabs TabPosition="TabPosition.TopRight">
+                            <Tabs>
+                                <RadzenTabsItem Icon="list">
+                                    <RadzenDataGrid Data="manufactures">
+                                        <Columns>
+                                            <RadzenDataGridColumn TItem="CountPerKey" Title="Country" Property="@nameof(CountPerKey.Key)" />
+                                            <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                                        </Columns>
+                                    </RadzenDataGrid>
+                                </RadzenTabsItem>
+                                <RadzenTabsItem Icon="pie_chart">
+                                    <RadzenChart>
+                                        <RadzenPieSeries Data="@manufactures" Title="Users" CategoryProperty="@nameof(CountPerKey.Key)" ValueProperty="@nameof(CountPerKey.Count)">
+                                            <RadzenSeriesDataLabels Visible="true" />
+                                        </RadzenPieSeries>
+                                    </RadzenChart>
+                                </RadzenTabsItem>
+                            </Tabs>
+                        </RadzenTabs>
                     }
                 </RadzenStack>
             </RadzenCard>
         </div>
-            
-
-    </div>
-    <div class="wrapbox">
         <div class="wrapitem">
             <RadzenCard>
                 <RadzenStack>
@@ -82,16 +120,30 @@
                     }
                     else
                     {
-                        <RadzenDataGrid Data="operatingSystemVersions" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
-                            <Columns>
-                                <RadzenDataGridColumn TItem="CountPerKey" Title="Operating system version" Property="@nameof(CountPerKey.Key)" />
-                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
-                            </Columns>
-                        </RadzenDataGrid>
+                        <RadzenTabs TabPosition="TabPosition.TopRight">
+                            <Tabs>
+                                <RadzenTabsItem Icon="list">
+                                    <RadzenDataGrid Data="operatingSystemVersions">
+                                        <Columns>
+                                            <RadzenDataGridColumn TItem="CountPerKey" Title="Country" Property="@nameof(CountPerKey.Key)" />
+                                            <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                                        </Columns>
+                                    </RadzenDataGrid>
+                                </RadzenTabsItem>
+                                <RadzenTabsItem Icon="pie_chart">
+                                    <RadzenChart>
+                                        <RadzenPieSeries Data="@operatingSystemVersions" Title="Users" CategoryProperty="@nameof(CountPerKey.Key)" ValueProperty="@nameof(CountPerKey.Count)">
+                                            <RadzenSeriesDataLabels Visible="true" />
+                                        </RadzenPieSeries>
+                                    </RadzenChart>
+                                </RadzenTabsItem>
+                            </Tabs>
+                        </RadzenTabs>
                     }
                 </RadzenStack>
             </RadzenCard>
         </div>
+
     </div>
 
 </RadzenStack>
@@ -101,9 +153,9 @@
 
     private bool isLoadingIdiom = true, isLoadingOperatingSystems = true, isLoadingManufactures = true, isLoadingOperatingSystemVersions = true;
 
-    private List<PercentPerKey> idiomUsers = new();
-    private List<PercentPerKey> operatingSystemUsers = new();
-    private List<PercentPerKey> manufactures = new();
+    private List<CountPerKey> idiomUsers = new();
+    private List<CountPerKey> operatingSystemUsers = new();
+    private List<CountPerKey> manufactures = new();
     private List<CountPerKey> operatingSystemVersions = new();
 
     protected override async Task OnParametersSetAsync()
@@ -116,16 +168,15 @@
         }
         catch(Exception ex)
         {
-           HandleException(ex);
+            HandleException(ex);
         }
     }
 
     private async Task LoadUserIdioms()
     {
         isLoadingIdiom = true;
-        var result = await Service.GetUsersPerIdiom(GlobalFilter);
-        var total = result.Sum(x => x.Count);
-        idiomUsers = result.Select(x => new PercentPerKey(x.Key, x.Count)).ToList();
+        idiomUsers = await Service.GetUsersPerIdiom(GlobalFilter);
+        
         isLoadingIdiom = false;
 
         StateHasChanged();
@@ -134,9 +185,8 @@
     private async Task LoadUserOperatingSystems()
     {
         isLoadingOperatingSystems = true;
-        var result = await Service.GetUsersPerOperatingSystem(GlobalFilter);
-        var total = result.Sum(x => x.Count);
-        operatingSystemUsers = result.Select(x => new PercentPerKey(x.Key, x.Count)).ToList();
+        operatingSystemUsers = await Service.GetUsersPerOperatingSystem(GlobalFilter);
+       
         isLoadingOperatingSystems = false;
 
         StateHasChanged();
@@ -145,9 +195,8 @@
     private async Task LoadManufactures()
     {
         isLoadingManufactures = true;
-        var result = await Service.GetUserPerManufacturer(GlobalFilter);
-        var total = result.Sum(x => x.Count);
-        manufactures = result.Select(x => new PercentPerKey(x.Key, x.Count)).ToList();
+        manufactures = await Service.GetUserPerManufacturer(GlobalFilter);
+       
         isLoadingManufactures = false;
 
         StateHasChanged();  

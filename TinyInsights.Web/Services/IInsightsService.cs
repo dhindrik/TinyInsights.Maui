@@ -40,6 +40,7 @@ public interface IInsightsService
     Task<List<CountPerKey>> GetUserPerManufacturer(GlobalFilter filter);
     Task<List<CountPerDay>> GetSessionsPerDay(GlobalFilter filter);
     Task<List<CountPerKey>> GetUsersPerOperatingSystemVersion(GlobalFilter filter);
+    Task<List<CountPerKey>> GetUsersPerAppVersion(GlobalFilter filter);
     #endregion
 
 }

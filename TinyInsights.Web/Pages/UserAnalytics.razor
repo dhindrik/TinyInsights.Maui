@@ -40,6 +40,8 @@
                 }
                 else
                 {
+
+
                     <RadzenChart>
                         <RadzenLegend Visible="false" />
                         <RadzenLineSeries Data="@sessionsPerDay" CategoryProperty="Date" ValueProperty="Count">
@@ -64,12 +66,27 @@
                     }
                     else
                     {
-                        <RadzenDataGrid Data="usersPerCountry">
-                            <Columns>
-                                <RadzenDataGridColumn TItem="CountPerKey" Title="Country" Property="@nameof(CountPerKey.Key)" />
-                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
-                            </Columns>
+                        <RadzenTabs TabPosition="TabPosition.TopRight">
+                            <Tabs>
+                                    <RadzenTabsItem Icon="list">
+                                          <RadzenDataGrid Data="usersPerCountry">
+                                            <Columns>
+                                                <RadzenDataGridColumn TItem="CountPerKey" Title="Country" Property="@nameof(CountPerKey.Key)" />
+                                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                                            </Columns>
                         </RadzenDataGrid>
+                        </RadzenTabsItem>
+                                <RadzenTabsItem Icon="pie_chart">
+                                        <RadzenChart>
+                                            <RadzenPieSeries Data="@usersPerCountry" Title="Users" CategoryProperty="Key" ValueProperty="Count">
+                                                <RadzenSeriesDataLabels Visible="true" />
+                                            </RadzenPieSeries>
+                                        </RadzenChart>
+                                </RadzenTabsItem>
+
+                            </Tabs>
+                        </RadzenTabs>
+                      
                     }
                 </RadzenStack>
             </RadzenCard>
@@ -85,12 +102,63 @@
                     }
                     else
                     {
-                        <RadzenDataGrid Data="usersPerLanguage">
-                            <Columns>
-                                <RadzenDataGridColumn TItem="CountPerKey" Title="Language" Property="@nameof(CountPerKey.Key)" />
-                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
-                            </Columns>
-                        </RadzenDataGrid>
+                            <RadzenTabs TabPosition="TabPosition.TopRight">
+                                <Tabs>
+                                    <RadzenTabsItem Icon="list">
+                                        <RadzenDataGrid Data="usersPerLanguage">
+                                            <Columns>
+                                                <RadzenDataGridColumn TItem="CountPerKey" Title="Language" Property="@nameof(CountPerKey.Key)" />
+                                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                                            </Columns>
+                                        </RadzenDataGrid>
+                                    </RadzenTabsItem>
+                                    <RadzenTabsItem Icon="pie_chart">
+                                        <RadzenChart>
+                                            <RadzenPieSeries Data="@usersPerLanguage" Title="Users" CategoryProperty="Key" ValueProperty="Count">
+                                                <RadzenSeriesDataLabels Visible="true" />
+                                            </RadzenPieSeries>
+                                        </RadzenChart>
+                                    </RadzenTabsItem>
+
+                                </Tabs>
+                            </RadzenTabs>                      
+                    }
+                </RadzenStack>
+            </RadzenCard>
+            </div>
+        </div>
+        
+        <div class="wrapbox">
+            <div class="wrapitem">
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>Users per app version</h2>
+
+                    @if (isLoadingAppVersions)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+                    else
+                    {
+                            <RadzenTabs TabPosition="TabPosition.TopRight">
+                                <Tabs>
+                                    <RadzenTabsItem Icon="list">
+                                        <RadzenDataGrid Data="usersPerAppVersion">
+                                            <Columns>
+                                                <RadzenDataGridColumn TItem="CountPerKey" Title="Language" Property="@nameof(CountPerKey.Key)" />
+                                                <RadzenDataGridColumn TItem="CountPerKey" Title="Count" Property="@nameof(CountPerKey.Count)" Width="100px" />
+                                            </Columns>
+                                        </RadzenDataGrid>
+                                    </RadzenTabsItem>
+                                    <RadzenTabsItem Icon="pie_chart">
+                                        <RadzenChart>
+                                            <RadzenPieSeries Data="@usersPerAppVersion" Title="Users" CategoryProperty="Key" ValueProperty="Count">
+                                                <RadzenSeriesDataLabels Visible="true" />
+                                            </RadzenPieSeries>
+                                        </RadzenChart>
+                                    </RadzenTabsItem>
+                                </Tabs>
+                            </RadzenTabs>                         
                     }
                 </RadzenStack>
             </RadzenCard>
@@ -98,15 +166,18 @@
         </div>
     </RadzenStack>
 </div>
+
+
 @code {
     [CascadingParameter]
     public GlobalFilter GlobalFilter { get; set; }
 
-    private bool isLoadingUsersPerDayViews = true, isLoadingCountryList = true, isLoadingUsersPerLanguage, isLoadingSessionsPerDay;
+    private bool isLoadingUsersPerDayViews = true, isLoadingCountryList = true, isLoadingUsersPerLanguage, isLoadingSessionsPerDay, isLoadingAppVersions;
     private List<CountPerDay> usersPerDay = new();
     private List<CountPerDay> sessionsPerDay = new();
     private List<CountPerKey> usersPerCountry = new();
     private List<CountPerKey> usersPerLanguage = new();
+    private List<CountPerKey> usersPerAppVersion = new();
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
@@ -118,7 +189,7 @@
     {
         try
         {
-            await Task.WhenAll(LoadUsersPerDay(), LoadCountries(), LoadLanguageList(), LoadSessionsPerDay());
+            await Task.WhenAll(LoadUsersPerDay(), LoadCountries(), LoadLanguageList(), LoadSessionsPerDay(), LoadAppVersions());
         }
         catch (Exception ex)
         {
@@ -198,6 +269,19 @@
         usersPerLanguage = result.OrderByDescending(x => x.Count).ToList();
 
         isLoadingUsersPerLanguage = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadAppVersions()
+    {
+        isLoadingAppVersions = true;
+
+        var result = await Service.GetUsersPerAppVersion(GlobalFilter);
+
+        usersPerAppVersion = result.OrderByDescending(x => x.Count).ToList();
+
+        isLoadingAppVersions = false;
 
         await InvokeAsync(StateHasChanged);
     }
