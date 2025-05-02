@@ -195,7 +195,8 @@
     private async Task LoadManufactures()
     {
         isLoadingManufactures = true;
-        manufactures = await Service.GetUserPerManufacturer(GlobalFilter);
+        var result = await Service.GetUserPerManufacturer(GlobalFilter);
+        manufactures = result.OrderByDescending(x => x.Count).ToList();
        
         isLoadingManufactures = false;
 
