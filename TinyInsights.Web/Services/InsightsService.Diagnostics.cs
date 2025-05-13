@@ -215,16 +215,18 @@ public partial class InsightsService : IInsightsService
         var toDate = to.ToUniversalTime().ToString("o");
         var fromDate = from.ToUniversalTime().ToString("o");
 
+        userId = userId.ToLower();
+
         var eventQuery =
-            $"customEvents| where user_Id == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
+            $"customEvents| where tolower(user_Id) == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
         var pageViewsQuery =
-            $"pageViews| where user_Id == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
+            $"pageViews| where tolower(user_Id) == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
         var errorsQuery =
-            $"exceptions | where user_Id == '{userId}' and customDimensions.IsCrash == 'true' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
+            $"exceptions | where tolower(user_Id) == '{userId}' and customDimensions.IsCrash == 'true' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
         var crashQuery =
-            $"exceptions | where user_Id == '{userId}' and customDimensions.IsCrash != 'true' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
+            $"exceptions | where tolower(user_Id) == '{userId}' and customDimensions.IsCrash != 'true' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
         var dependencyQuery =
-            $"dependencies | where user_Id == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
+            $"dependencies | where tolower(user_Id) == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
 
         var pageViewsTask = GetQueryResult<QueryResult>(pageViewsQuery);
         var eventsTask = GetQueryResult<QueryResult>(eventQuery);
