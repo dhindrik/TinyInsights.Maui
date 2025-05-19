@@ -457,23 +457,13 @@ public partial class InsightsService : IInsightsService
             {
                 var json = current.ToString();
 
-                var custom = JsonSerializer.Deserialize<CustomDimensions>(json);
-
-                data.Add(nameof(CustomDimensions.AppBuildNumber), custom.AppBuildNumber);
-                data.Add(nameof(CustomDimensions.AppVersion), custom.AppVersion);
-                data.Add(nameof(CustomDimensions.Language), custom.Language);
-                data.Add(nameof(CustomDimensions.StackTrace), custom.StackTrace);
-                data.Add(nameof(CustomDimensions.Manufacturer), custom.Manufacturer);
-                data.Add(nameof(CustomDimensions.OperatingSystemVersion), custom.OperatingSystemVersion);
-
-                if (custom.FullUrl is not null)
+                if (!string.IsNullOrWhiteSpace(json))
                 {
-                    data.Add(nameof(CustomDimensions.FullUrl), custom.FullUrl);
-                }
-
-                if (custom.HttpMethod is not null)
-                {
-                    data.Add(nameof(CustomDimensions.HttpMethod), custom.HttpMethod);
+                    using var doc = JsonDocument.Parse(json);
+                    foreach (var property in doc.RootElement.EnumerateObject())
+                    {
+                        data[property.Name] = property.Value.ValueKind == JsonValueKind.Null ? null : property.Value.ToString();
+                    }
                 }
             }
             else
