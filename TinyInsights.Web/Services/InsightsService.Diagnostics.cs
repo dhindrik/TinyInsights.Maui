@@ -6,8 +6,6 @@ namespace TinyInsights.Web.Services;
 
 public partial class InsightsService : IInsightsService
 {
-    public event EventHandler UnAuthorized;
-
     private readonly HttpClient httpClient;
 
     private string? appId;
@@ -367,7 +365,7 @@ public partial class InsightsService : IInsightsService
     {
         var queryFilter = GetFilter(filter);
 
-        var query = $"dependencies | where{queryFilter} success == false and resultCode != ''| distinct resultCode ";
+        var query = $"dependencies | where{queryFilter} success == false and resultCode != ''| distinct resultCode";
 
         var queryResult = await GetQueryResult<QueryResult>(query);
 

@@ -42,7 +42,7 @@
     [CascadingParameter]
     public GlobalFilter GlobalFilter  {get;set;}
 
-    private bool isLoadingPageViews, isLoadingList = true;
+    private bool isLoadingList = true;
     private List<CountPerKey> events = new();
 
     protected override async Task OnParametersSetAsync()

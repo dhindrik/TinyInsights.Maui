@@ -150,19 +150,33 @@
 
     private async Task LoadData()
     {
+
+        //It seems not to work with Task.WhenAll here, maybe becasue WASM is single threaded. 
         try
         {
-            var topTask = LoadTopDependencies();
-            var avgTask = LoadDependencyDuration();
-            var failedTask = LoadFailedDependencies();
-            var failedPerDaysTask = LoadFailedDependenciesPerDays();
-
-            await Task.WhenAll(topTask, avgTask, failedTask, failedPerDaysTask);
+            await LoadFailedDependenciesPerDays();
+            await LoadFailedDependencies();
+            await LoadTopDependencies();
+            await LoadDependencyDuration();          
         }
         catch (Exception ex)
         {
             HandleException(ex);
         }
+
+        // try
+        // {
+        //     var topTask = LoadTopDependencies();
+        //     var avgTask = LoadDependencyDuration();
+        //     var failedTask = LoadFailedDependencies();
+        //     var failedPerDaysTask = LoadFailedDependenciesPerDays();
+
+        //     await Task.WhenAll(topTask, avgTask, failedTask, failedPerDaysTask);
+        // }
+        // catch (Exception ex)
+        // {
+        //     HandleException(ex);
+        // }
     }
 
     private async Task LoadTopDependencies()
