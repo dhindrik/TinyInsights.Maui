@@ -94,20 +94,20 @@
 
     private bool isLoading = true;
 
-    [CascadingParameter]
-    public required GlobalFilter GlobalFilter { get; set; }
+    private CancellationTokenSource cts = new();
+
     protected override async Task OnParametersSetAsync()
     {
-        await LoadData();
+        await LoadData(cts.Token);
     }
 
-    private async Task LoadData()
+    private async Task LoadData(CancellationToken cancellationToken = default)
     {
         try
         {
             isLoading = true;
             
-            data = await Service.GetFailedDependencies(Key, Method, GlobalFilter);
+            data = await Service.GetFailedDependencies(Key, Method, GlobalFilter, cancellationToken);
             data.Items = data.Items.OrderByDescending(x => x.Timestamp).ToList();
             failedDependenciesPerDays = data.Items.GroupBy(x => x.Timestamp.Date).Select(x => new Services.Models.CountPerDay(DateOnly.FromDateTime(x.Key), x.Count())).OrderBy(x => x.Date).ToList();
 

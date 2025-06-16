@@ -45,9 +45,6 @@
     [Parameter]
     public required string EventName { get; set; }
 
-    [CascadingParameter]
-    public required GlobalFilter GlobalFilter { get; set; }
-
     private List<CountPerDay> perDays = new();
     private bool isLoadingPerDays = true;
 

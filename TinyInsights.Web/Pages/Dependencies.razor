@@ -124,8 +124,6 @@
 </div>
 @code {
 
-    [CascadingParameter]
-    public required GlobalFilter GlobalFilter { get; set; }
 
     private bool loadingTopDependencies = true, loadingDependencyAvg = true, loadingFailedDependencies = true,
     loadingFailedDependenciesPerDays = true;
@@ -144,20 +142,20 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-
-        await LoadData();
+        
+        await LoadData(CancellationToken);
     }
 
-    private async Task LoadData()
+    private async Task LoadData(CancellationToken cancellationToken = default)
     {
 
         //It seems not to work with Task.WhenAll here, maybe becasue WASM is single threaded. 
         try
         {
-            await LoadFailedDependenciesPerDays();
-            await LoadFailedDependencies();
-            await LoadTopDependencies();
-            await LoadDependencyDuration();          
+            await LoadFailedDependenciesPerDays(cancellationToken);
+            await LoadFailedDependencies(cancellationToken);
+            await LoadTopDependencies(cancellationToken);
+            await LoadDependencyDuration(cancellationToken);          
         }
         catch (Exception ex)
         {
@@ -166,10 +164,10 @@
 
         // try
         // {
-        //     var topTask = LoadTopDependencies();
-        //     var avgTask = LoadDependencyDuration();
-        //     var failedTask = LoadFailedDependencies();
-        //     var failedPerDaysTask = LoadFailedDependenciesPerDays();
+        //     var topTask = LoadTopDependencies(cancellationToken);
+        //     var avgTask = LoadDependencyDuration(cancellationToken);
+        //     var failedTask = LoadFailedDependencies(cancellationToken);
+        //     var failedPerDaysTask = LoadFailedDependenciesPerDays(cancellationToken);
 
         //     await Task.WhenAll(topTask, avgTask, failedTask, failedPerDaysTask);
         // }
@@ -179,11 +177,11 @@
         // }
     }
 
-    private async Task LoadTopDependencies()
+    private async Task LoadTopDependencies(CancellationToken cancellationToken = default)
     {
         loadingTopDependencies = true;
 
-        var dependencies = await Service.GetTopDependencies(GlobalFilter);
+        var dependencies = await Service.GetTopDependencies(GlobalFilter, cancellationToken);
         topDependencies = dependencies.OrderByDescending(x => x.Count).ToList();
 
         loadingTopDependencies = false;
@@ -191,11 +189,11 @@
         StateHasChanged();
     }
 
-    private async Task LoadDependencyDuration()
+    private async Task LoadDependencyDuration(CancellationToken cancellationToken = default)
     {
         loadingDependencyAvg = true;
 
-        var dependencies = await Service.GetDependencyAvgDurations(GlobalFilter);
+        var dependencies = await Service.GetDependencyAvgDurations(GlobalFilter, cancellationToken);
         dependencyDurations = dependencies.OrderByDescending(x => x.Avg).ToList();
 
         loadingDependencyAvg = false;
@@ -204,13 +202,13 @@
     }
 
 
-    private async Task LoadFailedDependencies()
+    private async Task LoadFailedDependencies(CancellationToken cancellationToken = default)
     {
         loadingFailedDependencies = true;
 
-        failedDependenciesCodes = await Service.GetFailedDependenciesStatusCodes(GlobalFilter);
+        failedDependenciesCodes = await Service.GetFailedDependenciesStatusCodes(GlobalFilter, cancellationToken);
 
-        var dependencies = await Service.GetFailedDependencies(GlobalFilter, GetCodesForFilter());
+        var dependencies = await Service.GetFailedDependencies(GlobalFilter, GetCodesForFilter(), cancellationToken);
         failedDependencies = dependencies.OrderByDescending(x => x.Count).ToList();
 
         loadingFailedDependencies = false;
@@ -218,11 +216,11 @@
         StateHasChanged();
     }
 
-    private async Task LoadFailedDependenciesPerDays()
+    private async Task LoadFailedDependenciesPerDays(CancellationToken cancellationToken = default)
     {
         loadingFailedDependenciesPerDays = true;
 
-        var result = await Service.GetFailedDependenciesPerDay(GlobalFilter);
+        var result = await Service.GetFailedDependenciesPerDay(GlobalFilter, cancellationToken);
 
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
@@ -304,8 +302,8 @@
                 selectedCodes.Add(AllResultCodes);
             }
 
-            var failedTask = LoadFailedDependencies();
-            var failedPerDaysTask = LoadFailedDependenciesPerDays();
+            var failedTask = LoadFailedDependencies(CancellationToken);
+            var failedPerDaysTask = LoadFailedDependenciesPerDays(CancellationToken);
 
             await Task.WhenAll(failedTask, failedPerDaysTask);
         }

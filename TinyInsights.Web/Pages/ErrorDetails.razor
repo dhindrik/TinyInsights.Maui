@@ -177,9 +177,6 @@
     [Parameter]
     public string? Severity { get; set; }
 
-    [CascadingParameter]
-    public required GlobalFilter GlobalFilter { get; set; }
-
     private bool isLoading = true;
     private bool isCrash;
     private string backUrl = string.Empty, detailsHeader = string.Empty, listHeader = string.Empty, perDayHeader = string.Empty;
@@ -224,16 +221,33 @@
             // Replace ' with the \'
             var escapedId = Id.Replace("'", "\\'");
 
+            List<CountPerDay>? perDay;
+
             if (isCrash)
             {
-                data = await Service.GetCrashDetails(escapedId, GlobalFilter);
-                errorsPerDays = await Service.GetCrashDetailsPerDay(escapedId, GlobalFilter);
+                data = await Service.GetCrashDetails(escapedId, GlobalFilter,CancellationToken);
+                perDay = await Service.GetCrashDetailsPerDay(escapedId, GlobalFilter, CancellationToken);
             }
             else
             {
-                data = await Service.GetErrorDetails(escapedId, GlobalFilter, Severity);
-                errorsPerDays = await Service.GetErrorDetailsPerDay(escapedId, GlobalFilter, Severity);
+                data = await Service.GetErrorDetails(escapedId, GlobalFilter, Severity, CancellationToken);
+                perDay = await Service.GetErrorDetailsPerDay(escapedId, GlobalFilter, Severity, CancellationToken);
             }
+
+            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+            var days = new List<CountPerDay>();
+
+            for (int i = 1; i <= GlobalFilter.NumberOfDays; i++)
+            {
+                var currentDate = date.AddDays(i);
+                var day = perDay.SingleOrDefault(x => x.Date == currentDate);
+
+                var count = day?.Count ?? 0;
+
+                days.Add(new CountPerDay(currentDate, count));
+            }
+
+            errorsPerDays = days;
 
             selectedItem = data.Items.FirstOrDefault();
 

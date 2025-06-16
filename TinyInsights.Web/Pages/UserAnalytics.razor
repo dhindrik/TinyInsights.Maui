@@ -169,8 +169,6 @@
 
 
 @code {
-    [CascadingParameter]
-    public GlobalFilter GlobalFilter { get; set; }
 
     private bool isLoadingUsersPerDayViews = true, isLoadingCountryList = true, isLoadingUsersPerLanguage, isLoadingSessionsPerDay, isLoadingAppVersions;
     private List<CountPerDay> usersPerDay = new();
@@ -178,18 +176,26 @@
     private List<CountPerKey> usersPerCountry = new();
     private List<CountPerKey> usersPerLanguage = new();
     private List<CountPerKey> usersPerAppVersion = new();
+    private CancellationTokenSource cts = new();
+
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
 
-        await LoadData();
+        await LoadData(cts.Token);
     }
 
-    private async Task LoadData()
+    private async Task LoadData(CancellationToken cancellationToken = default)
     {
         try
         {
-            await Task.WhenAll(LoadUsersPerDay(), LoadCountries(), LoadLanguageList(), LoadSessionsPerDay(), LoadAppVersions());
+            await Task.WhenAll(
+                LoadUsersPerDay(cancellationToken),
+                LoadCountries(cancellationToken),
+                LoadLanguageList(cancellationToken),
+                LoadSessionsPerDay(cancellationToken),
+                LoadAppVersions(cancellationToken)
+            );
         }
         catch (Exception ex)
         {
@@ -197,11 +203,11 @@
         }
     }
 
-    private async Task LoadUsersPerDay()
+    private async Task LoadUsersPerDay(CancellationToken cancellationToken = default)
     {
         isLoadingUsersPerDayViews = true;
 
-        var result = await Service.GetUsersPerDay(GlobalFilter);
+        var result = await Service.GetUsersPerDay(GlobalFilter, cancellationToken);
 
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
@@ -222,11 +228,11 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadSessionsPerDay()
+    private async Task LoadSessionsPerDay(CancellationToken cancellationToken = default)
     {
         isLoadingSessionsPerDay = true;
 
-        var result = await Service.GetSessionsPerDay(GlobalFilter);
+        var result = await Service.GetSessionsPerDay(GlobalFilter, cancellationToken);
 
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
@@ -247,11 +253,11 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadCountries()
+    private async Task LoadCountries(CancellationToken cancellationToken = default)
     {
         isLoadingCountryList = true;
 
-        var result = await Service.GetUserPerCountry(GlobalFilter);
+        var result = await Service.GetUserPerCountry(GlobalFilter, cancellationToken);
 
         usersPerCountry = result.OrderByDescending(x => x.Count).ToList();
 
@@ -260,11 +266,11 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadLanguageList()
+    private async Task LoadLanguageList(CancellationToken cancellationToken = default)
     {
         isLoadingUsersPerLanguage = true;
 
-        var result = await Service.GetUserPerLanguage(GlobalFilter);
+        var result = await Service.GetUserPerLanguage(GlobalFilter, cancellationToken);
 
         usersPerLanguage = result.OrderByDescending(x => x.Count).ToList();
 
@@ -273,11 +279,11 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadAppVersions()
+    private async Task LoadAppVersions(CancellationToken cancellationToken = default)
     {
         isLoadingAppVersions = true;
 
-        var result = await Service.GetUsersPerAppVersion(GlobalFilter);
+        var result = await Service.GetUsersPerAppVersion(GlobalFilter, cancellationToken);
 
         usersPerAppVersion = result.OrderByDescending(x => x.Count).ToList();
 
@@ -285,7 +291,6 @@
 
         await InvokeAsync(StateHasChanged);
     }
-
 
     private record DayFilterItem(string Text, int Value);
 }

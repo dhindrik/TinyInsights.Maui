@@ -148,9 +148,6 @@
 
 </RadzenStack>
 @code {
-    [CascadingParameter]
-    public GlobalFilter GlobalFilter { get; set; }
-
     private bool isLoadingIdiom = true, isLoadingOperatingSystems = true, isLoadingManufactures = true, isLoadingOperatingSystemVersions = true;
 
     private List<CountPerKey> idiomUsers = new();
@@ -158,13 +155,20 @@
     private List<CountPerKey> manufactures = new();
     private List<CountPerKey> operatingSystemVersions = new();
 
+    private CancellationTokenSource cts = new();
+
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
 
         try
         {
-            await Task.WhenAll(LoadUserIdioms(), LoadUserOperatingSystems(), LoadManufactures(), LoadOperatingSystemVersions());
+            await Task.WhenAll(
+                LoadUserIdioms(cts.Token),
+                LoadUserOperatingSystems(cts.Token),
+                LoadManufactures(cts.Token),
+                LoadOperatingSystemVersions(cts.Token)
+            );
         }
         catch(Exception ex)
         {
@@ -172,30 +176,30 @@
         }
     }
 
-    private async Task LoadUserIdioms()
+    private async Task LoadUserIdioms(CancellationToken cancellationToken = default)
     {
         isLoadingIdiom = true;
-        idiomUsers = await Service.GetUsersPerIdiom(GlobalFilter);
+        idiomUsers = await Service.GetUsersPerIdiom(GlobalFilter, cancellationToken);
         
         isLoadingIdiom = false;
 
         StateHasChanged();
     }
 
-    private async Task LoadUserOperatingSystems()
+    private async Task LoadUserOperatingSystems(CancellationToken cancellationToken = default)
     {
         isLoadingOperatingSystems = true;
-        operatingSystemUsers = await Service.GetUsersPerOperatingSystem(GlobalFilter);
+        operatingSystemUsers = await Service.GetUsersPerOperatingSystem(GlobalFilter, cancellationToken);
        
         isLoadingOperatingSystems = false;
 
         StateHasChanged();
     }
 
-    private async Task LoadManufactures()
+    private async Task LoadManufactures(CancellationToken cancellationToken = default)
     {
         isLoadingManufactures = true;
-        var result = await Service.GetUserPerManufacturer(GlobalFilter);
+        var result = await Service.GetUserPerManufacturer(GlobalFilter, cancellationToken);
         manufactures = result.OrderByDescending(x => x.Count).ToList();
        
         isLoadingManufactures = false;
@@ -203,11 +207,11 @@
         StateHasChanged();  
     }
 
-    private async Task LoadOperatingSystemVersions()
+    private async Task LoadOperatingSystemVersions(CancellationToken cancellationToken = default)
     {
         isLoadingOperatingSystemVersions = true;
 
-        var result = await Service.GetUsersPerOperatingSystemVersion(GlobalFilter);
+        var result = await Service.GetUsersPerOperatingSystemVersion(GlobalFilter, cancellationToken);
         operatingSystemVersions = result.OrderByDescending(x => x.Count).ToList();
 
         isLoadingOperatingSystemVersions = false;

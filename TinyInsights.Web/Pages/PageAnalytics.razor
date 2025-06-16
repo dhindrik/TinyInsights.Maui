@@ -50,26 +50,24 @@
 </RadzenStack>
 
 @code {
-    [CascadingParameter]
-    public GlobalFilter GlobalFilter  {get;set;}
-
     private bool isLoadingPageViews, isLoadingList = true;
     private List<CountPerDay> pageViewsPerDay = new();
     private List<CountPerKey> pageViews = new();
+    private CancellationTokenSource cts = new();
 
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
 
-        await LoadData();
+        await LoadData(cts.Token);
     }
 
-    private async Task LoadData()
+    private async Task LoadData(CancellationToken cancellationToken = default)
     {
         try
         {
-            var graphTask = LoadGraph();
-            var listTask = LoadList();
+            var graphTask = LoadGraph(cancellationToken);
+            var listTask = LoadList(cancellationToken);
 
             await Task.WhenAll(graphTask, listTask);
         }
@@ -79,11 +77,11 @@
         }
     }
 
-    private async Task LoadGraph()
+    private async Task LoadGraph(CancellationToken cancellationToken = default)
     {
         isLoadingPageViews = true;
         
-        var result = await Service.GetPageViewsPerDay(GlobalFilter);
+        var result = await Service.GetPageViewsPerDay(GlobalFilter, cancellationToken);
         
         var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
         var days = new List<CountPerDay>();
@@ -104,11 +102,11 @@
         await InvokeAsync(StateHasChanged);
     }
     
-    private async Task LoadList()
+    private async Task LoadList(CancellationToken cancellationToken = default)
     {
         isLoadingList = true;
 
-        var result = await Service.GetPageViewsGrouped(GlobalFilter);
+        var result = await Service.GetPageViewsGrouped(GlobalFilter, cancellationToken);
 
         pageViews = result.OrderByDescending(x => x.Count).ToList();
         

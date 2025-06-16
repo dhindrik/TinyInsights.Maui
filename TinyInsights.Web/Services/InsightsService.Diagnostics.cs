@@ -16,7 +16,7 @@ public partial class InsightsService : IInsightsService
         httpClient.BaseAddress = new Uri("https://api.applicationinsights.io/");
     }
 
-    public async Task<bool> AddAndValidateApiKey(string appId, string apiKey)
+    public async Task<bool> AddAndValidateApiKey(string appId, string apiKey, CancellationToken cancellationToken = default)
     {
         this.appId = appId;
 
@@ -24,12 +24,12 @@ public partial class InsightsService : IInsightsService
 
         var url = $"/v1/apps/{appId}/events/$all?$top=5";
 
-        var response = await httpClient.GetAsync(url);
+        var response = await httpClient.GetAsync(url, cancellationToken);
 
         return response.IsSuccessStatusCode;
     }
 
-    public async Task<(bool Succeed, string? ErrorMessage)> AddAndValidateBearer(string appId, string token)
+    public async Task<(bool Succeed, string? ErrorMessage)> AddAndValidateBearer(string appId, string token, CancellationToken cancellationToken = default)
     {
         this.appId = appId;
 
@@ -37,18 +37,18 @@ public partial class InsightsService : IInsightsService
 
         var url = $"/v1/apps/{appId}/events/$all?$top=5";
 
-        var response = await httpClient.GetAsync(url);
+        var response = await httpClient.GetAsync(url, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
             return (false, responseContent);
         }
 
         return (true, null);
     }
 
-    public async Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter, List<string>? errorSeverities = null)
+    public async Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter, List<string>? errorSeverities = null, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
@@ -64,7 +64,7 @@ public partial class InsightsService : IInsightsService
 
         var query =
             $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
 
         foreach (var row in queryResult.Tables.First().Rows)
@@ -76,13 +76,13 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<CountPerDay>> GetCrashesPerDay(GlobalFilter filter)
+    public async Task<List<CountPerDay>> GetCrashesPerDay(GlobalFilter filter, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
             $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
 
         foreach (var row in queryResult.Tables.First().Rows)
@@ -94,7 +94,7 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<ErrorCount>> GetErrorsGrouped(GlobalFilter filter, List<string>? errorSeverities = null)
+    public async Task<List<ErrorCount>> GetErrorsGrouped(GlobalFilter filter, List<string>? errorSeverities = null, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
@@ -111,7 +111,7 @@ public partial class InsightsService : IInsightsService
         var query =
             $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by problemId, tostring(customDimensions.ErrorSeverity)";
 
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
         var result = new List<ErrorCount>();
 
@@ -123,14 +123,14 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<CrashItem>> GetCrashesGrouped(GlobalFilter filter)
+    public async Task<List<CrashItem>> GetCrashesGrouped(GlobalFilter filter, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
             $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) | extend AppVersion = parse_version(tostring(customDimensions.AppVersion)) | summarize count_sum = sum(itemCount), users_affected = dcount(user_Id), latest_app_version = arg_max(AppVersion, customDimensions.AppVersion), last_reported = max(timestamp) by strcat(problemId, ' - ', outerMessage)";
 
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
         var result = new List<CrashItem>();
 
@@ -149,7 +149,7 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public Task<ErrorDetails> GetErrorDetails(string id, GlobalFilter filter, string? severity = null)
+    public Task<ErrorDetails> GetErrorDetails(string id, GlobalFilter filter, string? severity = null, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
@@ -161,22 +161,22 @@ public partial class InsightsService : IInsightsService
         var query =
             $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) and problemId == '{id}' | top 100 by timestamp desc";
 
-        return GetErrorDetails(query);
+        return GetErrorDetails(query, cancellationToken);
     }
 
-    public Task<ErrorDetails> GetCrashDetails(string id, GlobalFilter filter)
+    public Task<ErrorDetails> GetCrashDetails(string id, GlobalFilter filter, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
             $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) and strcat(problemId, \" - \", outerMessage) == '{id}' | top 100 by timestamp desc";
 
-        return GetErrorDetails(query);
+        return GetErrorDetails(query, cancellationToken);
     }
 
-    private async Task<ErrorDetails> GetErrorDetails(string query)
+    private async Task<ErrorDetails> GetErrorDetails(string query, CancellationToken cancellationToken = default)
     {
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
         var result = new ErrorDetails();
 
@@ -198,17 +198,17 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public Task<List<EventItem>> GetEventsByUser(string userId, GlobalFilter filter)
+    public Task<List<EventItem>> GetEventsByUser(string userId, GlobalFilter filter, CancellationToken cancellationToken = default)
     {
-        return GetEventsByUser(userId, DateTime.Now, DateTime.Now.AddDays(-filter.NumberOfDays));
+        return GetEventsByUser(userId, DateTime.Now, DateTime.Now.AddDays(-filter.NumberOfDays), cancellationToken);
     }
 
-    public async Task<List<EventItem>> GetEventsByUser(string userId, DateTime timestamp)
+    public async Task<List<EventItem>> GetEventsByUser(string userId, DateTime timestamp, CancellationToken cancellationToken = default)
     {
-        return await GetEventsByUser(userId, timestamp, timestamp.AddHours(-1));
+        return await GetEventsByUser(userId, timestamp, timestamp.AddHours(-1), cancellationToken);
     }
 
-    private async Task<List<EventItem>> GetEventsByUser(string userId, DateTime to, DateTime from)
+    private async Task<List<EventItem>> GetEventsByUser(string userId, DateTime to, DateTime from, CancellationToken cancellationToken = default)
     {
         var toDate = to.ToUniversalTime().ToString("o");
         var fromDate = from.ToUniversalTime().ToString("o");
@@ -226,11 +226,11 @@ public partial class InsightsService : IInsightsService
         var dependencyQuery =
             $"dependencies | where tolower(user_Id) == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
 
-        var pageViewsTask = GetQueryResult<QueryResult>(pageViewsQuery);
-        var eventsTask = GetQueryResult<QueryResult>(eventQuery);
-        var errorsTask = GetQueryResult<QueryResult>(errorsQuery);
-        var crashTask = GetQueryResult<QueryResult>(crashQuery);
-        var dependencyTask = GetQueryResult<QueryResult>(dependencyQuery);
+        var pageViewsTask = GetQueryResult<QueryResult>(pageViewsQuery, cancellationToken);
+        var eventsTask = GetQueryResult<QueryResult>(eventQuery, cancellationToken);
+        var errorsTask = GetQueryResult<QueryResult>(errorsQuery, cancellationToken);
+        var crashTask = GetQueryResult<QueryResult>(crashQuery, cancellationToken);
+        var dependencyTask = GetQueryResult<QueryResult>(dependencyQuery, cancellationToken);
 
         await Task.WhenAll(pageViewsTask, eventsTask, errorsTask, crashTask, dependencyTask);
 
@@ -284,16 +284,14 @@ public partial class InsightsService : IInsightsService
         return result.OrderByDescending(x => x.Timestamp).ToList();
     }
 
-
-
-    public async Task<List<AvgPerKey>> GetDependencyAvgDurations(GlobalFilter filter)
+    public async Task<List<AvgPerKey>> GetDependencyAvgDurations(GlobalFilter filter, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
             $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize avg = avg(duration) by data | limit 20";
 
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
         var result = new List<AvgPerKey>();
 
@@ -305,14 +303,14 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<DependencyCount>> GetTopDependencies(GlobalFilter filter)
+    public async Task<List<DependencyCount>> GetTopDependencies(GlobalFilter filter, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
             $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data, tostring(customDimensions.HttpMethod) | limit 20";
 
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
         var result = new List<DependencyCount>();
 
@@ -324,7 +322,7 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<DependencyCount>> GetFailedDependencies(GlobalFilter filter, List<string>? resultCodeFilter = null)
+    public async Task<List<DependencyCount>> GetFailedDependencies(GlobalFilter filter, List<string>? resultCodeFilter = null, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
@@ -349,7 +347,7 @@ public partial class InsightsService : IInsightsService
         var query =
             $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data, tostring(customDimensions.HttpMethod)";
 
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
         var result = new List<DependencyCount>();
 
@@ -361,26 +359,25 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<string>> GetFailedDependenciesStatusCodes(GlobalFilter filter)
+    public async Task<List<string>> GetFailedDependenciesStatusCodes(GlobalFilter filter, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
         var query = $"dependencies | where{queryFilter} success == false and resultCode != ''| distinct resultCode";
 
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
         return queryResult.Tables.First().Rows.Select(r => r.First().ToString()).ToList();
-
     }
 
-    public async Task<FailedDependencies> GetFailedDependencies(string key, string method, GlobalFilter filter)
+    public async Task<FailedDependencies> GetFailedDependencies(string key, string method, GlobalFilter filter, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
             $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) and data == '{key}' and customDimensions.HttpMethod == '{method}'";
 
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
         var result = new FailedDependencies();
 
@@ -402,13 +399,13 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<CountPerDay>> GetFailedDependenciesPerDay(GlobalFilter filter)
+    public async Task<List<CountPerDay>> GetFailedDependenciesPerDay(GlobalFilter filter, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
             $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
 
         foreach (var row in queryResult.Tables.First().Rows)
@@ -420,21 +417,21 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    private async Task<T> GetQueryResult<T>(string query)
+    private async Task<T> GetQueryResult<T>(string query, CancellationToken cancellationToken = default)
     {
         var url = $"/v1/apps/{appId}/query";
 
         var json = JsonSerializer.Serialize(new { query = query });
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await httpClient.PostAsync(url, content);
+        var response = await httpClient.PostAsync(url, content, cancellationToken);
 
         if (response.IsSuccessStatusCode is false && (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.NotFound))
         {
             throw new UnauthorizedAccessException();
         }
 
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
         var queryResult = JsonSerializer.Deserialize<T>(responseContent,
             new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
@@ -476,7 +473,8 @@ public partial class InsightsService : IInsightsService
 
         return data;
     }
-    public async Task<List<CountPerDay>> GetErrorDetailsPerDay(string problemId, GlobalFilter filter, string? severity = null)
+
+    public async Task<List<CountPerDay>> GetErrorDetailsPerDay(string problemId, GlobalFilter filter, string? severity = null, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
@@ -488,7 +486,7 @@ public partial class InsightsService : IInsightsService
         var query =
             $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and problemId == '{problemId}' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
 
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
 
         foreach (var row in queryResult.Tables.First().Rows)
@@ -499,14 +497,15 @@ public partial class InsightsService : IInsightsService
 
         return result.OrderBy(x => x.Date).ToList();
     }
-    public async Task<List<CountPerDay>> GetCrashDetailsPerDay(string problemId, GlobalFilter filter)
+
+    public async Task<List<CountPerDay>> GetCrashDetailsPerDay(string problemId, GlobalFilter filter, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and problemId == '{problemId}' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and strcat(problemId, \" - \", outerMessage) == '{problemId}' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
 
-        var queryResult = await GetQueryResult<QueryResult>(query);
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
 
         foreach (var row in queryResult.Tables.First().Rows)

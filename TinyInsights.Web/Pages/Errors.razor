@@ -107,9 +107,6 @@
     [Parameter]
     public string Type { get; set; }
 
-    [CascadingParameter]
-    public required GlobalFilter GlobalFilter  {get;set;}
-
     private List<CountPerDay> errorsPerDays = new();
     private List<CrashItem>? crashes;
     private List<ErrorCount>? errors;

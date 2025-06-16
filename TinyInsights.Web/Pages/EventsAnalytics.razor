@@ -38,25 +38,22 @@
 </RadzenStack>
 
 @code {
-
-    [CascadingParameter]
-    public GlobalFilter GlobalFilter  {get;set;}
-
     private bool isLoadingList = true;
     private List<CountPerKey> events = new();
+    private CancellationTokenSource cts = new();
 
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
 
-        await LoadData();
+        await LoadData(cts.Token);
     }
 
-    private async Task LoadData()
+    private async Task LoadData(CancellationToken cancellationToken = default)
     {
         try
         {
-            var listTask = LoadList();
+            var listTask = LoadList(cancellationToken);
 
             await Task.WhenAll(listTask);
         }
@@ -66,11 +63,11 @@
         }
     }
     
-    private async Task LoadList()
+    private async Task LoadList(CancellationToken cancellationToken = default)
     {
         isLoadingList = true;
 
-        var result = await Service.GetEventsGrouped(GlobalFilter);
+        var result = await Service.GetEventsGrouped(GlobalFilter, cancellationToken);
 
         events = result.OrderByDescending(x => x.Count).ToList();
         
