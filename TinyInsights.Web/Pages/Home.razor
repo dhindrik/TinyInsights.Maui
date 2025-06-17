@@ -16,7 +16,7 @@
             <RadzenTextBox @bind-Value="_model.ApplicationId" Placeholder="Enter your application id"/>
             <RadzenText Text="API token"></RadzenText>
             <RadzenPassword @bind-Value="_model.ApiKey" Placeholder="Enter your API token"/>
-            <RadzenButton ButtonType="ButtonType.Submit" Text="Open"/>
+            <RadzenButton ButtonType="ButtonType.Submit" Disabled="@isBusy" Text="Open"/>
         </RadzenStack>
     </EditForm>
 </RadzenCard>
@@ -37,6 +37,8 @@
     [CascadingParameter] public EventCallback<bool> IsLoggedInChanged { get; set; }
     private readonly AuthModel _model = new();
 
+    private bool isBusy;
+
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
@@ -51,6 +53,8 @@
     {
         try
         {
+            isBusy = true;
+
             if (_model.ApplicationId is not null && _model.ApiKey is not null)
             {
                 var result = await Service.AddAndValidateApiKey(_model.ApplicationId, _model.ApiKey);
@@ -70,6 +74,8 @@
         {
             await DialogService.Alert(ex.Message, "Error");
         }
+
+        isBusy = false;
     }
 
     public class AuthModel
