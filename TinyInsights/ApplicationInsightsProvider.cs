@@ -149,7 +149,6 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 throw new NullReferenceException("Unable to configure `IsAutoTrackPageViewsEnabled` as `Application.Current` is null. You can either set `IsAutoTrackPageViewsEnabled` to false to ignore this issue, or check out this link for a possible reason - https://github.com/dhindrik/TinyInsights.Maui/issues/21");
             }
 
-            
             Application.Current.PageAppearing += OnAppearing;
             Application.Current.PageDisappearing += OnDisappearing;
         }
