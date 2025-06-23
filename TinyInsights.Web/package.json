@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "@kusto/monaco-kusto": "^13.1.0"
-  }
-}
