@@ -30,11 +30,18 @@
 
                     else if (queryResult is not null && queryResult.Tables is not null)
                     {
+                        int tableIndex = 0;
                         foreach (var table in queryResult.Tables)
                         {
                             var filteredIndexes = GetFilteredColumnIndexes(table);
+                            var expandedRowIndex = expandedRowIndexes.Count > tableIndex ? expandedRowIndexes[tableIndex] : null;
                             <RadzenDataGrid Data="@table.Rows" TItem="List<object>" ShowPagingSummary="true" PageSize="20" AllowPaging="true" AllowSorting="true" class="rz-datagrid-table">
                                 <Columns>
+                                    <RadzenDataGridColumn TItem="List<object>" Title="" Width="40px">
+                                        <Template Context="row">
+                                            
+                                        </Template>
+                                    </RadzenDataGridColumn>
                                     @foreach (var idx in filteredIndexes)
                                     {
                                         <RadzenDataGridColumn @key=idx TItem="List<object>" Title="@table.Columns[idx].Name" Property="@PropertyAccess.GetDynamicPropertyExpression(idx.ToString(),typeof(object))">
@@ -44,7 +51,21 @@
                                         </RadzenDataGridColumn>
                                     }
                                 </Columns>
+                                <Template Context="row">
+                                    @{
+                                        var rowIndex = table.Rows.IndexOf(row);
+                                        bool isExpanded = expandedRowIndexes.Count > tableIndex && expandedRowIndexes[tableIndex] == rowIndex;
+                                    }
+                                        @for (int i = 0; i < table.Columns.Count; i++)
+                                        {
+                                            <tr>
+                                                <td><strong>@table.Columns[i].Name:</strong></td><td> @row[i]</td>
+                                            </tr>
+                                        }
+                                    
+                                </Template>
                             </RadzenDataGrid>
+                            tableIndex++;
                         }
                     }
                 </RadzenStack>
@@ -78,6 +99,25 @@
     private QueryResult? queryResult;
     private List<string> history = [];
 
+    // Track expanded row index for each table
+    private List<int?> expandedRowIndexes = new();
+
+    private void ToggleRowExpansion(int tableIdx, int rowIdx)
+    {
+        while (expandedRowIndexes.Count <= tableIdx)
+        {
+            expandedRowIndexes.Add(null);
+        }
+        if (expandedRowIndexes[tableIdx] == rowIdx)
+        {
+            expandedRowIndexes[tableIdx] = null;
+        }
+        else
+        {
+            expandedRowIndexes[tableIdx] = rowIdx;
+        }
+    }
+
     // Helper to get filtered column indexes for a table
     private List<int> GetFilteredColumnIndexes(Table table)
     {
@@ -97,6 +137,7 @@
         await base.OnParametersSetAsync();
 
         history = await GetHistory();
+        expandedRowIndexes.Clear();
 
         if (editor is not null)
         {
@@ -127,6 +168,7 @@
 
                 currentQuery = text;
                 queryResult = await insightsService.RunQuery(text, CancellationToken);
+                expandedRowIndexes.Clear();
 
                 await SetHistory(textToHistory);
             }
@@ -137,7 +179,6 @@
             StateHasChanged();
         }
     }
-
 
     private async Task HandleKeyUp()
     {
@@ -183,6 +224,7 @@
         {
             AutomaticLayout = true,
             Placeholder = "Type your query here",
+            Minimap = new EditorMinimapOptions() {Enabled = false}
         };
     }
 
