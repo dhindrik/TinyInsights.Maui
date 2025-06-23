@@ -21,7 +21,7 @@
                 <h2>Custom query</h2>
                 <span>Note, no global filter will apply when running this query!</span>
                 <RadzenButton Text="Run" Icon="play_arrow" class="run_button" Click="@(async(args) => await RunQuery())" Disabled="isRunDisabled" />
-                <StandaloneCodeEditor @ref="editor" Id="monaco-query-editor" ConstructionOptions="EditorConstructionOptions" OnKeyUp="HandleKeyUp" />
+                <StandaloneCodeEditor Id="monaco-query-editor" ConstructionOptions="EditorConstructionOptions" OnKeyUp="HandleKeyUp"  />
 
                 @if(isLoading)
                     {
@@ -119,7 +119,7 @@
             StateHasChanged();
         }
     }
-        
+
 
     private async Task HandleKeyUp()
     {
@@ -148,7 +148,7 @@
     {
         history.RemoveAll(q => q == value);   
         history.Insert(0, value);
-        
+
         if (history.Count > 10)
         {
             history = history.Take(10).ToList();
@@ -159,6 +159,9 @@
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
     {
+        //Make sure editor is loaded. Ugly, but it will thow exception if using @ref or setting it directly in this method
+        _= Task.Run(async() => { await Task.Delay(1000); this.editor = editor; });
+
         return new StandaloneEditorConstructionOptions
         {
             AutomaticLayout = true,
