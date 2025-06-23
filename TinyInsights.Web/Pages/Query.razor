@@ -1,5 +1,8 @@
 ﻿@page "/query"
 @using Blazored.LocalStorage
+
+@inherits TinyInsightsComponentBase
+
 @inject ILocalStorageService localStorage
 @inject IInsightsService insightsService
 
@@ -16,12 +19,32 @@
         <RadzenCard>
             <RadzenStack>
                 <h2>Custom query</h2>
+                <span>Note, no global filter will apply when running this query!</span>
                 <RadzenButton Text="Run" Icon="play_arrow" class="run_button" Click="@(async(args) => await RunQuery())" Disabled="isRunDisabled" />
-                <StandaloneCodeEditor @ref="editor" Id="monaco-query-editor" ConstructionOptions="EditorConstructionOptions" OnKeyUp="HandleKeyUp"  />
+                <StandaloneCodeEditor @ref="editor" Id="monaco-query-editor" ConstructionOptions="EditorConstructionOptions" OnKeyUp="HandleKeyUp" />
 
                 @if(isLoading)
                     {
                         <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+
+                    @if (queryResult is not null && queryResult.Tables is not null)
+                    {
+                        foreach (var table in queryResult.Tables)
+                        {
+                            <RadzenDataGrid Data="@table.Rows" TItem="IReadOnlyList<object>" ShowPagingSummary="true" PageSize="20" AllowPaging="true" AllowSorting="true" class="rz-datagrid-table">
+                                <Columns>
+                                    @for (int i = 0; i < table.Columns.Count && i < 5; i++)
+                                    {
+                                        <RadzenDataGridColumn TItem="IReadOnlyList<object>" Property="@($"[{i}]")" Title="@table.Columns[i].Name">
+                                            <Template Context="row">
+                                                @row[i]
+                                            </Template>
+                                        </RadzenDataGridColumn>
+                                    }
+                                </Columns>
+                            </RadzenDataGrid>
+                        }
                     }
                 </RadzenStack>
         </RadzenCard>
@@ -31,12 +54,10 @@
             <RadzenStack>
                 <h2>Query history</h2>
                 @foreach(var item in history)
-                    {
-                        <p>@item</p>
-                    }
-
-
-                </RadzenStack>
+                {
+                    <QueryItem Query="@item" RunClicked="@(async () => await RunHistoryQuery(item))" />
+                }
+            </RadzenStack>
         </RadzenCard>
     </RadzenSidebar>
 </RadzenLayout>
@@ -48,6 +69,8 @@
     private StandaloneCodeEditor? editor;
     private bool isRunDisabled = true;
     private bool isLoading = false;
+
+    private QueryResult? queryResult;
 
 
     private List<string> history = [];
@@ -66,17 +89,37 @@
 
     private async Task RunQuery()
     {
-        if(editor is not null)
+        try
         {
-            var text = await editor.GetValue(false);
+            if (editor is not null)
+            {
+                var text = await editor.GetValue(false);
 
-            var result = await insightsService.RunQuery(text);
+                isLoading = true;
+                StateHasChanged();
 
-           
+                CancelCurrentOperation();
 
-            await SetHistory(text);
+                var textToHistory = text;
+                var parts = text.Split("|");
+
+                if (parts is not null && !parts.Last().Contains("limit"))
+                {
+                    text = $"{text.Trim()} | limit 100";
+                }
+
+                queryResult = await insightsService.RunQuery(text, CancellationToken);
+
+                await SetHistory(textToHistory);
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
         }
     }
+        
 
     private async Task HandleKeyUp()
     {
@@ -103,7 +146,13 @@
 
     private async Task SetHistory(string value)
     {
+        history.RemoveAll(q => q == value);   
         history.Insert(0, value);
+        
+        if (history.Count > 10)
+        {
+            history = history.Take(10).ToList();
+        }
 
         await localStorage.SetItemAsync(HistoryLocalStorageKey, history);
     }
@@ -113,9 +162,18 @@
         return new StandaloneEditorConstructionOptions
         {
             AutomaticLayout = true,
-            Language = "kusto",
-            Placeholder = "Type your query here"
-          
+            Language = "javascript",
+            Placeholder = "Type your query here",
         };
+    }
+
+    private async Task RunHistoryQuery(string query)
+    {
+        if (editor is not null)
+        {
+            await editor.SetValue(query);
+            isRunDisabled = false;
+            await RunQuery();
+        }
     }
 }

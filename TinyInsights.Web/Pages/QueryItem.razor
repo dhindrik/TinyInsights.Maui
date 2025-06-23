@@ -1,0 +1,11 @@
+<div class="history-item">
+    <span class="query">@Query</span>
+    <RadzenButton Icon="play_arrow" Size="ButtonSize.Small" Click="RunClicked" />
+</div>
+
+@code {
+    [Parameter] 
+    public string Query { get; set; } = string.Empty;
+    [Parameter] 
+    public EventCallback RunClicked { get; set; }
+}

@@ -5,7 +5,11 @@
 }
 
 ::deep #monaco-query-editor { /* applies to a specific editor instance */
-    height: 500px;
+    height: 300px;
+    border: solid;
+    border-color: rgb(238, 238, 238);
+    border-width: 1px;
+    padding: 10px;
 }
 
 ::deep .monaco-editor-container { /* applies to all editor instances */
@@ -15,4 +19,8 @@
 ::deep .run_button
 {
     width:100px;
+}
+
+.query {
+    font-family: Monaco, Menlo, Courier;
 }

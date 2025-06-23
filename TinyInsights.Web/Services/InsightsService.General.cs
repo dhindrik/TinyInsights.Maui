@@ -45,8 +45,8 @@ public partial class InsightsService
         return filterBuilder.ToString();
     }
 
-    public Task<QueryResult> RunQuery(string query)
+    public Task<QueryResult> RunQuery(string query, CancellationToken cancellationToken = default)
     {
-        return GetQueryResult<QueryResult>(query);
+        return GetQueryResult<QueryResult>(query, cancellationToken);
     }
 }

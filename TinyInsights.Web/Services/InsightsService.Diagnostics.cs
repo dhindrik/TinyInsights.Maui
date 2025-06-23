@@ -520,7 +520,7 @@ public partial class InsightsService : IInsightsService
 
 public class QueryResult
 {
-    public List<Table> Tables { get; set; }
+    public List<Table> Tables { get; set; } = [];
 }
 
 public class Column
