@@ -1,0 +1,40 @@
+name: Publish TinyInsights.Web to Azure Blob Storage
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore TinyInsights.Web/TinyInsights.Web.csproj
+
+      - name: Publish TinyInsights.Web
+        run: dotnet publish TinyInsights.Web/TinyInsights.Web.csproj -c Release -o publish_output
+
+      - name: Upload to Azure Blob Storage
+        uses: azure/CLI@v2
+        with:
+          azcliversion: 2.53.0
+          inlineScript: |
+            az storage blob upload-batch \
+              --account-name "$AZURE_STORAGE_ACCOUNT" \
+              --account-key "$AZURE_STORAGE_KEY" \
+              --destination "$AZURE_STORAGE_CONTAINER" \
+              --source publish_output/wwwroot \
+              --overwrite
+        env:
+          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
+          AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
+          AZURE_STORAGE_CONTAINER: ${{ secrets.AZURE_STORAGE_CONTAINER }}
