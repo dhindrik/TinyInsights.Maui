@@ -44,4 +44,9 @@ public partial class InsightsService
 
         return filterBuilder.ToString();
     }
+
+    public Task<QueryResult> RunQuery(string query)
+    {
+        return GetQueryResult<QueryResult>(query);
+    }
 }

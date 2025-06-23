@@ -1,0 +1,18 @@
+::deep .rz-sidebar
+{
+    background-color:transparent;
+    padding:16px;
+}
+
+::deep #monaco-query-editor { /* applies to a specific editor instance */
+    height: 500px;
+}
+
+::deep .monaco-editor-container { /* applies to all editor instances */
+    height: 500px;
+}
+
+::deep .run_button
+{
+    width:100px;
+}

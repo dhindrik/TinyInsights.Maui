@@ -1,0 +1,121 @@
+﻿@page "/query"
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorage
+@inject IInsightsService insightsService
+
+<div>
+    <RadzenLayout Style="grid-template-columns: auto 1fr auto; grid-template-areas: 'rz-header rz-header rz-header' 'rz-sidebar rz-body rz-right-sidebar'">
+        <RadzenSidebar>
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>Predefined queries</h2>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenSidebar>
+    <RadzenBody>
+        <RadzenCard>
+            <RadzenStack>
+                <h2>Custom query</h2>
+                <RadzenButton Text="Run" Icon="play_arrow" class="run_button" Click="@(async(args) => await RunQuery())" Disabled="isRunDisabled" />
+                <StandaloneCodeEditor @ref="editor" Id="monaco-query-editor" ConstructionOptions="EditorConstructionOptions" OnKeyUp="HandleKeyUp"  />
+
+                @if(isLoading)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+                </RadzenStack>
+        </RadzenCard>
+    </RadzenBody>
+    <RadzenSidebar Style="width: 300px; grid-area: rz-right-sidebar">
+        <RadzenCard>
+            <RadzenStack>
+                <h2>Query history</h2>
+                @foreach(var item in history)
+                    {
+                        <p>@item</p>
+                    }
+
+
+                </RadzenStack>
+        </RadzenCard>
+    </RadzenSidebar>
+</RadzenLayout>
+</div>
+
+@code {
+    private const string HistoryLocalStorageKey = "history";
+
+    private StandaloneCodeEditor? editor;
+    private bool isRunDisabled = true;
+    private bool isLoading = false;
+
+
+    private List<string> history = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        history = await GetHistory();
+
+        if (editor is not null)
+        {
+            await editor.SetValue(string.Empty);
+        }
+    }
+
+    private async Task RunQuery()
+    {
+        if(editor is not null)
+        {
+            var text = await editor.GetValue(false);
+
+            var result = await insightsService.RunQuery(text);
+
+           
+
+            await SetHistory(text);
+        }
+    }
+
+    private async Task HandleKeyUp()
+    {
+        if (editor is not null)
+        {
+            var text = await editor.GetValue(false);
+
+            if(string.IsNullOrWhiteSpace(text))
+            {
+                isRunDisabled = true;
+                return;
+            }
+
+            isRunDisabled = false;
+        }
+    }
+
+    private async Task<List<string>> GetHistory()
+    {
+        var storedHistory = await localStorage.GetItemAsync<List<string>>(HistoryLocalStorageKey);
+
+        return storedHistory ?? [];
+    }
+
+    private async Task SetHistory(string value)
+    {
+        history.Insert(0, value);
+
+        await localStorage.SetItemAsync(HistoryLocalStorageKey, history);
+    }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            AutomaticLayout = true,
+            Language = "kusto",
+            Placeholder = "Type your query here"
+          
+        };
+    }
+}
