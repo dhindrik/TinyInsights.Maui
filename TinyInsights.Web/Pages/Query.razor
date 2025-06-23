@@ -20,7 +20,7 @@
             <RadzenStack>
                 <h2>Custom query</h2>
                 <span>Note, no global filter will apply when running this query!</span>
-                <RadzenButton Text="Run" Icon="play_arrow" class="run_button" Click="@(async(args) => await RunQuery())" Disabled="isRunDisabled" />
+                <RadzenButton Text="Run" Icon="play_arrow" class="run_button" Click="@(async(args) => await RunQuery())" Disabled="@(isRunDisabled || isLoading)" />
                 <StandaloneCodeEditor Id="monaco-query-editor" ConstructionOptions="EditorConstructionOptions" OnKeyUp="HandleKeyUp"  />
 
                 @if(isLoading)
@@ -28,17 +28,18 @@
                         <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
                     }
 
-                    @if (queryResult is not null && queryResult.Tables is not null)
+                    else if (queryResult is not null && queryResult.Tables is not null)
                     {
                         foreach (var table in queryResult.Tables)
                         {
-                            <RadzenDataGrid Data="@table.Rows" TItem="IReadOnlyList<object>" ShowPagingSummary="true" PageSize="20" AllowPaging="true" AllowSorting="true" class="rz-datagrid-table">
+                            var filteredIndexes = GetFilteredColumnIndexes(table);
+                            <RadzenDataGrid Data="@table.Rows" TItem="List<object>" ShowPagingSummary="true" PageSize="20" AllowPaging="true" AllowSorting="true" class="rz-datagrid-table">
                                 <Columns>
-                                    @for (int i = 0; i < table.Columns.Count && i < 5; i++)
+                                    @foreach (var idx in filteredIndexes)
                                     {
-                                        <RadzenDataGridColumn TItem="IReadOnlyList<object>" Property="@($"[{i}]")" Title="@table.Columns[i].Name">
-                                            <Template Context="row">
-                                                @row[i]
+                                        <RadzenDataGridColumn @key=idx TItem="List<object>" Title="@table.Columns[idx].Name" Property="@PropertyAccess.GetDynamicPropertyExpression(idx.ToString(),typeof(object))">
+                                            <Template>
+                                                @context[idx]
                                             </Template>
                                         </RadzenDataGridColumn>
                                     }
@@ -65,15 +66,31 @@
 
 @code {
     private const string HistoryLocalStorageKey = "history";
+    private readonly IReadOnlyList<string> generalColumns = ["timestamp", "user_Id",  "client_OS", "application_Version"];
+    private readonly IReadOnlyList<string> customEventsColumns = ["name"];
 
     private StandaloneCodeEditor? editor;
     private bool isRunDisabled = true;
     private bool isLoading = false;
 
+    private string? currentQuery;
+
     private QueryResult? queryResult;
-
-
     private List<string> history = [];
+
+    // Helper to get filtered column indexes for a table
+    private List<int> GetFilteredColumnIndexes(Table table)
+    {
+        var indexes = new List<int>();
+        for (int i = 0; i < table.Columns.Count; i++)
+        {
+            if (FilterColumn(table.Columns[i].Name))
+            {
+                indexes.Add(i);
+            }
+        }
+        return indexes;
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -108,6 +125,7 @@
                     text = $"{text.Trim()} | limit 100";
                 }
 
+                currentQuery = text;
                 queryResult = await insightsService.RunQuery(text, CancellationToken);
 
                 await SetHistory(textToHistory);
@@ -140,7 +158,6 @@
     private async Task<List<string>> GetHistory()
     {
         var storedHistory = await localStorage.GetItemAsync<List<string>>(HistoryLocalStorageKey);
-
         return storedHistory ?? [];
     }
 
@@ -165,7 +182,6 @@
         return new StandaloneEditorConstructionOptions
         {
             AutomaticLayout = true,
-            Language = "javascript",
             Placeholder = "Type your query here",
         };
     }
@@ -178,5 +194,25 @@
             isRunDisabled = false;
             await RunQuery();
         }
+    }
+
+    private bool FilterColumn(string name)
+    {
+        var include = generalColumns.Contains(name);
+
+        if(include)
+        {
+            return true;
+        }
+
+        if(currentQuery is not null)
+        {
+            if(currentQuery.StartsWith("customEvents"))
+            {
+                include = customEventsColumns.Contains(name);
+            }
+        }
+
+        return include; 
     }
 }
