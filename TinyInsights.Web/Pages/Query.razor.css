@@ -1,0 +1,26 @@
+::deep .rz-sidebar
+{
+    background-color:transparent;
+    padding:16px;
+}
+
+::deep #monaco-query-editor { /* applies to a specific editor instance */
+    height: 300px;
+    border: solid;
+    border-color: rgb(238, 238, 238);
+    border-width: 1px;
+    padding: 10px;
+}
+
+::deep .monaco-editor-container { /* applies to all editor instances */
+    height: 500px;
+}
+
+::deep .run_button
+{
+    width:100px;
+}
+
+.query {
+    font-family: Monaco, Menlo, Courier;
+}

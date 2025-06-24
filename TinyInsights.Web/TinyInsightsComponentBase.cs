@@ -53,7 +53,7 @@ public abstract class TinyInsightsComponentBase : ComponentBase
         };
     }
 
-    private void CancelCurrentOperation()
+    protected void CancelCurrentOperation()
     {
         if (cancellationTokenSource != null && !cancellationTokenSource.IsCancellationRequested)
         {

@@ -1,0 +1,283 @@
+﻿@page "/query"
+@using Blazored.LocalStorage
+
+@inherits TinyInsightsComponentBase
+
+@inject ILocalStorageService localStorage
+@inject IInsightsService insightsService
+
+<div>
+    <RadzenLayout Style="grid-template-columns: auto 1fr auto; grid-template-areas: 'rz-header rz-header rz-header' 'rz-sidebar rz-body rz-right-sidebar'">
+        <RadzenSidebar>
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>Predefined queries</h2>
+                    @foreach (var item in predefinedQueries)
+                    {
+                        <QueryItem Name="@item.Key" RunClicked="@(async () => await RunHistoryQuery(item.Value))" />
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenSidebar>
+    <RadzenBody>
+        <RadzenCard>
+            <RadzenStack>
+                <h2>Custom query</h2>
+                <span>Note, no global filter will apply when running this query!</span>
+      
+                        <RadzenButton Text="Run" Icon="play_arrow" class="run_button" Disabled="@(isRunDisabled || isLoading)" Click="RunQuery" />
+                        <b>Time range</b>
+                    <RadzenRadioButtonList TValue="string" Data="@timeRanges" @bind-Value="selectedTimeRange" TextProperty="Key" ValueProperty="Value" />
+                   
+     
+                <StandaloneCodeEditor Id="monaco-query-editor" ConstructionOptions="EditorConstructionOptions" OnKeyUp="HandleKeyUp"  />
+
+                @if(isLoading)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+
+                    else if (queryResult is not null && queryResult.Tables is not null)
+                    {
+                        int tableIndex = 0;
+                        foreach (var table in queryResult.Tables)
+                        {
+                            var filteredIndexes = GetFilteredColumnIndexes(table);
+                            var expandedRowIndex = expandedRowIndexes.Count > tableIndex ? expandedRowIndexes[tableIndex] : null;
+                            <RadzenDataGrid Data="@table.Rows" TItem="List<object>" ShowPagingSummary="true" PageSize="20" AllowPaging="true" AllowSorting="true" class="rz-datagrid-table">
+                                <Columns>
+                                    <RadzenDataGridColumn TItem="List<object>" Title="" Width="40px">
+                                        <Template Context="row">
+                                            
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    @foreach (var idx in filteredIndexes)
+                                    {
+                                        <RadzenDataGridColumn @key=idx TItem="List<object>" Title="@table.Columns[idx].Name" Property="@PropertyAccess.GetDynamicPropertyExpression(idx.ToString(),typeof(object))">
+                                            <Template>
+                                                @context[idx]
+                                            </Template>
+                                        </RadzenDataGridColumn>
+                                    }
+                                </Columns>
+                                <Template Context="row">
+                                    @{
+                                        var rowIndex = table.Rows.IndexOf(row);
+                                        bool isExpanded = expandedRowIndexes.Count > tableIndex && expandedRowIndexes[tableIndex] == rowIndex;
+                                    }
+
+                                    @for (int i = 0; i < table.Columns.Count; i++)
+                                    {
+                                            <tr>
+                                                <td><strong>@table.Columns[i].Name:</strong></td><td> @row[i]</td>
+                                            </tr>
+                                    }                                    
+                                </Template>
+                            </RadzenDataGrid>
+                            tableIndex++;
+                        }
+                    }
+                </RadzenStack>
+        </RadzenCard>
+    </RadzenBody>
+    <RadzenSidebar Style="width: 500px; grid-area: rz-right-sidebar">
+        <RadzenCard>
+            <RadzenStack>
+                <h2>Query history</h2>
+                @foreach(var item in history)
+                {
+                    <QueryItem Query="@item" RunClicked="@(async () => await RunHistoryQuery(item))" />
+                }
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenSidebar>
+</RadzenLayout>
+</div>
+
+@code {
+    private const string HistoryLocalStorageKey = "history";
+    private readonly IReadOnlyList<string> generalColumns = ["timestamp", "user_Id",  "client_OS", "application_Version"];
+    private readonly IReadOnlyList<string> customEventsColumns = ["name"];
+    private readonly IReadOnlyList<string> exceptionsColumns = ["problemId", "type", "assembly", "method", "outerType", "outerMessage"];
+    private readonly IReadOnlyList<string> dependenciesColumns = ["target", "type", "name", "resultCode", "duration", "success"];
+    private readonly IReadOnlyList<string> pageViewsColumns = ["name"];
+
+    private StandaloneCodeEditor? editor;
+    private bool isRunDisabled = true;
+    private bool isLoading = false;
+
+    private string? currentQuery;
+
+    private QueryResult? queryResult;
+    private List<string> history = [];
+
+    // Track expanded row index for each table
+    private List<int?> expandedRowIndexes = new();
+
+
+    private string selectedTimeRange = "3d";
+
+
+    // Helper to get filtered column indexes for a table
+    private List<int> GetFilteredColumnIndexes(Table table)
+    {
+        var indexes = new List<int>();
+        for (int i = 0; i < table.Columns.Count; i++)
+        {
+            if (table.Columns.Count <= 5 || FilterColumn(table.Columns[i].Name))
+            {
+                indexes.Add(i);
+            }
+        }
+        return indexes;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        history = await GetHistory();
+        expandedRowIndexes.Clear();
+
+        if (editor is not null)
+        {
+            await editor.SetValue(string.Empty);
+        }
+    }
+
+    private async Task RunQuery()
+    {
+        try
+        {
+            if (editor is not null)
+            {
+                var text = await editor.GetValue(false);
+
+                isLoading = true;
+                StateHasChanged();
+
+                CancelCurrentOperation();
+
+                var textToHistory = text;
+                var parts = text.Split("|");
+
+                if (text.Contains("timestamp > ago("))
+                {
+                    selectedTimeRange = CustomTimeRangeValue;
+                }
+                else if (selectedTimeRange != CustomTimeRangeValue)
+                {
+                    text = $"{text} | where timestamp > ago({selectedTimeRange})";
+                }
+
+                if (parts is not null && !parts.Last().Contains("limit"))
+                {
+                    text = $"{text.Trim()} | limit 100";
+                }
+
+               
+
+                currentQuery = text;
+                queryResult = await insightsService.RunQuery(text, CancellationToken);
+                expandedRowIndexes.Clear();
+
+                await SetHistory(textToHistory);
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleKeyUp()
+    {
+        if (editor is not null)
+        {
+            var text = await editor.GetValue(false);
+
+            if(string.IsNullOrWhiteSpace(text))
+            {
+                isRunDisabled = true;
+                return;
+            }
+
+            isRunDisabled = false;
+        }
+    }
+
+    private async Task<List<string>> GetHistory()
+    {
+        var storedHistory = await localStorage.GetItemAsync<List<string>>(HistoryLocalStorageKey);
+        return storedHistory ?? [];
+    }
+
+    private async Task SetHistory(string value)
+    {
+        history.RemoveAll(q => q == value);   
+        history.Insert(0, value);
+
+        if (history.Count > 10)
+        {
+            history = history.Take(10).ToList();
+        }
+
+        await localStorage.SetItemAsync(HistoryLocalStorageKey, history);
+    }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        //Make sure editor is loaded. Ugly, but it will thow exception if using @ref or setting it directly in this method
+        _= Task.Run(async() => { await Task.Delay(1000); this.editor = editor; });
+
+        return new StandaloneEditorConstructionOptions
+        {
+            AutomaticLayout = true,
+            Placeholder = "Type your query here",
+            Minimap = new EditorMinimapOptions() {Enabled = false}
+        };
+    }
+
+    private async Task RunHistoryQuery(string query)
+    {
+        if (editor is not null)
+        {
+            await editor.SetValue(query);
+            isRunDisabled = false;
+            await RunQuery();
+        }
+    }
+
+    private bool FilterColumn(string name)
+    {
+        var include = generalColumns.Contains(name);
+
+        if(include)
+        {
+            return true;
+        }
+
+        if(currentQuery is not null)
+        {
+            if(currentQuery.StartsWith("customEvents"))
+            {
+                include = customEventsColumns.Contains(name);
+            }
+            else if (currentQuery.StartsWith("exceptions"))
+            {
+                include = exceptionsColumns.Contains(name);
+            }
+            else if (currentQuery.StartsWith("dependencies"))
+            {
+                include = dependenciesColumns.Contains(name);
+            }
+            else if (currentQuery.StartsWith("pageViews"))
+            {
+                include = pageViewsColumns.Contains(name);
+            }
+        }
+
+        return include; 
+    }
+}
