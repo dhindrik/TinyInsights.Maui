@@ -1,0 +1,32 @@
+name: PR Web
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 9.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Run dotnet format
+        run: dotnet format --verify-no-changes
+
+      - name: Restore dependencies for Web
+        run: dotnet restore TinyInsights.Web/TinyInsights.Web.csproj
+
+      - name: Build Web
+        run: dotnet build TinyInsights.Web/TinyInsights.Web.csproj --no-restore
+
+      - name: Restore dependencies for WebServer
+        run: dotnet restore TinyInsights.WebServer/TinyInsights.WebServer.csproj
+
+      - name: Build WebServer
+        run: dotnet build TinyInsights.WebServer/TinyInsights.WebServer.csproj --no-restore
