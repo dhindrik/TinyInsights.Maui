@@ -220,9 +220,9 @@ public partial class InsightsService : IInsightsService
         var pageViewsQuery =
             $"pageViews| where tolower(user_Id) == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
         var errorsQuery =
-            $"exceptions | where tolower(user_Id) == '{userId}' and customDimensions.IsCrash == 'true' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
-        var crashQuery =
             $"exceptions | where tolower(user_Id) == '{userId}' and customDimensions.IsCrash != 'true' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
+        var crashQuery =
+            $"exceptions | where tolower(user_Id) == '{userId}' and customDimensions.IsCrash == 'true' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
         var dependencyQuery =
             $"dependencies | where tolower(user_Id) == '{userId}' and timestamp between (todatetime('{fromDate}') .. todatetime('{toDate}'))";
 
