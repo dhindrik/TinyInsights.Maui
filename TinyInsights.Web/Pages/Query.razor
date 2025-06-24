@@ -12,6 +12,10 @@
             <RadzenCard>
                 <RadzenStack>
                     <h2>Predefined queries</h2>
+                    @foreach (var item in predefinedQueries)
+                    {
+                        <QueryItem Name="@item.Key" RunClicked="@(async () => await RunHistoryQuery(item.Value))" />
+                    }
                 </RadzenStack>
             </RadzenCard>
         </RadzenSidebar>
@@ -20,7 +24,9 @@
             <RadzenStack>
                 <h2>Custom query</h2>
                 <span>Note, no global filter will apply when running this query!</span>
-                <RadzenButton Text="Run" Icon="play_arrow" class="run_button" Click="@(async(args) => await RunQuery())" Disabled="@(isRunDisabled || isLoading)" />
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    <RadzenButton Text="Run" Icon="play_arrow" class="run_button" Click="@(async(args) => await RunQuery())" Disabled="@(isRunDisabled || isLoading)" />
+                </RadzenStack>
                 <StandaloneCodeEditor Id="monaco-query-editor" ConstructionOptions="EditorConstructionOptions" OnKeyUp="HandleKeyUp"  />
 
                 @if(isLoading)
@@ -56,13 +62,13 @@
                                         var rowIndex = table.Rows.IndexOf(row);
                                         bool isExpanded = expandedRowIndexes.Count > tableIndex && expandedRowIndexes[tableIndex] == rowIndex;
                                     }
-                                        @for (int i = 0; i < table.Columns.Count; i++)
-                                        {
+
+                                    @for (int i = 0; i < table.Columns.Count; i++)
+                                    {
                                             <tr>
                                                 <td><strong>@table.Columns[i].Name:</strong></td><td> @row[i]</td>
                                             </tr>
-                                        }
-                                    
+                                    }                                    
                                 </Template>
                             </RadzenDataGrid>
                             tableIndex++;
@@ -71,7 +77,7 @@
                 </RadzenStack>
         </RadzenCard>
     </RadzenBody>
-    <RadzenSidebar Style="width: 300px; grid-area: rz-right-sidebar">
+    <RadzenSidebar Style="width: 500px; grid-area: rz-right-sidebar">
         <RadzenCard>
             <RadzenStack>
                 <h2>Query history</h2>
@@ -89,6 +95,9 @@
     private const string HistoryLocalStorageKey = "history";
     private readonly IReadOnlyList<string> generalColumns = ["timestamp", "user_Id",  "client_OS", "application_Version"];
     private readonly IReadOnlyList<string> customEventsColumns = ["name"];
+    private readonly IReadOnlyList<string> exceptionsColumns = ["problemId", "type", "assembly", "method", "outerType", "outerMessage"];
+    private readonly IReadOnlyList<string> dependenciesColumns = ["target", "type", "name", "resultCode", "duration", "success"];
+    private readonly IReadOnlyList<string> pageViewsColumns = ["name"];
 
     private StandaloneCodeEditor? editor;
     private bool isRunDisabled = true;
@@ -124,7 +133,7 @@
         var indexes = new List<int>();
         for (int i = 0; i < table.Columns.Count; i++)
         {
-            if (FilterColumn(table.Columns[i].Name))
+            if (table.Columns.Count <= 5 || FilterColumn(table.Columns[i].Name))
             {
                 indexes.Add(i);
             }
@@ -252,6 +261,18 @@
             if(currentQuery.StartsWith("customEvents"))
             {
                 include = customEventsColumns.Contains(name);
+            }
+            else if (currentQuery.StartsWith("exceptions"))
+            {
+                include = exceptionsColumns.Contains(name);
+            }
+            else if (currentQuery.StartsWith("dependencies"))
+            {
+                include = dependenciesColumns.Contains(name);
+            }
+            else if (currentQuery.StartsWith("pageViews"))
+            {
+                include = pageViewsColumns.Contains(name);
             }
         }
 

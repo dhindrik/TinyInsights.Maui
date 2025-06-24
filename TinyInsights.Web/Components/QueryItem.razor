@@ -1,0 +1,32 @@
+@inject TooltipService tooltipService
+
+<div class="history-item">
+    <span class="query" @ref="querySpanRef" @onmouseover="OnQueryMouseOver">@(Name ?? Query)</span>
+    <RadzenButton Icon="play_arrow" Size="ButtonSize.Small" Click="RunClicked" />
+</div>
+
+@code {
+    [Parameter] 
+    public string Query { get; set; } = string.Empty;
+    [Parameter]
+    public string? Name { get; set; }
+    [Parameter] 
+    public EventCallback RunClicked { get; set; }
+
+    private ElementReference querySpanRef;
+
+    private void ShowTooltip(ElementReference elementReference) 
+    { 
+        if(Name is not null)
+        {
+            return;
+        }
+
+        tooltipService.Open(elementReference, Name ?? Query, new TooltipOptions() { Style = "background: #757575; color: white;" }); 
+    }
+
+    private void OnQueryMouseOver()
+    {
+        ShowTooltip(querySpanRef);
+    }
+}
