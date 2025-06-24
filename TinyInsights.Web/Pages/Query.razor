@@ -24,9 +24,12 @@
             <RadzenStack>
                 <h2>Custom query</h2>
                 <span>Note, no global filter will apply when running this query!</span>
-                <RadzenStack Orientation="Orientation.Horizontal">
-                    <RadzenButton Text="Run" Icon="play_arrow" class="run_button" Click="@(async(args) => await RunQuery())" Disabled="@(isRunDisabled || isLoading)" />
-                </RadzenStack>
+      
+                        <RadzenButton Text="Run" Icon="play_arrow" class="run_button" Disabled="@(isRunDisabled || isLoading)" Click="RunQuery" />
+                        <b>Time range</b>
+                    <RadzenRadioButtonList TValue="string" Data="@timeRanges" @bind-Value="selectedTimeRange" TextProperty="Key" ValueProperty="Value" />
+                   
+     
                 <StandaloneCodeEditor Id="monaco-query-editor" ConstructionOptions="EditorConstructionOptions" OnKeyUp="HandleKeyUp"  />
 
                 @if(isLoading)
@@ -111,21 +114,9 @@
     // Track expanded row index for each table
     private List<int?> expandedRowIndexes = new();
 
-    private void ToggleRowExpansion(int tableIdx, int rowIdx)
-    {
-        while (expandedRowIndexes.Count <= tableIdx)
-        {
-            expandedRowIndexes.Add(null);
-        }
-        if (expandedRowIndexes[tableIdx] == rowIdx)
-        {
-            expandedRowIndexes[tableIdx] = null;
-        }
-        else
-        {
-            expandedRowIndexes[tableIdx] = rowIdx;
-        }
-    }
+
+    private string selectedTimeRange = "3d";
+
 
     // Helper to get filtered column indexes for a table
     private List<int> GetFilteredColumnIndexes(Table table)
@@ -170,10 +161,21 @@
                 var textToHistory = text;
                 var parts = text.Split("|");
 
+                if (text.Contains("timestamp > ago("))
+                {
+                    selectedTimeRange = CustomTimeRangeValue;
+                }
+                else if (selectedTimeRange != CustomTimeRangeValue)
+                {
+                    text = $"{text} | where timestamp > ago({selectedTimeRange})";
+                }
+
                 if (parts is not null && !parts.Last().Contains("limit"))
                 {
                     text = $"{text.Trim()} | limit 100";
                 }
+
+               
 
                 currentQuery = text;
                 queryResult = await insightsService.RunQuery(text, CancellationToken);
