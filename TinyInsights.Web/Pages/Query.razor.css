@@ -24,3 +24,37 @@
 .query {
     font-family: Monaco, Menlo, Courier;
 }
+
+::deep .close-history {
+    position:absolute;
+    right: 460px;
+    top:35px;    
+}
+
+::deep .history {
+    width: 20px;
+    font-size:32px !important;
+    background-color: transparent !important;
+    color: black !important;
+    box-shadow: none;
+}
+
+::deep .history i {
+
+    font-size: 28px !important;
+
+}
+
+::deep .history:hover,
+::deep .history:active,
+::deep .history:focus {
+    box-shadow: none !important;
+}
+
+::deep .open-history {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    box-shadow: none;
+}
+

@@ -20,6 +20,10 @@
             </RadzenCard>
         </RadzenSidebar>
     <RadzenBody>
+        @if(!isHistoryVisible)
+        {
+            <RadzenButton title="Show query history" Icon="history" class="history open-history" Click="@(() => isHistoryVisible = true)" />
+        }
         <RadzenCard>
             <RadzenStack>
                 <h2>Custom query</h2>
@@ -44,7 +48,7 @@
                         {
                             var filteredIndexes = GetFilteredColumnIndexes(table);
                             var expandedRowIndex = expandedRowIndexes.Count > tableIndex ? expandedRowIndexes[tableIndex] : null;
-                            <RadzenDataGrid Data="@table.Rows" TItem="List<object>" ShowPagingSummary="true" PageSize="20" AllowPaging="true" AllowSorting="true" class="rz-datagrid-table">
+                            <RadzenDataGrid Data="@table.Rows" TItem="List<object>" ShowPagingSummary="true" PageSize="20" AllowPaging="true" AllowSorting="true" ColumnWidth="200px" class="rz-datagrid-table">
                                 <Columns>
                                     <RadzenDataGridColumn TItem="List<object>" Title="" Width="40px">
                                         <Template Context="row">
@@ -80,17 +84,24 @@
                 </RadzenStack>
         </RadzenCard>
     </RadzenBody>
-    <RadzenSidebar Style="width: 500px; grid-area: rz-right-sidebar">
-        <RadzenCard>
-            <RadzenStack>
-                <h2>Query history</h2>
-                @foreach(var item in history)
-                {
-                    <QueryItem Query="@item" RunClicked="@(async () => await RunHistoryQuery(item))" />
-                }
-            </RadzenStack>
-        </RadzenCard>
-    </RadzenSidebar>
+        @if (isHistoryVisible)
+        {
+            <RadzenSidebar Style="width: 500px; grid-area: rz-right-sidebar">
+                <RadzenCard>
+                    <RadzenStack>
+
+                        <RadzenButton title="Hide history" Icon="keyboard_double_arrow_right" class="history close-history" Click="@(() => isHistoryVisible = false)" />
+
+                        <h2>Query history</h2>
+
+                        @foreach (var item in history)
+                        {
+                            <QueryItem Query="@item" RunClicked="@(async () => await RunHistoryQuery(item))" />
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenSidebar>
+    }
 </RadzenLayout>
 </div>
 
@@ -105,6 +116,7 @@
     private StandaloneCodeEditor? editor;
     private bool isRunDisabled = true;
     private bool isLoading = false;
+    private bool isHistoryVisible = true;
 
     private string? currentQuery;
 
