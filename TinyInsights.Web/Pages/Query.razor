@@ -50,11 +50,7 @@
                             var expandedRowIndex = expandedRowIndexes.Count > tableIndex ? expandedRowIndexes[tableIndex] : null;
                             <RadzenDataGrid Data="@table.Rows" TItem="List<object>" ShowPagingSummary="true" PageSize="20" AllowPaging="true" AllowSorting="true" ColumnWidth="200px" class="rz-datagrid-table">
                                 <Columns>
-                                    <RadzenDataGridColumn TItem="List<object>" Title="" Width="40px">
-                                        <Template Context="row">
-                                            
-                                        </Template>
-                                    </RadzenDataGridColumn>
+                                   
                                     @foreach (var idx in filteredIndexes)
                                     {
                                         <RadzenDataGridColumn @key=idx TItem="List<object>" Title="@table.Columns[idx].Name" Property="@PropertyAccess.GetDynamicPropertyExpression(idx.ToString(),typeof(object))">
@@ -72,8 +68,35 @@
 
                                     @for (int i = 0; i < table.Columns.Count; i++)
                                     {
+                                        var name = table.Columns[i].Name;
+
+                                           
+                                            @if(name == "customDimensions")
+                                            {
+                                                var json = @row[i].ToString();
+
+                                                if(json is not null)
+                                                {
+                                                    var customDimensions = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                                                    
+                                                        @if(customDimensions is not null)
+                                                    {
+                                                        foreach(var item in customDimensions)
+                                                        {
+                                                            <tr>
+                                                                <td><strong>customDimensions.@item.Key:</strong></td>
+                                                                <td>@item.Value</td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                }
+
+                                                continue;
+                                            }
+                                        
                                             <tr>
-                                                <td><strong>@table.Columns[i].Name:</strong></td><td> @row[i]</td>
+                                                <td><strong>@name:</strong></td>
+                                                <td>@row[i]</td>
                                             </tr>
                                     }                                    
                                 </Template>
