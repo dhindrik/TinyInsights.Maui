@@ -58,3 +58,7 @@
     box-shadow: none;
 }
 
+td .item-value {
+    white-space: pre-wrap !important;
+}
+
