@@ -57,7 +57,14 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        await insights.TrackEventAsync("EventButton");
+        var metrics = new Dictionary<string, double>()
+        {
+            {"metric1", 1.0},
+            {"metric2", 2.0}
+        };
+
+
+        await insights.TrackEventAsync("EventButton", metrics: metrics);
     }
 
     private async void ExceptionButton_OnClicked(object? sender, EventArgs e)
