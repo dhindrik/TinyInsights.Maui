@@ -10,15 +10,15 @@ public interface IInsights
 
     void RemoveGlobalProperty(string key);
 
-    Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null);
+    Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null);
 
-    Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null);
+    Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null);
 
     Task TrackPageVisitTime(string pageFullName, string pageDisplayName, double pageVisitTime);
 
-    Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null);
+    Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null);
 
-    Task TrackErrorAsync(Exception ex, ErrorSeverity severity, Dictionary<string, string>? properties = null);
+    Task TrackErrorAsync(Exception ex, ErrorSeverity severity, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null);
 
     Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null);
 
