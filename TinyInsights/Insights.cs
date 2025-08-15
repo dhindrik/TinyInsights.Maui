@@ -42,12 +42,12 @@ public class Insights : IInsights
         return insightsProviders;
     }
 
-    public Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
+    public Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null)
     {
         return TrackErrorAsync(ex, ErrorSeverity.Default, properties, metrics);
     }
 
-    public Task TrackErrorAsync(Exception ex, ErrorSeverity severity, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
+    public Task TrackErrorAsync(Exception ex, ErrorSeverity severity, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null)
     {
         var tasks = new List<Task>();
 
@@ -69,7 +69,7 @@ public class Insights : IInsights
         return Task.CompletedTask;
     }
 
-    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
+    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null)
     {
         var tasks = new List<Task>();
 
@@ -97,7 +97,7 @@ public class Insights : IInsights
         return Task.CompletedTask;
     }
 
-    public Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
+    public Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null)
     {
         var tasks = new List<Task>();
 
