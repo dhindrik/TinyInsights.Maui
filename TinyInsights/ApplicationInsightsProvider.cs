@@ -461,7 +461,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         crashHandler.EraseCrashes();
     }
 
-    public async Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
+    public async Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null)
     {
         try
         {
@@ -489,7 +489,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
-    public async Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
+    public async Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null)
     {
         try
         {
@@ -527,7 +527,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         await Client.FlushAsync(CancellationToken.None);
     }
 
-    public async Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
+    public async Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null)
     {
         try
         {

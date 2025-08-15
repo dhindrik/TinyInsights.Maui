@@ -20,9 +20,9 @@ public interface IInsightsProvider
 
     void RemoveGlobalProperty(string key);
 
-    Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null);
+    Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null);
 
-    Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null);
+    Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null);
 
     /// <summary>
     /// Track the duration a user spent on a page
@@ -30,7 +30,7 @@ public interface IInsightsProvider
     /// <param name="pageVisitTime">Duration in milliseconds</param>
     Task TrackPageVisitTime(string pageFullName, string pageDisplayName, double pageVisitTime);
 
-    Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null);
+    Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null);
 
     Task TrackDependencyAsync(string dependencyType, string dependencyName, string data, HttpMethod? httpMethod, DateTimeOffset startTime, TimeSpan duration, bool success, int resultCode = 0, Exception? exception = null);
 
