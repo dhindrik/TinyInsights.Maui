@@ -42,12 +42,12 @@ public class Insights : IInsights
         return insightsProviders;
     }
 
-    public Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null)
+    public Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
     {
-        return TrackErrorAsync(ex, ErrorSeverity.Default, properties);
+        return TrackErrorAsync(ex, ErrorSeverity.Default, properties, metrics);
     }
 
-    public Task TrackErrorAsync(Exception ex, ErrorSeverity severity, Dictionary<string, string>? properties = null)
+    public Task TrackErrorAsync(Exception ex, ErrorSeverity severity, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
     {
         var tasks = new List<Task>();
 
@@ -60,7 +60,7 @@ public class Insights : IInsights
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackErrorsEnabled))
         {
-            var task = provider.TrackErrorAsync(ex, properties);
+            var task = provider.TrackErrorAsync(ex, properties, metrics);
             tasks.Add(task);
         }
 
@@ -69,13 +69,13 @@ public class Insights : IInsights
         return Task.CompletedTask;
     }
 
-    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null)
+    public Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
     {
         var tasks = new List<Task>();
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackPageViewsEnabled))
         {
-            var task = provider.TrackPageViewAsync(viewName, properties);
+            var task = provider.TrackPageViewAsync(viewName, properties, metrics);
             tasks.Add(task);
         }
 
@@ -97,13 +97,13 @@ public class Insights : IInsights
         return Task.CompletedTask;
     }
 
-    public Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null)
+    public Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
     {
         var tasks = new List<Task>();
 
         foreach (var provider in insightsProviders.Where(x => x.IsTrackEventsEnabled))
         {
-            var task = provider.TrackEventAsync(eventName, properties);
+            var task = provider.TrackEventAsync(eventName, properties, metrics);
             tasks.Add(task);
         }
 

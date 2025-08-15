@@ -461,7 +461,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         crashHandler.EraseCrashes();
     }
 
-    public async Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null)
+    public async Task TrackErrorAsync(Exception ex, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
     {
         try
         {
@@ -480,7 +480,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 properties.TryAdd("StackTrace", ex.StackTrace);
             }
 
-            Client.TrackException(ex, properties);
+            Client.TrackException(ex, properties, metrics);
         }
         catch (Exception exception)
         {
@@ -489,7 +489,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
-    public async Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null)
+    public async Task TrackEventAsync(string eventName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
     {
         try
         {
@@ -501,7 +501,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
             if (EnableConsoleLogging)
                 Console.WriteLine($"TinyInsights: Tracking event {eventName}");
 
-            Client.TrackEvent(eventName, properties);
+            Client.TrackEvent(eventName, properties, metrics);
         }
         catch (Exception ex)
         {
@@ -527,7 +527,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         await Client.FlushAsync(CancellationToken.None);
     }
 
-    public async Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null)
+    public async Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, IDictionary<string, double>? metrics = null)
     {
         try
         {
@@ -554,6 +554,14 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 foreach (var property in properties)
                 {
                     pageView.Properties.Add(property.Key, property.Value);
+                }
+            }
+
+            if (metrics is not null)
+            {
+                foreach (var metric in metrics)
+                {
+                    pageView.Metrics.Add(metric.Key, metric.Value);
                 }
             }
 
