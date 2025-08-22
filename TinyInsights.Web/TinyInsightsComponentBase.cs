@@ -4,7 +4,7 @@ namespace TinyInsights.Web;
 
 public abstract class TinyInsightsComponentBase : ComponentBase
 {
-    private CancellationTokenSource cancellationTokenSource = new();
+    protected CancellationTokenSource cancellationTokenSource = new();
 
     [CascadingParameter]
     public bool IsLoggedIn { get; set; }
@@ -32,6 +32,29 @@ public abstract class TinyInsightsComponentBase : ComponentBase
 
         }
     }
+
+    protected (DateOnly StartDate, int NumberOfDays) GetDateRangeFromFilter()
+    {
+        var date = DateOnly.MinValue;
+        var numberOfDays = GlobalFilter.NumberOfDays;
+
+        if (GlobalFilter.DateFilter is not null)
+        {
+            date = GlobalFilter.DateFilter.StartDate;
+            numberOfDays = GlobalFilter.DateFilter.EndDate.DayNumber - GlobalFilter.DateFilter.StartDate.DayNumber;
+            numberOfDays++;  //to also include the end date in the range
+            return (date, numberOfDays);
+        }
+
+        //(GlobalFilter.NumberOfDays-1) so we full days
+        date = DateOnly.FromDateTime(DateTime.Now).AddDays(-(GlobalFilter.NumberOfDays - 1));
+        return (date, numberOfDays);
+    }
+}
+
+public abstract class TinyInsightsPageComponentBase : TinyInsightsComponentBase
+{
+
 
     protected override void OnInitialized()
     {

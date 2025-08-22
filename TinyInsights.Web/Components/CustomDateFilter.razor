@@ -1,0 +1,76 @@
+﻿@using Blazored.LocalStorage
+@inherits TinyInsightsComponentBase
+
+@inject DialogService dialogService
+@inject ILocalStorageService localStorageService
+
+<div>
+    <div class="container">
+        <b>Days from today</b><br />
+        <RadzenNumeric TValue="int?" @bind-Value="numberOfDays" @bind-Value:after="NumberOfDaysChanged" />
+    </div>
+    <div class="container">
+        <b>Start date</b>
+        <RadzenDatePicker @bind-Value="startDate" @bind-Value:after="DateChanged" Max="maxDate" Inline="true" />
+    </div>
+    <div class="container">
+        <b>End date</b>
+        <RadzenDatePicker @bind-Value="endDate" @bind-Value:after="DateChanged" Min="minDate" Max="DateTime.Now" Inline="true" />
+    </div>
+    <RadzenButton class="apply-button" Text="Apply" Click="Apply" />
+</div>
+@code {
+    private DateTime startDate = DateTime.Now, endDate = DateTime.Now, minDate = DateTime.Now, maxDate = DateTime.Now;
+    private int? numberOfDays;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (await localStorageService.ContainKeyAsync(nameof(GlobalFilter)))
+        {
+            var filter = await localStorageService.GetItemAsync<FilterModel>(nameof(GlobalFilter));
+
+            if (filter is not null)
+            {
+                numberOfDays = filter.NumberOfDays;
+            }
+        }
+
+        NumberOfDaysChanged();
+        UpdateMinMaxValues();
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    private void NumberOfDaysChanged()
+    {
+        startDate = DateTime.Now.AddDays(-((numberOfDays ??= 30)-1)); //-1 because today is included
+        endDate = DateTime.Now;
+
+        UpdateMinMaxValues();
+    }
+
+    private void DateChanged()
+    {
+        UpdateMinMaxValues();
+
+        numberOfDays = null;
+    }
+
+    private void UpdateMinMaxValues()
+    {
+        minDate = startDate.AddDays(1);
+        maxDate = endDate.AddDays(-1);
+    }
+
+    private void Apply()
+    {
+        GlobalFilter.DateFilter = new DateFilter(DateOnly.FromDateTime(startDate), DateOnly.FromDateTime(endDate));
+
+        dialogService.Close(true);
+    }
+}

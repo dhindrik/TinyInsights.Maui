@@ -1,6 +1,6 @@
 ﻿@page "/diagnostics/dependencies/failed/{Method}/{*Key}"
 
-@inherits TinyInsightsComponentBase
+@inherits TinyInsightsPageComponentBase
 
 @inject IInsightsService Service
 @inject DialogService DialogService
@@ -106,10 +106,24 @@
         try
         {
             isLoading = true;
-            
+
             data = await Service.GetFailedDependencies(Key, Method, GlobalFilter, cancellationToken);
             data.Items = data.Items.OrderByDescending(x => x.Timestamp).ToList();
-            failedDependenciesPerDays = data.Items.GroupBy(x => x.Timestamp.Date).Select(x => new Services.Models.CountPerDay(DateOnly.FromDateTime(x.Key), x.Count())).OrderBy(x => x.Date).ToList();
+
+            var range = GetDateRangeFromFilter();
+            var days = new List<Services.Models.CountPerDay>();
+
+            for (int i = 0; i < range.NumberOfDays; i++)
+            {
+                var currentDate = range.StartDate.AddDays(i);
+                var day = data.Items.Where(x => DateOnly.FromDateTime(x.Timestamp) == currentDate);
+
+                var count = day.Count();
+
+                days.Add(new CountPerDay(currentDate, count));
+            }      
+
+            failedDependenciesPerDays = days;
 
             isLoading = false;
         }

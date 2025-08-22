@@ -42,6 +42,18 @@ public partial class InsightsService
             filterBuilder.Append(") and ");
         }
 
+        if (filter.DateFilter is not null)
+        {
+            var start = filter.DateFilter.StartDate.AddDays(-1);
+            var end = filter.DateFilter.EndDate.AddDays(1);
+
+            filterBuilder.Append($"timestamp > datetime('{start}') and timestamp < datetime('{end}')");
+        }
+        else
+        {
+            filterBuilder.Append($"timestamp > ago({filter.NumberOfDays}d)");
+        }
+
         return filterBuilder.ToString();
     }
 

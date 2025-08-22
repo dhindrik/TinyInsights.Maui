@@ -5,7 +5,7 @@
 @using System.Web
 @using System.Text.RegularExpressions
 
-@inherits TinyInsightsComponentBase
+@inherits TinyInsightsPageComponentBase
 
 @inject IInsightsService Service
 @inject DialogService DialogService
@@ -234,12 +234,13 @@
                 perDay = await Service.GetErrorDetailsPerDay(escapedId, GlobalFilter, Severity, CancellationToken);
             }
 
-            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+            var range = GetDateRangeFromFilter();
+
             var days = new List<CountPerDay>();
 
-            for (int i = 1; i <= GlobalFilter.NumberOfDays; i++)
+            for (int i = 1; i < range.NumberOfDays; i++)
             {
-                var currentDate = date.AddDays(i);
+                var currentDate = range.StartDate.AddDays(i);
                 var day = perDay.SingleOrDefault(x => x.Date == currentDate);
 
                 var count = day?.Count ?? 0;

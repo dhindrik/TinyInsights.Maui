@@ -1,0 +1,8 @@
+::deep .apply-button {
+    display: block;
+    margin-left: auto;
+}
+
+::deep .container {
+    margin-bottom:20px;
+}

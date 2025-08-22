@@ -30,11 +30,32 @@ public class GlobalFilter : INotifyPropertyChanged
         }
     }
 
+    public async Task RestoreDayFilter()
+    {
+
+        if (await localStorageService.ContainKeyAsync(nameof(GlobalFilter)))
+        {
+            var filter = await localStorageService.GetItemAsync<FilterModel>(nameof(GlobalFilter));
+
+            if (filter is not null)
+            {
+                NumberOfDays = filter.NumberOfDays;
+            }
+        }
+    }
+
     private int numberOfDays = 30;
     public int NumberOfDays
     {
         get => numberOfDays;
         set => SetField(ref numberOfDays, value);
+    }
+
+    private DateFilter? dateFilter;
+    public DateFilter? DateFilter
+    {
+        get => dateFilter;
+        set => SetField(ref dateFilter, value);
     }
 
     private string operatingSystem = "all";
@@ -75,8 +96,17 @@ public class GlobalFilter : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    protected virtual async void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
+        if (propertyName == nameof(NumberOfDays) && NumberOfDays == -1)
+        {
+            return;
+        }
+        else if (propertyName == nameof(NumberOfDays))
+        {
+            dateFilter = null;
+        }
+
         if (propertyName == nameof(AppVersions))
         {
             if (AppVersions.Count == 0)
@@ -96,11 +126,27 @@ public class GlobalFilter : INotifyPropertyChanged
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        _ = localStorageService.SetItemAsync(nameof(GlobalFilter), new FilterModel()
+        if (propertyName == nameof(NumberOfDays) || propertyName == nameof(TextFilter))
         {
-            NumberOfDays = NumberOfDays,
-            TextFilter = TextFilter
-        });
+            var daysToSave = NumberOfDays;
+
+            //Use last saved value if custom filter
+            if (daysToSave == -1)
+            {
+                var filter = await localStorageService.GetItemAsync<FilterModel>(nameof(GlobalFilter));
+
+                if (filter is not null)
+                {
+                    daysToSave = filter.NumberOfDays;
+                }
+            }
+
+            _ = localStorageService.SetItemAsync(nameof(GlobalFilter), new FilterModel()
+            {
+                NumberOfDays = daysToSave,
+                TextFilter = TextFilter
+            });
+        }
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
@@ -111,6 +157,8 @@ public class GlobalFilter : INotifyPropertyChanged
         return true;
     }
 }
+
+public record DateFilter(DateOnly StartDate, DateOnly EndDate);
 
 public class FilterModel
 {

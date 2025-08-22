@@ -1,6 +1,8 @@
 @inherits TinyInsightsComponentBase
+
 @inject IInsightsService Service
 @inject TooltipService tooltipService
+@inject DialogService dialogService
 
 <div>
     <RadzenStack Orientation="Orientation.Horizontal" Gap="20" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
@@ -18,7 +20,11 @@
         <RadzenDropDown @bind-Value="@GlobalFilter.OperatingSystem" Data="operatingSystemFilter" TextProperty="Text"
         ValueProperty="Value" />                        
         <RadzenDropDown @bind-Value="@GlobalFilter.AppVersions" Data="appVersions" Multiple="true" Chips="true" />
-        <RadzenDropDown @bind-Value="@GlobalFilter.NumberOfDays" Data="dayFilter" TextProperty="Text" ValueProperty="Value" />
+        <RadzenDropDown @bind-Value="@GlobalFilter.NumberOfDays" @bind-Value:after="NumberOfDaysChanged" Data="dayFilter" TextProperty="Text" ValueProperty="Value" />
+        @if(GlobalFilter.DateFilter is not null)
+        {
+            <RadzenButton Icon="date_range" Click="@(() => NumberOfDaysChanged())" MouseEnter="ShowCustomTooltip" />
+        }
     </RadzenStack>
 </div>
 @code {
@@ -26,26 +32,28 @@
     private bool hasActiveFilters;
 
     private List<DayFilterItem> dayFilter = new()
-{
-new("3 days", 3),
-new("7 days", 7),
-new("14 days", 14),
-new("30 days", 30),
-};
+    {
+        new("3 days", 3),
+        new("7 days", 7),
+        new("14 days", 14),
+        new("30 days", 30),
+        new("Custom", -1)
+    };
 
     private List<OperatingSystem> operatingSystemFilter = new List<OperatingSystem>()
-{
-new ("All operating systems", "all"),
-new("iOS", "iOS"),
-new("Android", "Android"),
-new("Windows", "WinUI"),
-new("MacOS", "MacOS")
-};
+    {
+        new ("All operating systems", "all"),
+        new("iOS", "iOS"),
+        new("Android", "Android"),
+        new("Windows", "WinUI"),
+        new("MacOS", "MacOS")
+    };
 
     private List<string> appVersions = new List<string>()
-{
-GlobalFilter.AppVersionsDefaultValue
-};
+    {
+        GlobalFilter.AppVersionsDefaultValue
+    };
+
     protected override async Task OnParametersSetAsync()
     {
         if (appVersions.Count == 1)
@@ -62,9 +70,26 @@ GlobalFilter.AppVersionsDefaultValue
         }
     }
 
+    private async Task NumberOfDaysChanged()
+    {
+        //If the value is -1, it indicates a custom filter and we should show the custom filter options.
+        if (GlobalFilter.NumberOfDays != -1)
+        {
+            return;
+        }
+
+        var result = await dialogService.OpenAsync<CustomDateFilter>("Custom date range");
+
+        if(result is null && GlobalFilter.DateFilter is null)
+        {
+            await GlobalFilter.RestoreDayFilter();
+        }
+    }
+
     private void ShowTooltip(ElementReference elementReference) => tooltipService.Open(elementReference, "Add a simple KQL filter like <i>name == cloud_RoleName == 'Mobile.App'</i>. Do not include where, it will break the query. <b>Also remember, this is a global filter and some columns are specific to a certain view.</b>", new TooltipOptions(){ Style = "background: #757575; color: white;"});
     private void ShowFilterTooltip(ElementReference elementReference) => tooltipService.Open(elementReference, showAllFilters ? "<b>Hide filters</b>" : "<b>Show all filters</b>", new TooltipOptions(){ Style = "background: #757575; color: white;"});
+    private void ShowCustomTooltip(ElementReference elementReference) => tooltipService.Open(elementReference, "<b>Change data range</b>", new TooltipOptions() { Style = "background: #757575; color: white;" });
+    
     private record DayFilterItem(string Text, int Value);
-
     private record OperatingSystem(string Text, string Value);
 }

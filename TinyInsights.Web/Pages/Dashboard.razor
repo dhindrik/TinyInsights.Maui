@@ -2,7 +2,7 @@
 
 @using TinyInsights.Web.Services
 
-@inherits TinyInsightsComponentBase
+@inherits TinyInsightsPageComponentBase
 
 @inject IInsightsService Service
 <RadzenStack Gap="20">
@@ -81,13 +81,14 @@
 
             await Task.WhenAll(crashTask, errorTask);
 
-            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+            var range = GetDateRangeFromFilter();
+            
             var crashDays = new List<CountPerDay>();
             var errorDays = new List<CountPerDay>();
 
-            for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+            for (int i = 0; i < range.NumberOfDays; i++)
             {
-                var currentDate = date.AddDays(i);
+                var currentDate = range.StartDate.AddDays(i);
                 var crashDay = crashTask.Result.SingleOrDefault(x => x.Date == currentDate);
                 var errorDay = errorTask.Result.SingleOrDefault(x => x.Date == currentDate);
 
@@ -116,12 +117,13 @@
 
         var result = await Service.GetUsersPerDay(GlobalFilter);
 
-        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+        var range = GetDateRangeFromFilter();
+
         var days = new List<CountPerDay>();
 
-        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+        for (int i = 0; i < range.NumberOfDays; i++)
         {
-            var currentDate = date.AddDays(i);
+            var currentDate = range.StartDate.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
 
             var count = day?.Count ?? 0;

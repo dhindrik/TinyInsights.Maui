@@ -63,7 +63,7 @@ public partial class InsightsService : IInsightsService
         }
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash != 'true' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
 
@@ -81,7 +81,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
 
@@ -109,7 +109,7 @@ public partial class InsightsService : IInsightsService
         }
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by problemId, tostring(customDimensions.ErrorSeverity)";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash != 'true' | summarize count_sum = sum(itemCount) by problemId, tostring(customDimensions.ErrorSeverity)";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
@@ -128,7 +128,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) | extend AppVersion = parse_version(tostring(customDimensions.AppVersion)) | summarize count_sum = sum(itemCount), users_affected = dcount(user_Id), latest_app_version = arg_max(AppVersion, customDimensions.AppVersion), last_reported = max(timestamp) by strcat(problemId, ' - ', outerMessage)";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' | extend AppVersion = parse_version(tostring(customDimensions.AppVersion)) | summarize count_sum = sum(itemCount), users_affected = dcount(user_Id), latest_app_version = arg_max(AppVersion, customDimensions.AppVersion), last_reported = max(timestamp) by strcat(problemId, ' - ', outerMessage)";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
@@ -159,7 +159,7 @@ public partial class InsightsService : IInsightsService
         }
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and timestamp > ago({filter.NumberOfDays}d) and problemId == '{id}' | top 100 by timestamp desc";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash != 'true' and problemId == '{id}' | top 100 by timestamp desc";
 
         return GetErrorDetails(query, cancellationToken);
     }
@@ -169,7 +169,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and timestamp > ago({filter.NumberOfDays}d) and strcat(problemId, \" - \", outerMessage) == '{id}' | top 100 by timestamp desc";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' and strcat(problemId, \" - \", outerMessage) == '{id}' | top 100 by timestamp desc";
 
         return GetErrorDetails(query, cancellationToken);
     }
@@ -289,7 +289,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize avg = avg(duration) by data | limit 20";
+            $"dependencies | where{queryFilter} | summarize avg = avg(duration) by data | limit 20";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
@@ -308,7 +308,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"dependencies | where{queryFilter} timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data, tostring(customDimensions.HttpMethod) | limit 20";
+            $"dependencies | where{queryFilter} | summarize count_sum = sum(itemCount) by data, tostring(customDimensions.HttpMethod) | limit 20";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
@@ -345,7 +345,7 @@ public partial class InsightsService : IInsightsService
         }
 
         var query =
-            $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by data, tostring(customDimensions.HttpMethod)";
+            $"dependencies | where{queryFilter} and success == false | summarize count_sum = sum(itemCount) by data, tostring(customDimensions.HttpMethod)";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
@@ -363,7 +363,7 @@ public partial class InsightsService : IInsightsService
     {
         var queryFilter = GetFilter(filter);
 
-        var query = $"dependencies | where{queryFilter} success == false and resultCode != ''| distinct resultCode";
+        var query = $"dependencies | where{queryFilter} and success == false and resultCode != ''| distinct resultCode";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
@@ -375,7 +375,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) and data == '{key}' and customDimensions.HttpMethod == '{method}'";
+            $"dependencies | where{queryFilter} and success == false and data == '{key}' and customDimensions.HttpMethod == '{method}'";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
 
@@ -404,7 +404,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"dependencies | where{queryFilter} success == false and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+            $"dependencies | where{queryFilter} and success == false | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
 
@@ -484,7 +484,7 @@ public partial class InsightsService : IInsightsService
         }
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and problemId == '{problemId}' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and problemId == '{problemId}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
@@ -503,7 +503,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and strcat(problemId, \" - \", outerMessage) == '{problemId}' and timestamp > ago({filter.NumberOfDays}d) | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and strcat(problemId, \" - \", outerMessage) == '{problemId}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();

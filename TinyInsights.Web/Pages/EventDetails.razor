@@ -1,5 +1,5 @@
 @page "/analytics/events/details/{*EventName}"
-@inherits TinyInsightsComponentBase
+@inherits TinyInsightsPageComponentBase
 
 @inject IInsightsService Service
 
@@ -75,12 +75,12 @@
 
         var result = await Service.GetEventsPerDay(EventName, GlobalFilter);
 
-        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-GlobalFilter.NumberOfDays);
+        var range = GetDateRangeFromFilter();
         var days = new List<CountPerDay>();
 
-        for (int i = 0; i <= GlobalFilter.NumberOfDays; i++)
+        for (int i = 0; i < range.NumberOfDays; i++)
         {
-            var currentDate = date.AddDays(i);
+            var currentDate = range.StartDate.AddDays(i);
             var day = result.SingleOrDefault(x => x.Date == currentDate);
 
             var count = day?.Count ?? 0;
