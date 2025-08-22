@@ -18,6 +18,11 @@ body {
     -ms-user-select:text !important;
     pointer-events:all !important;
 }
+
+h2 {
+    margin:0;
+}
+
 .rz-unselectable-text {
     user-select: auto !important;
     -webkit-user-select: auto !important;

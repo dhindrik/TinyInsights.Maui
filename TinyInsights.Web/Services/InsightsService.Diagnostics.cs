@@ -174,6 +174,49 @@ public partial class InsightsService : IInsightsService
         return GetErrorDetails(query, cancellationToken);
     }
 
+    public async Task<List<CountPerKey>> GetErrorsPerOperatingSystem(GlobalFilter filter, List<string>? errorSeverities = null, CancellationToken cancellationToken = default)
+    {
+        var queryFilter = GetFilter(filter);
+
+        if (errorSeverities is { Count: > 0 })
+        {
+            var filterBuilder = new StringBuilder();
+            filterBuilder.Append(queryFilter);
+            filterBuilder.Append("customDimensions.ErrorSeverity in (");
+            filterBuilder.AppendJoin(',', errorSeverities.Select(x => $"'{x}'"));
+            filterBuilder.Append(") and ");
+            queryFilter = filterBuilder.ToString();
+        }
+
+        var query = $"exceptions | where{queryFilter} and customDimensions.IsCrash != 'true' | summarize count_sum = sum(itemCount) by client_OS";
+
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
+        var result = new List<CountPerKey>();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            result.Add(new CountPerKey(row[0].ToString(), int.Parse(row[1].ToString())));
+        }
+
+        return result;
+    }
+
+    public async Task<List<CountPerKey>> GetCrashesPerOperatingSystem(GlobalFilter filter, CancellationToken cancellationToken = default)
+    {
+        var queryFilter = GetFilter(filter);
+        var query = $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' | summarize count_sum = sum(itemCount) by client_OS";
+
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
+        var result = new List<CountPerKey>();
+
+        foreach (var row in queryResult.Tables.First().Rows)
+        {
+            result.Add(new CountPerKey(row[0].ToString(), int.Parse(row[1].ToString())));
+        }
+
+        return result;
+    }
+
     private async Task<ErrorDetails> GetErrorDetails(string query, CancellationToken cancellationToken = default)
     {
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);

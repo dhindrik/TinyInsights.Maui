@@ -6,7 +6,7 @@
 
 @inject IInsightsService Service
 @inject TooltipService tooltipService
-
+<div>
 <RadzenStack Gap="20">
     <RadzenRow JustifyContent="JustifyContent.End">
         <GlobalFilters />
@@ -34,26 +34,51 @@
         </RadzenCard>
     }
 
-    <RadzenCard>
-        <RadzenStack>
-            <h2>@perDayHeader</h2>
-            @if (isLoadingGraph)
-            {
-                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
-            }
-            else
-            {
-                <RadzenChart>
-                    <RadzenLegend Visible="false"/>
-                    <RadzenLineSeries Data="@errorsPerDays" CategoryProperty="Date" ValueProperty="Count">
-                        <RadzenMarkers MarkerType="MarkerType.Circle"/>
-                        <RadzenSeriesDataLabels/>
-                    </RadzenLineSeries>
-                    <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
-                </RadzenChart>
-            }
-        </RadzenStack>
-    </RadzenCard>
+    <!-- begin wrapbox with per-platform (left) and per-day (right) -->
+    <div class="wrapbox">       
+        <div class="wrapitem">
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>@perDayHeader</h2>
+                    @if (isLoadingGraph)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+                    }
+                    else
+                    {
+                        <RadzenChart>
+                            <RadzenLegend Visible="false"/>
+                            <RadzenLineSeries Data="@errorsPerDays" CategoryProperty="Date" ValueProperty="Count">
+                                <RadzenMarkers MarkerType="MarkerType.Circle"/>
+                                <RadzenSeriesDataLabels/>
+                            </RadzenLineSeries>
+                            <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                        </RadzenChart>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </div>
+        <div class="wrapitem wrapitem-small">
+            <RadzenCard>
+                <RadzenStack>
+                    <h2>@perPlatformHeader</h2>
+                    @if (isLoadingPerPlatform)
+                    {
+                        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    }
+                    else
+                    {
+                        <RadzenChart>
+                            <RadzenPieSeries Data="@perPlatform" Title="@perPlatformHeader" CategoryProperty="@nameof(CountPerKey.Key)" ValueProperty="@nameof(CountPerKey.Count)">
+                                <RadzenSeriesDataLabels Visible="true" />
+                            </RadzenPieSeries>
+                        </RadzenChart>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </div>
+    </div>
+    <!-- end wrapbox -->
 
     <RadzenCard>
         <RadzenStack>
@@ -102,6 +127,7 @@
         </RadzenStack>
     </RadzenCard>
 </RadzenStack>
+</div>
 @code {
 
     [Parameter]
@@ -120,6 +146,10 @@
     private bool isCrash;
     private string perDayHeader, listHeader = string.Empty;
 
+    private List<CountPerKey> perPlatform = new();
+    private bool isLoadingPerPlatform = true;
+    private string perPlatformHeader = string.Empty;
+
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
@@ -132,12 +162,14 @@
             isCrash = true;
             perDayHeader = "Crashes per day";
             listHeader = "Crashes";
+            perPlatformHeader = "Crashes per platform";
         }
         else
         {
             isCrash = false;
             perDayHeader = "Errors per day";
             listHeader = "Errors";
+            perPlatformHeader = "Errors per platform";
         }
 
         await LoadData();
@@ -149,8 +181,9 @@
         {
             var graphTask = LoadGraph();
             var listTask = LoadList();
+            var platformTask = LoadPerPlatform();
 
-            await Task.WhenAll(graphTask, listTask);
+            await Task.WhenAll(graphTask, listTask, platformTask);
         }
         catch (Exception ex)
         {
@@ -193,6 +226,24 @@
 
         isLoadingGraph = false;
 
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadPerPlatform()
+    {
+        isLoadingPerPlatform = true;
+
+        if (isCrash)
+        {
+            perPlatform = await Service.GetCrashesPerOperatingSystem(GlobalFilter);
+        }
+        else
+        {
+            var filter = selectedSeverities.Where(x => x != All).ToList();
+            perPlatform = await Service.GetErrorsPerOperatingSystem(GlobalFilter, filter);
+        }
+
+        isLoadingPerPlatform = false;
         await InvokeAsync(StateHasChanged);
     }
 

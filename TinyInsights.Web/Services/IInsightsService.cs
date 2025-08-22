@@ -26,6 +26,8 @@ public interface IInsightsService
     Task<List<CountPerDay>> GetFailedDependenciesPerDay(GlobalFilter filter, CancellationToken cancellationToken = default);
     Task<List<CountPerDay>> GetCrashDetailsPerDay(string problemId, GlobalFilter filter, CancellationToken cancellationToken = default);
     Task<List<CountPerDay>> GetErrorDetailsPerDay(string problemId, GlobalFilter filter, string? severity = null, CancellationToken cancellationToken = default);
+    Task<List<CountPerKey>> GetErrorsPerOperatingSystem(GlobalFilter filter, List<string>? errorSeverities = null, CancellationToken cancellationToken = default);
+    Task<List<CountPerKey>> GetCrashesPerOperatingSystem(GlobalFilter filter, CancellationToken cancellationToken = default);
     #endregion
 
     #region Analytics

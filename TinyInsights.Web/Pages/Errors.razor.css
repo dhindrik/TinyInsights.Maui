@@ -1,0 +1,7 @@
+.wrapitem {
+    max-width: 66% !important;
+    min-width:600px !important;
+}
+.wrapitem-small {
+    max-width: 32% !important;
+}
