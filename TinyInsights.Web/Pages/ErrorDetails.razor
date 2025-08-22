@@ -31,12 +31,12 @@
                 {
                     <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
                 }
-                else
+                else if(data.Items.Count > 0)
                 {
                     <LabelValuePair Key="Type" Value="@data.Items.First().Data["type"]" />
 
                     <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="20px">
-                        <LabelValuePair Key="Count" Value="@data.Count.ToString()" />
+                        <LabelValuePair Key="Count" Value="@detailsCount.ToString()" />
                         <LabelValuePair Key="Affected users" Value="@data.AffectedUsersCount.ToString()" />
                         <LabelValuePair Key="Affected app versions" Value="@(string.Join(", ", data.AffectedAppVersions))" />
                         <LabelValuePair Key="Affected operating systems" Value="@(string.Join(", ", data.AffectedOperatingSystems))" />
@@ -187,6 +187,7 @@
     private List<CountPerDay>? errorsPerDays;
 
     private bool isPropertiesExpanded;
+    private int detailsCount;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -225,13 +226,15 @@
 
             if (isCrash)
             {
-                data = await Service.GetCrashDetails(escapedId, GlobalFilter,CancellationToken);
+                data = await Service.GetCrashDetails(escapedId, GlobalFilter, CancellationToken);
                 perDay = await Service.GetCrashDetailsPerDay(escapedId, GlobalFilter, CancellationToken);
+                detailsCount = await Service.GetCrashDetailsCount(escapedId, GlobalFilter, CancellationToken);                
             }
             else
             {
-                data = await Service.GetErrorDetails(escapedId, GlobalFilter, Severity, CancellationToken);
+                data= await Service.GetErrorDetails(escapedId, GlobalFilter, Severity, CancellationToken);
                 perDay = await Service.GetErrorDetailsPerDay(escapedId, GlobalFilter, Severity, CancellationToken);
+                detailsCount = await Service.GetErrorDetailsCount(escapedId, GlobalFilter, Severity, CancellationToken);
             }
 
             var range = GetDateRangeFromFilter();

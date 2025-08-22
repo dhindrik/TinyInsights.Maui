@@ -16,6 +16,8 @@ public interface IInsightsService
     Task<List<ErrorCount>> GetErrorsGrouped(GlobalFilter filter, List<string>? errorSeverities = null, CancellationToken cancellationToken = default);
     Task<ErrorDetails> GetCrashDetails(string id, GlobalFilter filter, CancellationToken cancellationToken = default);
     Task<ErrorDetails> GetErrorDetails(string id, GlobalFilter filter, string? severity = null, CancellationToken cancellationToken = default);
+    Task<int> GetErrorDetailsCount(string id, GlobalFilter filter, string? severity = null, CancellationToken cancellationToken = default);
+    Task<int> GetCrashDetailsCount(string id, GlobalFilter filter, CancellationToken cancellationToken = default);
     Task<List<EventItem>> GetEventsByUser(string userId, DateTime timestamp, CancellationToken cancellationToken = default);
     Task<List<EventItem>> GetEventsByUser(string userId, GlobalFilter filter, CancellationToken cancellationToken = default);
     Task<List<AvgPerKey>> GetDependencyAvgDurations(GlobalFilter filter, CancellationToken cancellationToken = default);

@@ -56,9 +56,9 @@ public partial class InsightsService : IInsightsService
         {
             var filterBuilder = new StringBuilder();
             filterBuilder.Append(queryFilter);
-            filterBuilder.Append("customDimensions.ErrorSeverity in (");
+            filterBuilder.Append(" and customDimensions.ErrorSeverity in (");
             filterBuilder.AppendJoin(',', errorSeverities.Select(x => $"'{x}'"));
-            filterBuilder.Append(") and ");
+            filterBuilder.Append(")");
             queryFilter = filterBuilder.ToString();
         }
 
@@ -102,9 +102,9 @@ public partial class InsightsService : IInsightsService
         {
             var filterBuilder = new StringBuilder();
             filterBuilder.Append(queryFilter);
-            filterBuilder.Append("customDimensions.ErrorSeverity in (");
+            filterBuilder.Append(" and customDimensions.ErrorSeverity in (");
             filterBuilder.AppendJoin(',', errorSeverities.Select(x => $"'{x}'"));
-            filterBuilder.Append(") and ");
+            filterBuilder.Append(")");
             queryFilter = filterBuilder.ToString();
         }
 
@@ -155,11 +155,13 @@ public partial class InsightsService : IInsightsService
 
         if (severity is not null)
         {
-            queryFilter += $"customDimensions.ErrorSeverity == '{severity}' and ";
+            queryFilter += $" and customDimensions.ErrorSeverity == '{severity}'";
         }
 
+        id = id.Replace(" ", "");
+
         var query =
-            $"exceptions | where{queryFilter} and customDimensions.IsCrash != 'true' and problemId == '{id}' | top 100 by timestamp desc";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash != 'true' and replace_regex(problemId, @\"\\s+\", \"\") == '{id}' | top 100 by timestamp desc";
 
         return GetErrorDetails(query, cancellationToken);
     }
@@ -168,10 +170,53 @@ public partial class InsightsService : IInsightsService
     {
         var queryFilter = GetFilter(filter);
 
+        id = id.Replace(" ", "");
+
         var query =
-            $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' and strcat(problemId, \" - \", outerMessage) == '{id}' | top 100 by timestamp desc";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' and replace_regex(strcat(problemId, \" - \", outerMessage), @\"\\s+\", \"\") == '{id}' | top 100 by timestamp desc";
 
         return GetErrorDetails(query, cancellationToken);
+    }
+
+    public async Task<int> GetErrorDetailsCount(string id, GlobalFilter filter, string? severity = null, CancellationToken cancellationToken = default)
+    {
+        var queryFilter = GetFilter(filter);
+
+        if (severity is not null)
+        {
+            queryFilter += $" and customDimensions.ErrorSeverity == '{severity}'";
+        }
+
+        id = id.Replace(" ", "");
+
+        var query = $"exceptions | where{queryFilter} and customDimensions.IsCrash != 'true' and replace_regex(problemId, @\"\\s+\", \"\") == '{id}' | summarize count_sum = sum(itemCount)";
+
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
+        var table = queryResult?.Tables?.FirstOrDefault();
+        var row = table?.Rows?.FirstOrDefault();
+        if (row is null || row.Count == 0)
+        {
+            return 0;
+        }
+        return int.TryParse(row.Last().ToString(), out var count) ? count : 0;
+    }
+
+    public async Task<int> GetCrashDetailsCount(string id, GlobalFilter filter, CancellationToken cancellationToken = default)
+    {
+        var queryFilter = GetFilter(filter);
+
+        id = id.Replace(" ", "");
+
+        var query = $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' and replace_regex(strcat(problemId, \" - \", outerMessage), @\"\\s+\", \"\") == '{id}' | summarize count_sum = sum(itemCount)";
+
+        var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
+        var table = queryResult?.Tables?.FirstOrDefault();
+        var row = table?.Rows?.FirstOrDefault();
+        if (row is null || row.Count == 0)
+        {
+            return 0;
+        }
+        return int.TryParse(row.Last().ToString(), out var count) ? count : 0;
     }
 
     public async Task<List<CountPerKey>> GetErrorsPerOperatingSystem(GlobalFilter filter, List<string>? errorSeverities = null, CancellationToken cancellationToken = default)
@@ -182,9 +227,9 @@ public partial class InsightsService : IInsightsService
         {
             var filterBuilder = new StringBuilder();
             filterBuilder.Append(queryFilter);
-            filterBuilder.Append("customDimensions.ErrorSeverity in (");
+            filterBuilder.Append(" customDimensions.ErrorSeverity in (");
             filterBuilder.AppendJoin(',', errorSeverities.Select(x => $"'{x}'"));
-            filterBuilder.Append(") and ");
+            filterBuilder.Append(")");
             queryFilter = filterBuilder.ToString();
         }
 
@@ -523,11 +568,13 @@ public partial class InsightsService : IInsightsService
 
         if (severity is not null)
         {
-            queryFilter += $"customDimensions.ErrorSeverity == '{severity}' and ";
+            queryFilter += $" and customDimensions.ErrorSeverity == '{severity}'";
         }
 
+        problemId = problemId.Replace(" ", "");
+
         var query =
-            $"exceptions | where{queryFilter} and customDimensions.IsCrash != 'true' and problemId == '{problemId}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash != 'true' and replace_regex(problemId, @\"\\s+\", \"\") == '{problemId}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
@@ -545,8 +592,10 @@ public partial class InsightsService : IInsightsService
     {
         var queryFilter = GetFilter(filter);
 
+        problemId = problemId.Replace(" ", "");
+
         var query =
-            $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' and strcat(problemId, \" - \", outerMessage) == '{problemId}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' and replace_regex(strcat(problemId, \" - \", outerMessage), @\"\\s+\", \"\") == '{problemId}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
