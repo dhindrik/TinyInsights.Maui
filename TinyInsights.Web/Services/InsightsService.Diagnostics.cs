@@ -484,7 +484,7 @@ public partial class InsightsService : IInsightsService
         }
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash != 'true' and problemId == '{problemId}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash != 'true' and problemId == '{problemId}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
@@ -503,7 +503,7 @@ public partial class InsightsService : IInsightsService
         var queryFilter = GetFilter(filter);
 
         var query =
-            $"exceptions | where{queryFilter} customDimensions.IsCrash == 'true' and strcat(problemId, \" - \", outerMessage) == '{problemId}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+            $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' and strcat(problemId, \" - \", outerMessage) == '{problemId}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
 
         var queryResult = await GetQueryResult<QueryResult>(query, cancellationToken);
         var result = new List<CountPerDay>();
