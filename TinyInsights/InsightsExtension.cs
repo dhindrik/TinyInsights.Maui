@@ -11,6 +11,51 @@ public static class InsightsExtension
         return appBuilder;
     }
 
+    public static MauiAppBuilder UseTinyInsightsOpenTelemetry(this MauiAppBuilder appBuilder, string? applicationInsightsConnectionString = null, Action<OpenTelemetryInsightsProvider>? configureProvider = null)
+    {
+        appBuilder.Services.AddSingleton<IInsights>((serviceProvider) =>
+        {
+#if WINDOWS
+			var provider = new OpenTelemetryInsightsProvider(MauiWinUIApplication.Current, applicationInsightsConnectionString);
+#elif ANDROID || IOS || MACCATALYST
+			var provider = new OpenTelemetryInsightsProvider(applicationInsightsConnectionString);
+#else
+            var provider = new OpenTelemetryInsightsProvider();
+#endif
+
+            configureProvider?.Invoke(provider);
+            provider.Initialize();
+
+            var insights = new Insights();
+            insights.AddProvider(provider);
+            return insights;
+        });
+
+        appBuilder.Services.AddTransient<InsightsMessageHandler>();
+        return appBuilder;
+    }
+
+    public static MauiAppBuilder UseTinyInsightsOpenTelemetryAsILogger(this MauiAppBuilder appBuilder, string? applicationInsightsConnectionString = null, Action<OpenTelemetryInsightsProvider>? configureProvider = null)
+    {
+        appBuilder.Services.AddSingleton<ILogger>((_) =>
+        {
+#if WINDOWS
+			var provider = new OpenTelemetryInsightsProvider(MauiWinUIApplication.Current, applicationInsightsConnectionString);
+#elif ANDROID || IOS || MACCATALYST
+			var provider = new OpenTelemetryInsightsProvider(applicationInsightsConnectionString);
+#else
+            var provider = new OpenTelemetryInsightsProvider();
+#endif
+
+            configureProvider?.Invoke(provider);
+            provider.Initialize();
+            return provider;
+        });
+
+        appBuilder.Services.AddTransient<InsightsMessageHandler>();
+        return appBuilder;
+    }
+
     public static MauiAppBuilder UseTinyInsights(this MauiAppBuilder appBuilder, string applicationInsightsConnectionString)
     {
         return UseTinyInsights(appBuilder, applicationInsightsConnectionString, null, null);

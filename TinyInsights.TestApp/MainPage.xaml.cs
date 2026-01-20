@@ -42,10 +42,12 @@ public partial class MainPage : ContentPage
         if (UseILogger)
         {
             logger.LogTrace("MainView");
+            await insights.FlushAsync();
             return;
         }
 
         await insights.TrackPageViewAsync("MainView", data);
+        await insights.FlushAsync();
     }
 
 
@@ -54,6 +56,7 @@ public partial class MainPage : ContentPage
         if (UseILogger)
         {
             logger.LogInformation("EventButton");
+            await insights.FlushAsync();
             return;
         }
 
@@ -65,6 +68,7 @@ public partial class MainPage : ContentPage
 
 
         await insights.TrackEventAsync("EventButton", metrics: metrics);
+        await insights.FlushAsync();
     }
 
     private async void ExceptionButton_OnClicked(object? sender, EventArgs e)
@@ -78,10 +82,12 @@ public partial class MainPage : ContentPage
             if (UseILogger)
             {
                 logger.LogError(ex, "ExceptionButton");
+                await insights.FlushAsync();
                 return;
             }
 
             await insights.TrackErrorAsync(ex);
+            await insights.FlushAsync();
         }
     }
 
@@ -93,6 +99,8 @@ public partial class MainPage : ContentPage
         {
             _ = await client.GetAsync("https://google.se");
         }
+
+        await insights.FlushAsync();
     }
 
     private void CrashButton_OnClicked(object? sender, EventArgs e)
