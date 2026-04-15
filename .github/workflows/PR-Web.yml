@@ -19,14 +19,17 @@ jobs:
       - name: Restore dependencies for Web
         run: dotnet restore TinyInsights.Web/TinyInsights.Web.csproj
 
-      - name: Run dotnet format
-        run: dotnet format --verify-no-changes
+      - name: Restore dependencies for WebServer
+        run: dotnet restore TinyInsights.WebServer/TinyInsights.WebServer.csproj
+
+      - name: Run dotnet format for Web
+        run: dotnet format TinyInsights.Web/TinyInsights.Web.csproj --verify-no-changes
+
+      - name: Run dotnet format for WebServer
+        run: dotnet format TinyInsights.WebServer/TinyInsights.WebServer.csproj --verify-no-changes
 
       - name: Build Web
         run: dotnet build TinyInsights.Web/TinyInsights.Web.csproj --no-restore
-
-      - name: Restore dependencies for WebServer
-        run: dotnet restore TinyInsights.WebServer/TinyInsights.WebServer.csproj
 
       - name: Build WebServer
         run: dotnet build TinyInsights.WebServer/TinyInsights.WebServer.csproj --no-restore

@@ -27,7 +27,7 @@ jobs:
         run: dotnet restore TinyInsights/TinyInsights.csproj
 
       - name: Run dotnet format
-        run: dotnet format --verify-no-changes
+        run: dotnet format TinyInsights/TinyInsights.csproj --verify-no-changes
 
       - name: Build
         run: dotnet build TinyInsights/TinyInsights.csproj --no-restore
