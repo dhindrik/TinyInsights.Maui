@@ -58,6 +58,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     private static ICrashHandler CreateDefaultCrashHandlerType() => new CrashToJsonFileStorageHandler();
 
+    public Action<Dictionary<string, string>>? AfterCrash { get; set; }
+    public Func<Dictionary<string, string>, Task>? BeforeSendCrash { get; set; }
+
     public Func<(string DependencyType, string DependencyName, string Data, DateTimeOffset StartTime, TimeSpan Duration, bool Success, int ResultCode, Exception? Exception), bool>? TrackDependencyFilter { get; set; }
 
 #if IOS || MACCATALYST || ANDROID
@@ -74,9 +77,12 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         async void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
+            var crashProperties = CaptureGlobalProperties();
+            AfterCrash?.Invoke(crashProperties);
+
             if (IsTrackCrashesEnabled)
             {
-                this.crashHandler.PushCrashToStorage(e.Exception, CaptureGlobalProperties());
+                this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
             }
 
             if (Client is not null)
@@ -87,9 +93,13 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         async void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+            var crashProperties = CaptureGlobalProperties();
+
+            AfterCrash?.Invoke(crashProperties);
+
             if (IsTrackCrashesEnabled)
             {
-                this.crashHandler.PushCrashToStorage((Exception)e.ExceptionObject, CaptureGlobalProperties());
+                this.crashHandler.PushCrashToStorage((Exception)e.ExceptionObject, crashProperties);
             }
 
             if (Client is not null)
@@ -111,9 +121,13 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
+            var crashProperties = CaptureGlobalProperties();
+
+            AfterCrash?.Invoke(crashProperties);
+
             if (IsTrackCrashesEnabled)
             {
-                this.crashHandler.PushCrashToStorage(e.Exception, CaptureGlobalProperties());
+                this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
             }
 
             if (Client is not null)
@@ -451,6 +465,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 return;
             }
 
+
             if (EnableConsoleLogging)
                 Console.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
 
@@ -470,6 +485,12 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                     { "ExceptionType", crash.ExceptionType },
                     { "Source", crash.Source ?? string.Empty }
                 };
+
+
+                if (BeforeSendCrash is not null)
+                {
+                    await BeforeSendCrash.Invoke(properties);
+                }
 
                 if (crash.GlobalProperties is not null && crash.GlobalProperties.Count > 0)
                 {
