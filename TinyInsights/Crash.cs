@@ -10,7 +10,7 @@ public class Crash
         ExceptionType = string.Empty;
     }
 
-    public Crash(Exception exception)
+    public Crash(Exception exception, Dictionary<string, string>? globalProperties)
     {
         var type = exception.GetType();
 
@@ -19,6 +19,7 @@ public class Crash
         ExceptionType = type.ToString();
         ExceptionAssembly = type.Assembly.FullName!;
         Source = exception.Source;
+        GlobalProperties = globalProperties;
     }
 
     public string? Message { get; init; }
@@ -26,6 +27,7 @@ public class Crash
     public string ExceptionType { get; init; }
     public string ExceptionAssembly { get; init; }
     public string? Source { get; init; }
+    public Dictionary<string, string>? GlobalProperties { get; init; }
 
     public Exception? GetException()
     {
