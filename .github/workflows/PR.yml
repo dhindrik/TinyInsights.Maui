@@ -20,14 +20,14 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Run dotnet format
-        run: dotnet format --verify-no-changes
-
       - name: Install Maui
         run: dotnet workload install maui
 
       - name: Restore dependencies
         run: dotnet restore TinyInsights/TinyInsights.csproj
+
+      - name: Run dotnet format
+        run: dotnet format --verify-no-changes
 
       - name: Build
         run: dotnet build TinyInsights/TinyInsights.csproj --no-restore
