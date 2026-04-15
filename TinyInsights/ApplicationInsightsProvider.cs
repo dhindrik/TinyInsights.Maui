@@ -489,7 +489,15 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
                 if (BeforeSendCrash is not null)
                 {
-                    await BeforeSendCrash.Invoke(properties);
+                    try
+                    {
+                        await BeforeSendCrash.Invoke(properties);
+                    }
+                    catch (Exception e)
+                    {
+                        if (EnableConsoleLogging)
+                            Console.WriteLine($"TinyInsights: Error sending crashes. Message: {e.Message}");
+                    }
                 }
 
                 if (crash.GlobalProperties is not null && crash.GlobalProperties.Count > 0)
