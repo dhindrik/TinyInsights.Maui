@@ -24,13 +24,18 @@ public class CrashToJsonFileStorageHandler : ICrashHandler
 
     public virtual void PushCrashToStorage(Exception ex)
     {
+        PushCrashToStorage(ex, null);
+    }
+
+    public virtual void PushCrashToStorage(Exception ex, Dictionary<string, string>? globalProperties)
+    {
         try
         {
             Trace.WriteLine("TinyInsights: Handle crashes");
 
             var crashes = ReadCrashes() ?? [];
 
-            crashes.Add(new Crash(ex));
+            crashes.Add(new Crash(ex, globalProperties));
 
             var json = JsonSerializer.Serialize(crashes);
 

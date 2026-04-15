@@ -58,6 +58,9 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     private static ICrashHandler CreateDefaultCrashHandlerType() => new CrashToJsonFileStorageHandler();
 
+    public Action<Dictionary<string, string>>? AfterCrash { get; set; }
+    public Func<Dictionary<string, string>, Task>? BeforeSendCrash { get; set; }
+
     public Func<(string DependencyType, string DependencyName, string Data, DateTimeOffset StartTime, TimeSpan Duration, bool Success, int ResultCode, Exception? Exception), bool>? TrackDependencyFilter { get; set; }
 
 #if IOS || MACCATALYST || ANDROID
@@ -74,9 +77,12 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         async void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
+            var crashProperties = CaptureGlobalProperties();
+            AfterCrash?.Invoke(crashProperties);
+
             if (IsTrackCrashesEnabled)
             {
-                this.crashHandler.PushCrashToStorage(e.Exception);
+                this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
             }
 
             if (Client is not null)
@@ -87,9 +93,13 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         async void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+            var crashProperties = CaptureGlobalProperties();
+
+            AfterCrash?.Invoke(crashProperties);
+
             if (IsTrackCrashesEnabled)
             {
-                this.crashHandler.PushCrashToStorage((Exception)e.ExceptionObject);
+                this.crashHandler.PushCrashToStorage((Exception)e.ExceptionObject, crashProperties);
             }
 
             if (Client is not null)
@@ -111,9 +121,13 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
+            var crashProperties = CaptureGlobalProperties();
+
+            AfterCrash?.Invoke(crashProperties);
+
             if (IsTrackCrashesEnabled)
             {
-                this.crashHandler.PushCrashToStorage(e.Exception);
+                this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
             }
 
             if (Client is not null)
@@ -369,6 +383,38 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         }
     }
 
+    private Dictionary<string, string> CaptureGlobalProperties()
+    {
+        var snapshot = new Dictionary<string, string>(globalProperties);
+
+        if (client is not null)
+        {
+            // Capture context properties from the live client so we get
+            // the actual values (defaults + user overrides) at crash time
+            snapshot.TryAdd("Device.OperatingSystem", client.Context.Device.OperatingSystem);
+            snapshot.TryAdd("Device.Model", client.Context.Device.Model);
+            snapshot.TryAdd("Device.Type", client.Context.Device.Type);
+
+            if (!string.IsNullOrEmpty(client.Context.Device.Id))
+            {
+                snapshot.TryAdd("Device.Id", client.Context.Device.Id);
+            }
+
+            snapshot.TryAdd("Cloud.RoleName", client.Context.Cloud.RoleName);
+            snapshot.TryAdd("Cloud.RoleInstance", client.Context.Cloud.RoleInstance);
+            snapshot.TryAdd("User.Id", client.Context.User.Id);
+            snapshot.TryAdd("Session.Id", client.Context.Session.Id);
+            snapshot.TryAdd("Component.Version", client.Context.Component.Version);
+
+            foreach (var property in client.Context.GlobalProperties)
+            {
+                snapshot.TryAdd(property.Key, property.Value);
+            }
+        }
+
+        return snapshot;
+    }
+
     public void OverrideAnonymousUserId(string userId)
     {
         Preferences.Set(UserIdKey, userId);
@@ -419,6 +465,7 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 return;
             }
 
+
             if (EnableConsoleLogging)
                 Console.WriteLine($"TinyInsights: Sending {crashes.Count} crashes");
 
@@ -439,6 +486,32 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                     { "Source", crash.Source ?? string.Empty }
                 };
 
+
+                if (BeforeSendCrash is not null)
+                {
+                    try
+                    {
+                        await BeforeSendCrash.Invoke(properties);
+                    }
+                    catch (Exception e)
+                    {
+                        if (EnableConsoleLogging)
+                            Console.WriteLine($"TinyInsights: Error sending crashes. Message: {e.Message}");
+                    }
+                }
+
+                if (crash.GlobalProperties is not null && crash.GlobalProperties.Count > 0)
+                {
+                    var crashClient = CreateCrashTelemetryClient(crash.GlobalProperties);
+
+                    if (crashClient is not null)
+                    {
+                        crashClient.TrackException(ex, properties);
+                        await crashClient.FlushAsync(CancellationToken.None);
+                        continue;
+                    }
+                }
+
                 await TrackErrorAsync(ex, properties);
             }
 
@@ -448,6 +521,84 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             if (EnableConsoleLogging)
                 Console.WriteLine($"TinyInsights: Error sending crashes. Message: {ex.Message}");
+        }
+    }
+
+    private TelemetryClient? CreateCrashTelemetryClient(Dictionary<string, string> crashGlobalProperties)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(ConnectionString))
+            {
+                return null;
+            }
+
+            var crashConfiguration = new TelemetryConfiguration()
+            {
+                ConnectionString = ConnectionString
+            };
+
+            if (TelemetryChannel is not null)
+            {
+                crashConfiguration.TelemetryChannel = TelemetryChannel;
+            }
+
+            var crashClient = new TelemetryClient(crashConfiguration);
+
+            foreach (var property in crashGlobalProperties)
+            {
+                switch (property.Key)
+                {
+                    case "Cloud.RoleName":
+                        crashClient.Context.Cloud.RoleName = property.Value;
+                        break;
+
+                    case "Cloud.RoleInstance":
+                        crashClient.Context.Cloud.RoleInstance = property.Value;
+                        break;
+
+                    case "Device.OperatingSystem":
+                        crashClient.Context.Device.OperatingSystem = property.Value;
+                        break;
+
+                    case "Device.Model":
+                        crashClient.Context.Device.Model = property.Value;
+                        break;
+
+                    case "Device.Type":
+                        crashClient.Context.Device.Type = property.Value;
+                        break;
+
+                    case "Device.Id":
+                        crashClient.Context.Device.Id = property.Value;
+                        break;
+
+                    case "User.Id":
+                        crashClient.Context.User.Id = property.Value;
+                        break;
+
+                    case "Session.Id":
+                        crashClient.Context.Session.Id = property.Value;
+                        break;
+
+                    case "Component.Version":
+                        crashClient.Context.Component.Version = property.Value;
+                        break;
+
+                    default:
+                        crashClient.Context.GlobalProperties[property.Key] = property.Value;
+                        break;
+                }
+            }
+
+            return crashClient;
+        }
+        catch (Exception ex)
+        {
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error creating crash TelemetryClient. Message: {ex.Message}");
+
+            return null;
         }
     }
 

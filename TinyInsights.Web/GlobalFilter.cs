@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace TinyInsights.Web;
+
 public class GlobalFilter : INotifyPropertyChanged
 {
     public const string AppVersionsDefaultValue = "All app versions";

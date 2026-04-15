@@ -1,4 +1,5 @@
 namespace TinyInsights.Web.Pages;
+
 public partial class Query
 {
     private Dictionary<string, string> predefinedQueries = new()

@@ -1,5 +1,6 @@
 ﻿using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace TinyInsights.TestApp;
 
@@ -20,6 +21,15 @@ public static class MauiProgram
                 if (provider is ApplicationInsightsProvider appProvider)
                 {
                     appProvider.TelemetryChannel = new ServerTelemetryChannel();
+                    appProvider.AfterCrash = (properties) =>
+                    {
+                        Debug.WriteLine("TinyInsights TestApp: AfterCrash invoked");
+                    };
+                    appProvider.BeforeSendCrash = async (properties) =>
+                    {
+                        Debug.WriteLine("TinyInsights TestApp: BeforeSend invoked");
+                        await Task.CompletedTask;
+                    };
                 }
                 provider.TrackDependencyFilter = (dependency) =>
                 {

@@ -17,10 +17,10 @@ public interface ICrashHandler
     List<Crash>? PopCrashesFromStorage();
 
     /// <summary>
-    /// Pushes the unhandled exception. 
+    /// Pushes the unhandled exception along with a snapshot of global properties at crash time.
     /// This method is supposed to be called when the app crashes in order to store the crash information in the underlying storage.
-    /// </summary>    
-    void PushCrashToStorage(Exception ex);
+    /// </summary>
+    void PushCrashToStorage(Exception ex, Dictionary<string, string>? globalProperties);
 
     /// <summary>
     /// Erases crashes from the underlying storage. 

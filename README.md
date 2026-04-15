@@ -132,6 +132,32 @@ await blob.DownloadToAsync(stream);
 dependency.Dispose();
 ```
 
+#### Crash callbacks
+The `ApplicationInsightsProvider` exposes two callbacks that let you hook into the crash handling pipeline:
+
+- **`AfterCrash`** – An `Action<Dictionary<string,string>>` that is invoked immediately after a crash has been captured and stored. The dictionary argument contains the snapshot of global properties that was captured for that crash. Use this to run synchronous cleanup or logging right when the crash occurs.
+- **`BeforeSendCrash`** – A `Func<Dictionary<string,string>,Task>` that is awaited before stored crashes are sent to Application Insights on the next app launch. The dictionary argument contains the telemetry properties that will be sent with the crash report. Use this for any async preparation you need before crash data is transmitted.
+
+```csharp
+.UseTinyInsights("{CONNECTION-STRING}", (provider) =>
+{
+    if (provider is ApplicationInsightsProvider appProvider)
+    {
+        appProvider.AfterCrash = (globalProperties) =>
+        {
+            // Runs right after a crash is captured.
+            // globalProperties contains the captured snapshot of global properties for the crash.
+        };
+        appProvider.BeforeSendCrash = async (telemetryProperties) =>
+        {
+            // Runs before stored crashes are sent to Application Insights.
+            // telemetryProperties contains the properties that will be sent with the crash telemetry.
+            await Task.CompletedTask;
+        };
+    }
+});
+```
+
 #### UserId
 By default a random UserId is generated for each user. If you want to set a specific UserId you can do it like below.
 ```csharp
