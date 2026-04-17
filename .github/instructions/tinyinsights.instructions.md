@@ -1,19 +1,12 @@
 ---
 title: "TinyInsights.Maui"
 description: "Instructions for using TinyInsights, an Application Insights helper library for .NET MAUI apps."
+applyTo: "**/*.cs"
 ---
 
 # TinyInsights for .NET MAUI
 
-TinyInsights is a library for tracking insights in .NET MAUI apps using Application Insights as the backend.
-
-## Installation
-
-Install the NuGet package:
-
-```
-dotnet add package TinyInsights.Maui.AppInsights
-```
+TinyInsights is a library for tracking insights in .NET MAUI apps using Application Insights as the backend. This project already has the `TinyInsights.Maui.AppInsights` NuGet package installed.
 
 ## Setup in MauiProgram.cs
 
