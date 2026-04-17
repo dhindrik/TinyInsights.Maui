@@ -240,6 +240,24 @@ insights.UpsertGlobalProperty("Cloud.RoleName", "MyRoleName");
 
 Supported predefined keys: `Cloud.RoleName`, `Cloud.RoleInstance`, `Device.Id`, `Device.Type`, `Device.Model`, `Device.OperatingSystem`.
 
+## Offline Support
+
+By default TinyInsights uses `MemoryTelemetryChannel` from the Application Insights SDK, which stores events in memory. This works for short offline periods, but events are lost if the OS terminates the app before they are sent.
+
+To persist events to disk and survive app restarts, set the `TelemetryChannel` property to `ServerTelemetryChannel`:
+
+```csharp
+.UseTinyInsights("{CONNECTION-STRING}", (provider) =>
+{
+    if (provider is ApplicationInsightsProvider appProvider)
+    {
+        appProvider.TelemetryChannel = new ServerTelemetryChannel();
+    }
+});
+```
+
+> **Note:** The Application Insights SDK batches data and only publishes when enough data is collected, so there may be a delay before data appears in Application Insights.
+
 ## Flush Behavior
 
 Since version 1.8.0, events are no longer flushed on every call. Call `FlushAsync` before the app goes to sleep to avoid data loss:
