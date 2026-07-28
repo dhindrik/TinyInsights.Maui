@@ -77,34 +77,48 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         async void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
-            var crashProperties = CaptureGlobalProperties();
-            AfterCrash?.Invoke(crashProperties);
-
-            if (IsTrackCrashesEnabled)
+            // This is an async void method, so we need to make sure that we never throw,
+            // an unhandled exception here would crash the app.
+            try
             {
-                this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
+                var crashProperties = CaptureGlobalProperties();
+                AfterCrash?.Invoke(crashProperties);
+
+                if (IsTrackCrashesEnabled)
+                {
+                    this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
+                }
+
+                await FlushAsync();
             }
-
-            if (Client is not null)
+            catch (Exception exception)
             {
-                await Client.FlushAsync(CancellationToken.None);
+                if (EnableConsoleLogging)
+                    Console.WriteLine($"TinyInsights: Error handling unobserved task exception. Message: {exception.Message}");
             }
         }
 
         async void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            var crashProperties = CaptureGlobalProperties();
-
-            AfterCrash?.Invoke(crashProperties);
-
-            if (IsTrackCrashesEnabled)
+            // This is an async void method, so we need to make sure that we never throw,
+            // an unhandled exception here would crash the app.
+            try
             {
-                this.crashHandler.PushCrashToStorage((Exception)e.ExceptionObject, crashProperties);
+                var crashProperties = CaptureGlobalProperties();
+
+                AfterCrash?.Invoke(crashProperties);
+
+                if (IsTrackCrashesEnabled && e.ExceptionObject is Exception exceptionObject)
+                {
+                    this.crashHandler.PushCrashToStorage(exceptionObject, crashProperties);
+                }
+
+                await FlushAsync();
             }
-
-            if (Client is not null)
+            catch (Exception exception)
             {
-                await Client.FlushAsync(CancellationToken.None);
+                if (EnableConsoleLogging)
+                    Console.WriteLine($"TinyInsights: Error handling unhandled exception. Message: {exception.Message}");
             }
         }
     }
@@ -121,18 +135,26 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
-            var crashProperties = CaptureGlobalProperties();
-
-            AfterCrash?.Invoke(crashProperties);
-
-            if (IsTrackCrashesEnabled)
+            try
             {
-                this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
+                var crashProperties = CaptureGlobalProperties();
+
+                AfterCrash?.Invoke(crashProperties);
+
+                if (IsTrackCrashesEnabled)
+                {
+                    this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
+                }
+
+                if (Client is not null && !IsOffline())
+                {
+                    Client.Flush();
+                }
             }
-
-            if (Client is not null)
+            catch (Exception exception)
             {
-                Client.Flush();
+                if (EnableConsoleLogging)
+                    Console.WriteLine($"TinyInsights: Error handling unhandled exception. Message: {exception.Message}");
             }
         }
     }
@@ -316,6 +338,24 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         return null;
     }
 
+    /// <summary>
+    /// Checks if the device is offline. If the network state can't be determined,
+    /// the device is considered to be online.
+    /// </summary>
+    private static bool IsOffline()
+    {
+        try
+        {
+            var networkAccess = Connectivity.Current.NetworkAccess;
+
+            return networkAccess is NetworkAccess.None or NetworkAccess.Local or NetworkAccess.ConstrainedInternet;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     private void InitializeServerChannel(ServerTelemetryChannel channel)
     {
         channel.StorageFolder = FileSystem.CacheDirectory;
@@ -455,6 +495,15 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             if (Client is null)
             {
+                return;
+            }
+
+            if (IsOffline())
+            {
+                // Keep the crashes in the storage and send them the next time the app is started with an internet connection.
+                if (EnableConsoleLogging)
+                    Console.WriteLine("TinyInsights: Skipping sending crashes because the device is offline");
+
                 return;
             }
 
@@ -663,19 +712,28 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public async Task TrackPageVisitTime(string pageFullName, string pageDisplayName, double pageVisitTime)
     {
-        if (Client is null)
+        try
         {
-            return;
+            if (Client is null)
+            {
+                return;
+            }
+
+            var properties = new Dictionary<string, string>
+            {
+                { "Page", pageFullName },
+                { "DisplayName", pageDisplayName },
+            };
+
+            Client.TrackMetric("PageVisitTime", pageVisitTime, properties);
+
+            await FlushAsync();
         }
-
-        var properties = new Dictionary<string, string>
+        catch (Exception ex)
         {
-            { "Page", pageFullName },
-            { "DisplayName", pageDisplayName },
-        };
-
-        Client.TrackMetric("PageVisitTime", pageVisitTime, properties);
-        await Client.FlushAsync(CancellationToken.None);
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error tracking page visit time. Message: {ex.Message}");
+        }
     }
 
     public async Task TrackPageViewAsync(string viewName, Dictionary<string, string>? properties = null, Dictionary<string, double>? metrics = null)
@@ -798,6 +856,15 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
                 return;
             }
 
+            if (IsOffline())
+            {
+                // Flushing when the device is offline can block for a long time and the telemetry can't be sent anyway.
+                if (EnableConsoleLogging)
+                    Console.WriteLine("TinyInsights: Skipping flush because the device is offline");
+
+                return;
+            }
+
             await Client.FlushAsync(CancellationToken.None);
         }
         catch (Exception ex)
@@ -811,24 +878,34 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
     public async void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        if (!IsEnabled(logLevel))
+        // This is an async void method, so we need to make sure that we never throw,
+        // an unhandled exception here would crash the app.
+        try
         {
-            return;
+            if (!IsEnabled(logLevel))
+            {
+                return;
+            }
+
+            var logTask = logLevel switch
+            {
+                LogLevel.Trace => TrackPageViewAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
+                LogLevel.Debug => TrackDebugAsync(eventId, state, exception),
+                LogLevel.Information => TrackEventAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
+                LogLevel.Warning => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
+                LogLevel.Error => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
+                LogLevel.Critical => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
+                LogLevel.None => Task.CompletedTask,
+                _ => Task.CompletedTask
+            };
+
+            await logTask;
         }
-
-        var logTask = logLevel switch
+        catch (Exception ex)
         {
-            LogLevel.Trace => TrackPageViewAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
-            LogLevel.Debug => TrackDebugAsync(eventId, state, exception),
-            LogLevel.Information => TrackEventAsync(GetEventName(eventId), GetLoggerData(logLevel, eventId, state, exception, formatter)),
-            LogLevel.Warning => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
-            LogLevel.Error => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
-            LogLevel.Critical => TrackErrorAsync(exception!, GetLoggerData(logLevel, eventId, state, exception, formatter)),
-            LogLevel.None => Task.CompletedTask,
-            _ => Task.CompletedTask
-        };
-
-        await logTask;
+            if (EnableConsoleLogging)
+                Console.WriteLine($"TinyInsights: Error logging. Message: {ex.Message}");
+        }
     }
 
     private static Task TrackDebugAsync<TState>(EventId eventId, TState state, Exception? exception)
