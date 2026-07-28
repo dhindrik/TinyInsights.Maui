@@ -159,7 +159,7 @@ The `ApplicationInsightsProvider` exposes two callbacks that let you hook into t
 ```
 
 #### Offline behavior
-TinyInsights checks the network status before it sends telemetry. When the device doesn't have an internet connection, no telemetry is sent and stored crashes are kept in the local storage, so they can be sent the next time the app is started with an internet connection. This is to avoid long running network calls and errors when the device is offline.
+TinyInsights checks the network status before it sends telemetry. When the device doesn't have an internet connection, no telemetry is sent and stored crashes are kept in the local storage, so they can be sent the next time the app is started with an internet connection. This is to avoid long-running network calls and errors when the device is offline.
 
 Note that the network status is read with `Connectivity.Current.NetworkAccess`, which on Android requires the `ACCESS_NETWORK_STATE` permission. If the network status can't be read, TinyInsights will assume that the device is online.
 
