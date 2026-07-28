@@ -77,49 +77,29 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         async void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
-            // This is an async void method, so we need to make sure that we never throw,
-            // an unhandled exception here would crash the app.
-            try
-            {
-                var crashProperties = CaptureGlobalProperties();
-                AfterCrash?.Invoke(crashProperties);
+            var crashProperties = CaptureGlobalProperties();
+            AfterCrash?.Invoke(crashProperties);
 
-                if (IsTrackCrashesEnabled)
-                {
-                    this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
-                }
-
-                await FlushAsync();
-            }
-            catch (Exception exception)
+            if (IsTrackCrashesEnabled)
             {
-                if (EnableConsoleLogging)
-                    Console.WriteLine($"TinyInsights: Error handling unobserved task exception. Message: {exception.Message}");
+                this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
             }
+
+            await FlushAsync();
         }
 
         async void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            // This is an async void method, so we need to make sure that we never throw,
-            // an unhandled exception here would crash the app.
-            try
+            var crashProperties = CaptureGlobalProperties();
+
+            AfterCrash?.Invoke(crashProperties);
+
+            if (IsTrackCrashesEnabled && e.ExceptionObject is Exception exceptionObject)
             {
-                var crashProperties = CaptureGlobalProperties();
-
-                AfterCrash?.Invoke(crashProperties);
-
-                if (IsTrackCrashesEnabled && e.ExceptionObject is Exception exceptionObject)
-                {
-                    this.crashHandler.PushCrashToStorage(exceptionObject, crashProperties);
-                }
-
-                await FlushAsync();
+                this.crashHandler.PushCrashToStorage(exceptionObject, crashProperties);
             }
-            catch (Exception exception)
-            {
-                if (EnableConsoleLogging)
-                    Console.WriteLine($"TinyInsights: Error handling unhandled exception. Message: {exception.Message}");
-            }
+
+            await FlushAsync();
         }
     }
 
@@ -135,26 +115,18 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
 
         void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
-            try
+            var crashProperties = CaptureGlobalProperties();
+
+            AfterCrash?.Invoke(crashProperties);
+
+            if (IsTrackCrashesEnabled)
             {
-                var crashProperties = CaptureGlobalProperties();
-
-                AfterCrash?.Invoke(crashProperties);
-
-                if (IsTrackCrashesEnabled)
-                {
-                    this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
-                }
-
-                if (Client is not null && !IsOffline())
-                {
-                    Client.Flush();
-                }
+                this.crashHandler.PushCrashToStorage(e.Exception, crashProperties);
             }
-            catch (Exception exception)
+
+            if (Client is not null && !IsOffline())
             {
-                if (EnableConsoleLogging)
-                    Console.WriteLine($"TinyInsights: Error handling unhandled exception. Message: {exception.Message}");
+                Client.Flush();
             }
         }
     }
