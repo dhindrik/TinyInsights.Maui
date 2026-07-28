@@ -348,10 +348,15 @@ public class ApplicationInsightsProvider : IInsightsProvider, ILogger
         {
             var networkAccess = Connectivity.Current.NetworkAccess;
 
+            // ConstrainedInternet means that the device is behind a captive portal,
+            // so telemetry can't be sent even if there is a network connection.
             return networkAccess is NetworkAccess.None or NetworkAccess.Local or NetworkAccess.ConstrainedInternet;
         }
         catch (Exception)
         {
+            // The network state can't always be determined, for example if the app doesn't have
+            // the permission to read it. In that case we assume that we are online and let the
+            // telemetry client try to send the telemetry.
             return false;
         }
     }
