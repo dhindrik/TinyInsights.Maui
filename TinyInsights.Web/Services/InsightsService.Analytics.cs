@@ -32,7 +32,7 @@ public partial class InsightsService
     public Task<List<CountPerDay>> GetEventsPerDay(string eventName, GlobalFilter filter, CancellationToken cancellationToken = default)
     {
         var queryFilter = GetFilter(filter);
-        var query = $"customEvents | where{queryFilter} name == '{eventName}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
+        var query = $"customEvents | where{queryFilter} and name == '{eventName}' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
 
         return GetPerDayResult(query, cancellationToken);
     }
