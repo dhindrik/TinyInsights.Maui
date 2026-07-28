@@ -34,4 +34,4 @@ jobs:
         run: dotnet pack TinyInsights/TinyInsights.csproj -p:PackageVersion=${{ github.ref_name }}
 
       - name: Push
-        run: dotnet nuget push '**/*.nupkg' --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push '**/*.nupkg' --source https://api.nuget.org/v3/index.json
