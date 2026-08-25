@@ -10,8 +10,8 @@ public interface IInsightsService
     Task<List<string>> GetUniqueAppVersions();
 
     #region Diagnostics
-    Task<List<CountPerDay>> GetCrashesPerDay(GlobalFilter filter, CancellationToken cancellationToken = default);
-    Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter, List<string>? errorSeverities = null, CancellationToken cancellationToken = default);
+    Task<List<CountPerDay>> GetCrashesPerDay(GlobalFilter filter, int extraDaysBack = 0, CancellationToken cancellationToken = default);
+    Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter, List<string>? errorSeverities = null, int extraDaysBack = 0, CancellationToken cancellationToken = default);
     Task<List<CrashItem>> GetCrashesGrouped(GlobalFilter filter, CancellationToken cancellationToken = default);
     Task<List<ErrorCount>> GetErrorsGrouped(GlobalFilter filter, List<string>? errorSeverities = null, CancellationToken cancellationToken = default);
     Task<ErrorDetails> GetCrashDetails(string id, GlobalFilter filter, CancellationToken cancellationToken = default);

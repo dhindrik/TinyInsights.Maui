@@ -14,7 +14,7 @@ public partial class InsightsService
 
     }
 
-    private string GetFilter(GlobalFilter filter)
+    private string GetFilter(GlobalFilter filter, int extraDaysBack = 0)
     {
         var filterBuilder = new StringBuilder();
         filterBuilder.Append(" ");
@@ -44,14 +44,14 @@ public partial class InsightsService
 
         if (filter.DateFilter is not null)
         {
-            var start = filter.DateFilter.StartDate.AddDays(-1);
+            var start = filter.DateFilter.StartDate.AddDays(-1 - extraDaysBack);
             var end = filter.DateFilter.EndDate.AddDays(1);
 
             filterBuilder.Append($"timestamp > datetime('{start}') and timestamp < datetime('{end}')");
         }
         else
         {
-            filterBuilder.Append($"timestamp > ago({filter.NumberOfDays}d)");
+            filterBuilder.Append($"timestamp > ago({filter.NumberOfDays + extraDaysBack}d)");
         }
 
         return filterBuilder.ToString();

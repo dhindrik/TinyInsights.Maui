@@ -48,9 +48,9 @@ public partial class InsightsService : IInsightsService
         return (true, null);
     }
 
-    public async Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter, List<string>? errorSeverities = null, CancellationToken cancellationToken = default)
+    public async Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter, List<string>? errorSeverities = null, int extraDaysBack = 0, CancellationToken cancellationToken = default)
     {
-        var queryFilter = GetFilter(filter);
+        var queryFilter = GetFilter(filter, extraDaysBack);
 
         if (errorSeverities is { Count: > 0 })
         {
@@ -76,9 +76,9 @@ public partial class InsightsService : IInsightsService
         return result;
     }
 
-    public async Task<List<CountPerDay>> GetCrashesPerDay(GlobalFilter filter, CancellationToken cancellationToken = default)
+    public async Task<List<CountPerDay>> GetCrashesPerDay(GlobalFilter filter, int extraDaysBack = 0, CancellationToken cancellationToken = default)
     {
-        var queryFilter = GetFilter(filter);
+        var queryFilter = GetFilter(filter, extraDaysBack);
 
         var query =
             $"exceptions | where{queryFilter} and customDimensions.IsCrash == 'true' | summarize count_sum = sum(itemCount) by bin(timestamp,1d)";
