@@ -39,4 +39,11 @@
 	<ItemGroup>
 		<None Include="readme.txt" pack="true" PackagePath="." />
 	</ItemGroup>
+	<ItemGroup>
+		<Content Include="../.github/instructions/tinyinsights.instructions.md" pack="true" PackagePath="contentFiles/any/any/.github/instructions/" BuildAction="None" CopyToPublishDirectory="Never">
+			<Link>.github/instructions/tinyinsights.instructions.md</Link>
+			<PackageCopyToOutput>false</PackageCopyToOutput>
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 </Project>
