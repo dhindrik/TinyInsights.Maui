@@ -12,8 +12,6 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddRadzenComponents();
 
-builder.Services.AddHttpClient();
-
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://api.applicationinsights.io/") });
 
 builder.Services.AddSingleton<IInsightsService, InsightsService>();

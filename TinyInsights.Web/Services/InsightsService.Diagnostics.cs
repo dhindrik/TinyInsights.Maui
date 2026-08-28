@@ -10,10 +10,9 @@ public partial class InsightsService : IInsightsService
 
     private string? appId;
 
-    public InsightsService(IHttpClientFactory httpClientFactory)
+    public InsightsService(HttpClient httpClient)
     {
-        httpClient = httpClientFactory.CreateClient();
-        httpClient.BaseAddress = new Uri("https://api.applicationinsights.io/");
+        this.httpClient = httpClient;
     }
 
     public async Task<bool> AddAndValidateApiKey(string appId, string apiKey, CancellationToken cancellationToken = default)
@@ -22,7 +21,7 @@ public partial class InsightsService : IInsightsService
 
         httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
 
-        var url = $"/v1/apps/{appId}/events/$all?$top=5";
+        var url = $"v1/apps/{appId}/events/$all?$top=5";
 
         var response = await httpClient.GetAsync(url, cancellationToken);
 
@@ -35,7 +34,7 @@ public partial class InsightsService : IInsightsService
 
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        var url = $"/v1/apps/{appId}/events/$all?$top=5";
+        var url = $"v1/apps/{appId}/events/$all?$top=5";
 
         var response = await httpClient.GetAsync(url, cancellationToken);
 
@@ -46,6 +45,23 @@ public partial class InsightsService : IInsightsService
         }
 
         return (true, null);
+    }
+
+    public async Task<bool> SetAppIdAndValidate(string appId, CancellationToken cancellationToken = default)
+    {
+        this.appId = appId;
+
+        var url = $"v1/apps/{appId}/events/$all?$top=5";
+
+        var response = await httpClient.GetAsync(url, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            return false;
+        }
+
+        return true;
     }
 
     public async Task<List<CountPerDay>> GetErrorsPerDay(GlobalFilter filter, List<string>? errorSeverities = null, int extraDaysBack = 0, CancellationToken cancellationToken = default)
@@ -507,7 +523,7 @@ public partial class InsightsService : IInsightsService
 
     private async Task<T> GetQueryResult<T>(string query, CancellationToken cancellationToken = default)
     {
-        var url = $"/v1/apps/{appId}/query";
+        var url = $"v1/apps/{appId}/query";
 
         var json = JsonSerializer.Serialize(new { query = query });
         var content = new StringContent(json, Encoding.UTF8, "application/json");

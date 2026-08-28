@@ -25,8 +25,6 @@ builder.Services.AddControllers();
 
 builder.Services.AddRadzenComponents();
 
-builder.Services.AddHttpClient();
-
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://api.applicationinsights.io/") });
 
 builder.Services.AddScoped<IInsightsService, InsightsService>();

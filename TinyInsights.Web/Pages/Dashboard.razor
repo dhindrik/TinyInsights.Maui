@@ -6,33 +6,33 @@
 
 @inject IInsightsService Service
 <RadzenStack Gap="20">
-<RadzenRow JustifyContent="JustifyContent.End">
-    <GlobalFilters />
-</RadzenRow>
-<RadzenCard>
-    <RadzenStack>
-        <h2>Crashes and errors</h2>
-        @if (isLoadingGraph)
-        {
-            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-        }
-        else
-        {
-            <RadzenChart>
-                <RadzenLegend />
-                <RadzenLineSeries Data="@errorsPerDays" CategoryProperty="Date" ValueProperty="Count" Title="Errors">
-                    <RadzenMarkers MarkerType="MarkerType.Circle" />
-                    <RadzenSeriesDataLabels />
-                </RadzenLineSeries>
+    <RadzenRow JustifyContent="JustifyContent.End">
+        <GlobalFilters />
+    </RadzenRow>
+    <RadzenCard>
+        <RadzenStack>
+            <h2>Crashes and errors</h2>
+            @if (isLoadingGraph)
+            {
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            }
+            else
+            {
+                <RadzenChart>
+                    <RadzenLegend />
+                    <RadzenLineSeries Data="@errorsPerDays" CategoryProperty="Date" ValueProperty="Count" Title="Errors">
+                        <RadzenMarkers MarkerType="MarkerType.Circle" />
+                        <RadzenSeriesDataLabels />
+                    </RadzenLineSeries>
                     <RadzenLineSeries Data="@crashesPerDays" CategoryProperty="Date" ValueProperty="Count" Title="Crashes">
                         <RadzenMarkers MarkerType="MarkerType.Circle" />
                         <RadzenSeriesDataLabels />
                     </RadzenLineSeries>
-                <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
-            </RadzenChart>
-        }
-    </RadzenStack>
-</RadzenCard>
+                    <RadzenCategoryAxis Visible="false"></RadzenCategoryAxis>
+                </RadzenChart>
+            }
+        </RadzenStack>
+    </RadzenCard>
     <RadzenCard>
         <RadzenStack>
             <h2>Users</h2>
@@ -60,29 +60,35 @@
     private List<CountPerDay> errorsPerDays = new();
     private List<CountPerDay> crashesPerDays = new();
     private List<CountPerDay> usersPerDay = new();
-    private bool isLoadingGraph = true; 
+    private bool isLoadingGraph = true;
     private bool isLoadingUsersPerDayViews = true;
 
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
 
-        await Task.WhenAll(LoadGraph(), LoadUserGraph());
+        try
+        {
+            await Task.WhenAll(LoadGraph(CancellationToken), LoadUserGraph(CancellationToken));
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
-    private async Task LoadGraph()
+    private async Task LoadGraph(CancellationToken cancellationToken)
     {
         isLoadingGraph = true;
 
         try
         {
-            var crashTask = Service.GetCrashesPerDay(GlobalFilter);
-            var errorTask = Service.GetErrorsPerDay(GlobalFilter);
+            var crashTask = Service.GetCrashesPerDay(GlobalFilter, cancellationToken: cancellationToken);
+            var errorTask = Service.GetErrorsPerDay(GlobalFilter, cancellationToken: cancellationToken);
 
             await Task.WhenAll(crashTask, errorTask);
 
             var range = GetDateRangeFromFilter();
-            
+
             var crashDays = new List<CountPerDay>();
             var errorDays = new List<CountPerDay>();
 
@@ -106,16 +112,16 @@
 
             await InvokeAsync(StateHasChanged);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             HandleException(ex);
         }
     }
-    private async Task LoadUserGraph()
+    private async Task LoadUserGraph(CancellationToken cancellationToken)
     {
         isLoadingUsersPerDayViews = true;
 
-        var result = await Service.GetUsersPerDay(GlobalFilter);
+        var result = await Service.GetUsersPerDay(GlobalFilter, cancellationToken);
 
         var range = GetDateRangeFromFilter();
 

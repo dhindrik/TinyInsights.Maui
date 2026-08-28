@@ -4,6 +4,7 @@ public interface IInsightsService
 {
     Task<bool> AddAndValidateApiKey(string appId, string apiKey, CancellationToken cancellationToken = default);
     Task<(bool Succeed, string? ErrorMessage)> AddAndValidateBearer(string appId, string token, CancellationToken cancellationToken = default);
+    Task<bool> SetAppIdAndValidate(string appId, CancellationToken cancellationToken = default);
 
     Task<QueryResult> RunQuery(string query, CancellationToken cancellationToken = default);
 

@@ -54,7 +54,11 @@ public abstract class TinyInsightsComponentBase : ComponentBase
 
 public abstract class TinyInsightsPageComponentBase : TinyInsightsComponentBase
 {
-
+    public void Dispose()
+    {
+        cancellationTokenSource.Cancel();
+        cancellationTokenSource.Dispose();
+    }
 
     protected override void OnInitialized()
     {
